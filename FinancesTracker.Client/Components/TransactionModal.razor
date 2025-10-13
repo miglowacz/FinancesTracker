@@ -1,0 +1,118 @@
+@if (IsVisible)
+{
+    <div class="modal fade show" style="display: block; background: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(Transaction.Id == 0 ? "Dodaj transakcjê" : "Edytuj transakcjê")</h5>
+                    <button type="button" class="btn-close" @onclick="OnClose"></button>
+                </div>
+                <EditForm Model="Transaction" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Data</label>
+                                <InputDate class="form-control" @bind-Value="Transaction.Date" />
+                                <ValidationMessage For="@(() => Transaction.Date)" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Kwota</label>
+                                <InputNumber class="form-control" @bind-Value="Transaction.Amount" step="0.01" />
+                                <ValidationMessage For="@(() => Transaction.Amount)" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Opis</label>
+                                <InputText class="form-control" @bind-Value="Transaction.Description" />
+                                <ValidationMessage For="@(() => Transaction.Description)" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Kategoria</label>
+                                <InputSelect class="form-select" @bind-Value="Transaction.CategoryId" @onchange="OnCategoryChanged">
+                                    <option value="0">Wybierz kategoriê</option>
+                                    @if (Categories != null)
+                                    {
+                                        @foreach (var category in Categories)
+                                        {
+                                            <option value="@category.Id">@category.Name</option>
+                                        }
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => Transaction.CategoryId)" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Podkategoria</label>
+                                <InputSelect class="form-select" @bind-Value="Transaction.SubcategoryId">
+                                    <option value="0">Wybierz podkategoriê</option>
+                                    @if (subcategories != null)
+                                    {
+                                        @foreach (var subcategory in subcategories)
+                                        {
+                                            <option value="@subcategory.Id">@subcategory.Name</option>
+                                        }
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => Transaction.SubcategoryId)" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Bank</label>
+                                <InputSelect class="form-select" @bind-Value="Transaction.BankName">
+                                    <option value="">Wybierz bank</option>
+                                    @foreach (var bank in AppConstants.SupportedBanks.All)
+                                    {
+                                        <option value="@bank">@bank</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="OnClose">Anuluj</button>
+                        <button type="submit" class="btn btn-primary">Zapisz</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public TransactionDto Transaction { get; set; } = new();
+    [Parameter] public List<CategoryDto>? Categories { get; set; }
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<TransactionDto> OnSave { get; set; }
+
+    private List<SubcategoryDto>? subcategories;
+
+    protected override void OnParametersSet()
+    {
+        if (Transaction.CategoryId > 0 && Categories != null)
+        {
+            var category = Categories.FirstOrDefault(c => c.Id == Transaction.CategoryId);
+            subcategories = category?.Subcategories;
+        }
+    }
+
+    private void OnCategoryChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int categoryId) && categoryId > 0)
+        {
+            var category = Categories?.FirstOrDefault(c => c.Id == categoryId);
+            subcategories = category?.Subcategories;
+            Transaction.CategoryId = categoryId;
+            Transaction.SubcategoryId = 0; // Reset podkategoria
+        }
+        else
+        {
+            subcategories = null;
+            Transaction.CategoryId = 0;
+            Transaction.SubcategoryId = 0;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        await OnSave.InvokeAsync(Transaction);
+    }
+}

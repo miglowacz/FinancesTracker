@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36221.1 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancesTracker", "FinancesTracker\FinancesTracker.csproj", "{F386FE5E-60C7-4C57-B00A-E304225D1E80}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancesTracker.Client", "FinancesTracker.Client\FinancesTracker.Client.csproj", "{2218E62D-0BC2-4467-A28A-3D4C03244A0E}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "FinancesTracker.Shared", "FinancesTracker.Shared\FinancesTracker.Shared.shproj", "{C78E7588-DB39-4A60-B965-EF183A917170}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F386FE5E-60C7-4C57-B00A-E304225D1E80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F386FE5E-60C7-4C57-B00A-E304225D1E80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F386FE5E-60C7-4C57-B00A-E304225D1E80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F386FE5E-60C7-4C57-B00A-E304225D1E80}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2218E62D-0BC2-4467-A28A-3D4C03244A0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2218E62D-0BC2-4467-A28A-3D4C03244A0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2218E62D-0BC2-4467-A28A-3D4C03244A0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2218E62D-0BC2-4467-A28A-3D4C03244A0E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D71D55EE-A250-4B5D-AB7D-65FE61C6C5B7}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		FinancesTracker.Shared\FinancesTracker.Shared.projitems*{2218e62d-0bc2-4467-a28a-3d4c03244a0e}*SharedItemsImports = 5
+		FinancesTracker.Shared\FinancesTracker.Shared.projitems*{c78e7588-db39-4a60-b965-ef183a917170}*SharedItemsImports = 13
+		FinancesTracker.Shared\FinancesTracker.Shared.projitems*{f386fe5e-60c7-4c57-b00a-e304225d1e80}*SharedItemsImports = 5
+	EndGlobalSection
+EndGlobal

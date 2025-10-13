@@ -1,0 +1,400 @@
+@page "/transactions"
+@using FinancesTracker.Client.Services
+@using FinancesTracker.Shared.DTOs
+@using FinancesTracker.Shared.Constants
+@using Microsoft.AspNetCore.Components.Web
+@rendermode InteractiveWebAssembly
+@inject TransactionService TransactionService
+@inject CategoryService CategoryService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Transakcje</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Transakcje finansowe</h2>
+                <button class="btn btn-primary" @onclick="ShowAddTransactionModal">
+                    <i class="fas fa-plus"></i> Dodaj transakcjê
+                </button>
+            </div>
+
+            <!-- Filtry -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Filtry</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Rok</label>
+                            <select class="form-select" @bind="Filter.Year" @bind:after="OnFilterChanged">
+                                <option value="">Wszystkie</option>
+                                @for (int year = DateTime.Now.Year; year >= DateTime.Now.Year - 5; year--)
+                                {
+                                    <option value="@year">@year</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Miesi¹c</label>
+                            <select class="form-select" @bind="Filter.Month" @bind:after="OnFilterChanged">
+                                <option value="">Wszystkie</option>
+                                @foreach (var month in AppConstants.Months.Polish)
+                                {
+                                    <option value="@month.Key">@month.Value</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Kategoria</label>
+                            <select class="form-select" @bind="Filter.CategoryId" @bind:after="OnCategoryChanged">
+                                <option value="">Wszystkie</option>
+                                @if (categories != null)
+                                {
+                                    @foreach (var category in categories)
+                                    {
+                                        <option value="@category.Id">@category.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Podkategoria</label>
+                            <select class="form-select" @bind="Filter.SubcategoryId" @bind:after="OnFilterChanged">
+                                <option value="">Wszystkie</option>
+                                @if (subcategories != null)
+                                {
+                                    @foreach (var subcategory in subcategories)
+                                    {
+                                        <option value="@subcategory.Id">@subcategory.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Szukaj</label>
+                            <input type="text" class="form-control" @bind="Filter.SearchTerm" @onkeypress="OnSearchKeyPress" placeholder="Szukaj w opisie...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Kwota od</label>
+                            <input type="number" class="form-control" @bind="Filter.MinAmount" @bind:after="OnFilterChanged" step="0.01">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Kwota do</label>
+                            <input type="number" class="form-control" @bind="Filter.MaxAmount" @bind:after="OnFilterChanged" step="0.01">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista transakcji -->
+            @if (isLoading)
+            {
+                <div class="text-center p-4">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">£adowanie...</span>
+                    </div>
+                </div>
+            }
+            else if (transactions?.Items?.Any() == true)
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th @onclick="() => SortBy(nameof(TransactionDto.Date))" style="cursor: pointer;">
+                                            Data
+                                            @if (Filter.SortBy == nameof(TransactionDto.Date))
+                                            {
+                                                <i class="fas @(Filter.SortDescending ? "fa-sort-down" : "fa-sort-up")"></i>
+                                            }
+                                        </th>
+                                        <th @onclick="() => SortBy(nameof(TransactionDto.Description))" style="cursor: pointer;">
+                                            Opis
+                                            @if (Filter.SortBy == nameof(TransactionDto.Description))
+                                            {
+                                                <i class="fas @(Filter.SortDescending ? "fa-sort-down" : "fa-sort-up")"></i>
+                                            }
+                                        </th>
+                                        <th @onclick="() => SortBy(nameof(TransactionDto.Amount))" style="cursor: pointer;">
+                                            Kwota
+                                            @if (Filter.SortBy == nameof(TransactionDto.Amount))
+                                            {
+                                                <i class="fas @(Filter.SortDescending ? "fa-sort-down" : "fa-sort-up")"></i>
+                                            }
+                                        </th>
+                                        <th @onclick="() => SortBy(nameof(TransactionDto.CategoryName))" style="cursor: pointer;">
+                                            Kategoria
+                                            @if (Filter.SortBy == nameof(TransactionDto.CategoryName))
+                                            {
+                                                <i class="fas @(Filter.SortDescending ? "fa-sort-down" : "fa-sort-up")"></i>
+                                            }
+                                        </th>
+                                        <th>Podkategoria</th>
+                                        <th>Bank</th>
+                                        <th>Akcje</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var transaction in transactions.Items)
+                                    {
+                                        <tr>
+                                            <td>@transaction.Date.ToString("dd.MM.yyyy")</td>
+                                            <td>@transaction.Description</td>
+                                            <td class="@(transaction.Amount >= 0 ? "text-success" : "text-danger")">
+                                                @transaction.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
+                                            </td>
+                                            <td>@transaction.CategoryName</td>
+                                            <td>@transaction.SubcategoryName</td>
+                                            <td>@transaction.BankName</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => EditTransaction(transaction)">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteTransaction(transaction.Id)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginacja -->
+                        @if (transactions.TotalPages > 1)
+                        {
+                            <nav aria-label="Nawigacja stron">
+                                <ul class="pagination justify-content-center mt-3">
+                                    <li class="page-item @(transactions.HasPreviousPage ? "" : "disabled")">
+                                        <button class="page-link" @onclick="() => ChangePage(1)" disabled="@(!transactions.HasPreviousPage)">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </button>
+                                    </li>
+                                    <li class="page-item @(transactions.HasPreviousPage ? "" : "disabled")">
+                                        <button class="page-link" @onclick="() => ChangePage(Filter.PageNumber - 1)" disabled="@(!transactions.HasPreviousPage)">
+                                            <i class="fas fa-angle-left"></i>
+                                        </button>
+                                    </li>
+                                    
+                                    @{
+                                        int startPage = Math.Max(1, Filter.PageNumber - 2);
+                                        int endPage = Math.Min(transactions.TotalPages, Filter.PageNumber + 2);
+                                    }
+
+                  @for (int pageNumber = startPage; pageNumber <= endPage; pageNumber++) {
+                    <li class="page-item @(pageNumber == Filter.PageNumber ? "active" : "")">
+                      <button class="page-link" @onclick="() => ChangePage(pageNumber)">@pageNumber</button>
+                    </li>
+                  }
+                                    
+                                    <li class="page-item @(transactions.HasNextPage ? "" : "disabled")">
+                                        <button class="page-link" @onclick="() => ChangePage(Filter.PageNumber + 1)" disabled="@(!transactions.HasNextPage)">
+                                            <i class="fas fa-angle-right"></i>
+                                        </button>
+                                    </li>
+                                    <li class="page-item @(transactions.HasNextPage ? "" : "disabled")">
+                                        <button class="page-link" @onclick="() => ChangePage(transactions.TotalPages)" disabled="@(!transactions.HasNextPage)">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
+                            
+                            <div class="text-center mt-2">
+                                <small class="text-muted">
+                                    Strona @Filter.PageNumber z @transactions.TotalPages 
+                                    (wyœwietlane @((Filter.PageNumber - 1) * Filter.PageSize + 1)-@Math.Min(Filter.PageNumber * Filter.PageSize, transactions.TotalCount) 
+                                    z @transactions.TotalCount transakcji)
+                                </small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Brak transakcji</h5>
+                        <p class="text-muted">Nie znaleziono transakcji spe³niaj¹cych kryteria wyszukiwania.</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private PagedResult<TransactionDto> transactions = new();
+    private List<CategoryDto> categories = new();
+    private List<SubcategoryDto> subcategories = new();
+    private TransactionFilterDto Filter = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+        await LoadTransactions();
+    }
+
+    private async Task LoadCategories()
+    {
+        try
+        {
+            var resp = await CategoryService.GetCategoriesAsync();
+            if (!resp.Success)
+            {
+                Console.WriteLine($"B³¹d podczas ³adowania kategorii: {BuildErrorMessage(resp)}");
+                categories = new();
+                return;
+            }
+
+            categories = resp.Data ?? new();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"B³¹d podczas ³adowania kategorii: {ex.Message}");
+            categories = new();
+        }
+    }
+
+    private async Task LoadTransactions()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var resp = await TransactionService.GetTransactionsAsync(Filter);
+            if (!resp.Success)
+            {
+                Console.WriteLine($"B³¹d podczas ³adowania transakcji: {BuildErrorMessage(resp)}");
+                transactions = new PagedResult<TransactionDto>();
+            }
+            else
+            {
+                transactions = resp.Data ?? new PagedResult<TransactionDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"B³¹d podczas ³adowania transakcji: {ex.Message}");
+            transactions = new PagedResult<TransactionDto>();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnFilterChanged()
+    {
+        Filter.PageNumber = 1;
+        await LoadTransactions();
+    }
+
+    private async Task OnCategoryChanged()
+    {
+        if (Filter.CategoryId.HasValue)
+        {
+            var selectedCategory = categories.FirstOrDefault(c => c.Id == Filter.CategoryId.Value);
+            subcategories = selectedCategory?.Subcategories ?? new List<SubcategoryDto>();
+        }
+        else
+        {
+            subcategories = new List<SubcategoryDto>();
+        }
+
+        Filter.SubcategoryId = null;
+        Filter.PageNumber = 1;
+        await LoadTransactions();
+    }
+
+    private async Task OnSearchKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            Filter.PageNumber = 1;
+            await LoadTransactions();
+        }
+    }
+
+    private async Task SortBy(string sortBy)
+    {
+        if (Filter.SortBy == sortBy)
+        {
+            Filter.SortDescending = !Filter.SortDescending;
+        }
+        else
+        {
+            Filter.SortBy = sortBy;
+            Filter.SortDescending = true;
+        }
+        
+        await LoadTransactions();
+    }
+
+    private async Task ChangePage(int pageNumber)
+    {
+        if (pageNumber >= 1 && pageNumber <= transactions.TotalPages)
+        {
+            Filter.PageNumber = pageNumber;
+            await LoadTransactions();
+        }
+    }
+
+    private async Task ShowAddTransactionModal()
+    {
+        await JSRuntime.InvokeVoidAsync("showModal", "addTransactionModal");
+    }
+
+    private async Task EditTransaction(TransactionDto transaction)
+    {
+        await JSRuntime.InvokeVoidAsync("showEditModal", transaction.Id);
+    }
+
+private async Task DeleteTransaction(int transactionId)
+{
+    bool confirmDelete = await JSRuntime.InvokeAsync<bool>("confirm", "Czy na pewno chcesz usun¹æ tê transakcjê?");
+    if (!confirmDelete)
+        return;
+
+    try
+    {
+        var resp = await TransactionService.DeleteTransactionAsync(transactionId);
+
+        // Jawne rzutowanie, aby odczytaæ w³aœciwoœæ Success (unikniêcie kolizji ze statyczn¹ metod¹ Success)
+        if (!((ApiResponse<object>)resp).Success)
+        {
+            var msg = resp.Message ?? (resp.Errors is { Count: > 0 }
+                ? string.Join(", ", resp.Errors)
+                : "Nie uda³o siê usun¹æ transakcji.");
+
+            Console.WriteLine($"B³¹d podczas usuwania transakcji: {msg}");
+            await JSRuntime.InvokeVoidAsync("alert", $"Wyst¹pi³ b³¹d podczas usuwania transakcji: {msg}");
+            return;
+        }
+
+        await LoadTransactions();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"B³¹d podczas usuwania transakcji: {ex.Message}");
+        await JSRuntime.InvokeVoidAsync("alert", "Wyst¹pi³ b³¹d podczas usuwania transakcji.");
+    }
+}
+private static string BuildErrorMessage<T>(ApiResponse<T> resp)
+        => resp.Message ?? ((resp.Errors != null && resp.Errors.Count > 0) ? string.Join(", ", resp.Errors) : "Wyst¹pi³ b³¹d.");
+
+    private static string BuildErrorMessage(ApiResponse resp)
+        => BuildErrorMessage<object>(resp);
+}

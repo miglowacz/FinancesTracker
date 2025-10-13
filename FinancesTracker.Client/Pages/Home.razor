@@ -1,0 +1,133 @@
+@page "/"
+@using FinancesTracker.Client.Services
+@rendermode InteractiveWebAssembly
+@inject TransactionService TransactionService
+
+<PageTitle>Pulpit - FinancesTracker</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Pulpit finansowy</h1>
+            
+            <!-- Szybkie statystyki -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Dochody w tym miesi¹cu</h5>
+                            <h3 class="card-text">@(summary?.TotalIncome?.ToString("C", polishCulture) ?? "0,00 z³")</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Wydatki w tym miesi¹cu</h5>
+                            <h3 class="card-text">@(summary?.TotalExpenses?.ToString("C", polishCulture) ?? "0,00 z³")</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Bilans</h5>
+                            <h3 class="card-text">@(summary?.Balance?.ToString("C", polishCulture) ?? "0,00 z³")</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body">
+                            <h5 class="card-title">Aktualna data</h5>
+                            <h3 class="card-text">@DateTime.Now.ToString("dd.MM.yyyy")</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Szybkie akcje -->
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Szybkie akcje</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="/transactions" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Dodaj transakcjê
+                                </a>
+                                <a href="/import" class="btn btn-success">
+                                    <i class="fas fa-upload"></i> Importuj z CSV
+                                </a>
+                                <a href="/reports" class="btn btn-info">
+                                    <i class="fas fa-chart-bar"></i> Zobacz raporty
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Wydatki wed³ug kategorii (bie¿¹cy miesi¹c)</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (isLoadingSummary)
+                            {
+                                <div class="text-center">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">£adowanie...</span>
+                                    </div>
+                                </div>
+                            }
+                            else if (summary?.Categories?.Any() == true)
+                            {
+                                @foreach (var category in summary.Categories.Take(5))
+                                {
+                                    <div class="mb-2">
+                                        <div class="d-flex justify-content-between">
+                                            <small>@category.CategoryName</small>
+                                            <small>@Math.Abs(category.Expenses).ToString("C", polishCulture)</small>
+                                        </div>
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: @(Math.Abs(category.Expenses) / Math.Max(summary.TotalExpenses, 1) * 100)%"></div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-muted">Brak danych do wyœwietlenia</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private dynamic? summary;
+    private bool isLoadingSummary = true;
+    private readonly System.Globalization.CultureInfo polishCulture = new("pl-PL");
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSummary();
+    }
+
+    private async Task LoadSummary()
+    {
+        isLoadingSummary = true;
+        var response = await TransactionService.GetSummaryAsync(DateTime.Now.Year, DateTime.Now.Month);
+        if (response.Success && response.Data != null)
+        {
+            summary = response.Data;
+        }
+        isLoadingSummary = false;
+    }
+}

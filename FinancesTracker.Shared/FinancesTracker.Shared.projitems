@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>c78e7588-db39-4a60-b965-ef183a917170</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>FinancesTracker.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Constants\AppConstants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\ApiResponse.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\CategoryDto.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\CategoryRuleDto.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\CsvImportDto.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\PagedResult.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\TransactionDto.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\TransactionFilterDto.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Category.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\CategoryRule.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Subcategory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Transaction.cs" />
+  </ItemGroup>
+</Project>
