@@ -1,0 +1,170 @@
+@page "/category-manager"
+@using FinancesTracker.Client.Services
+@inject cCategoryService CategoryService
+@inject cSubcategoryService SubcategoryService
+@inject cCategoryRuleService CategoryRuleService
+
+<h3>Category & Subcategory Manager</h3>
+
+<!-- Add/Edit Category -->
+<EditForm Model="@newCategory" OnValidSubmit="@AddOrUpdateCategory">
+    <InputText @bind-Value="newCategory.Name" placeholder="Category name" />
+    <button type="submit">@(newCategory.Id == 0 ? "Add Category" : "Update Category")</button>
+</EditForm>
+
+<!-- List Categories -->
+<ul>
+    @foreach (var cat in categories)
+    {
+        <li>
+            @cat.Name
+            <button @onclick="() => EditCategory(cat)">Edit</button>
+            <button @onclick="() => DeleteCategory(cat.Id)">Delete</button>
+        </li>
+    }
+</ul>
+
+<!-- Add/Edit Subcategory -->
+<EditForm Model="@newSubcategory" OnValidSubmit="@AddOrUpdateSubcategory">
+    <InputText @bind-Value="newSubcategory.Name" placeholder="Subcategory name" />
+    <InputSelect @bind-Value="newSubcategory.CategoryId">
+        <option value="">Select Category</option>
+        @foreach (var cat in categories)
+        {
+            <option value="@cat.Id">@cat.Name</option>
+        }
+    </InputSelect>
+    <button type="submit">@(newSubcategory.Id == 0 ? "Add Subcategory" : "Update Subcategory")</button>
+</EditForm>
+
+<!-- List Subcategories -->
+<ul>
+    @foreach (var sub in subcategories)
+    {
+        <li>
+            @sub.Name (@categories.FirstOrDefault(c => c.Id == sub.CategoryId)?.Name)
+            <button @onclick="() => EditSubcategory(sub)">Edit</button>
+            <button @onclick="() => DeleteSubcategory(sub.Id)">Delete</button>
+        </li>
+    }
+</ul>
+
+<!-- Add/Edit Category Rule -->
+<EditForm Model="@newRule" OnValidSubmit="@AddOrUpdateRule">
+    <InputText @bind-Value="newRule.Keyword" placeholder="Keyword" />
+    <InputSelect @bind-Value="newRule.CategoryId">
+        <option value="">Select Category</option>
+        @foreach (var cat in categories)
+        {
+            <option value="@cat.Id">@cat.Name</option>
+        }
+    </InputSelect>
+    <InputSelect @bind-Value="newRule.SubcategoryId">
+        <option value="">Select Subcategory</option>
+        @foreach (var sub in subcategories.Where(s => s.CategoryId == newRule.CategoryId))
+        {
+            <option value="@sub.Id">@sub.Name</option>
+        }
+    </InputSelect>
+    <button type="submit">@(newRule.Id == 0 ? "Add Rule" : "Update Rule")</button>
+</EditForm>
+
+<!-- List Rules -->
+<table>
+    <thead>
+        <tr>
+            <th>Keyword</th>
+            <th>Category</th>
+            <th>Subcategory</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var rule in rules)
+        {
+            <tr>
+                <td>@rule.Keyword</td>
+                <td>@categories.FirstOrDefault(c => c.Id == rule.CategoryId)?.Name</td>
+                <td>@subcategories.FirstOrDefault(s => s.Id == rule.SubcategoryId)?.Name</td>
+                <td>
+                    <button @onclick="() => EditRule(rule)">Edit</button>
+                    <button @onclick="() => DeleteRule(rule.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    List<cCategory> categories = new();
+    List<cSubcategory> subcategories = new();
+    List<cCategoryRule> rules = new();
+
+    cCategory newCategory = new();
+    cSubcategory newSubcategory = new();
+    cCategoryRule newRule = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await CategoryService.GetAllAsync();
+        subcategories = await SubcategoryService.GetAllAsync();
+        rules = await CategoryRuleService.GetAllAsync();
+    }
+
+    async Task AddOrUpdateCategory()
+    {
+        if (newCategory.Id == 0)
+            await CategoryService.AddAsync(newCategory);
+        else
+            await CategoryService.UpdateAsync(newCategory);
+
+        categories = await CategoryService.GetAllAsync();
+        newCategory = new();
+    }
+
+    void EditCategory(cCategory cat) => newCategory = new cCategory { Id = cat.Id, Name = cat.Name };
+
+    async Task DeleteCategory(int id)
+    {
+        await CategoryService.DeleteAsync(id);
+        categories = await CategoryService.GetAllAsync();
+    }
+
+    async Task AddOrUpdateSubcategory()
+    {
+        if (newSubcategory.Id == 0)
+            await SubcategoryService.AddAsync(newSubcategory);
+        else
+            await SubcategoryService.UpdateAsync(newSubcategory);
+
+        subcategories = await SubcategoryService.GetAllAsync();
+        newSubcategory = new();
+    }
+
+    void EditSubcategory(cSubcategory sub) => newSubcategory = new cSubcategory { Id = sub.Id, Name = sub.Name, CategoryId = sub.CategoryId };
+
+    async Task DeleteSubcategory(int id)
+    {
+        await SubcategoryService.DeleteAsync(id);
+        subcategories = await SubcategoryService.GetAllAsync();
+    }
+
+    async Task AddOrUpdateRule()
+    {
+        if (newRule.Id == 0)
+            await CategoryRuleService.AddAsync(newRule);
+        else
+            await CategoryRuleService.UpdateAsync(newRule);
+
+        rules = await CategoryRuleService.GetAllAsync();
+        newRule = new();
+    }
+
+    void EditRule(cCategoryRule rule) => newRule = new cCategoryRule { Id = rule.Id, Keyword = rule.Keyword, CategoryId = rule.CategoryId, SubcategoryId = rule.SubcategoryId };
+
+    async Task DeleteRule(int id)
+    {
+        await CategoryRuleService.DeleteAsync(id);
+        rules = await CategoryRuleService.GetAllAsync();
+    }
+}

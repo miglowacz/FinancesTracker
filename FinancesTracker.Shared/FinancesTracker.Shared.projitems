@@ -11,15 +11,15 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Constants\AppConstants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\ApiResponse.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DTOs\CategoryDto.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\cCategory_DTO.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\CategoryRuleDto.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\CsvImportDto.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\PagedResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\TransactionDto.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\TransactionFilterDto.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Models\Category.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Models\CategoryRule.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Models\Subcategory.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Models\Transaction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\cCategory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\cCategoryRule.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\cSubcategory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\cTransaction.cs" />
   </ItemGroup>
 </Project>

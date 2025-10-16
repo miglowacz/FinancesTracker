@@ -5,7 +5,7 @@ namespace FinancesTracker.Services;
 
 public class MappingService
 {
-    public static TransactionDto ToDto(Transaction transaction)
+    public static TransactionDto ToDto(cTransaction transaction)
     {
         return new TransactionDto
         {
@@ -25,9 +25,9 @@ public class MappingService
         };
     }
 
-    public static Transaction ToEntity(TransactionDto dto)
+    public static cTransaction ToEntity(TransactionDto dto)
     {
-        return new Transaction
+        return new cTransaction
         {
             Id = dto.Id,
             Date = dto.Date,
@@ -43,22 +43,22 @@ public class MappingService
         };
     }
 
-    public static CategoryDto ToDto(Category category)
+    public static cCategory_DTO ToDto(cCategory category)
     {
-        return new CategoryDto
+        return new cCategory_DTO
         {
             Id = category.Id,
             Name = category.Name,
-            Subcategories = category.Subcategories?.Select(s => new SubcategoryDto
+            Subcategories = category.Subcategories?.Select(s => new cSubcategory_DTO
             {
                 Id = s.Id,
                 Name = s.Name,
                 CategoryId = s.CategoryId
-            }).ToList() ?? new List<SubcategoryDto>()
+            }).ToList() ?? new List<cSubcategory_DTO>()
         };
     }
 
-    public static CategoryRuleDto ToDto(CategoryRule rule)
+    public static CategoryRuleDto ToDto(cCategoryRule rule)
     {
         return new CategoryRuleDto
         {
@@ -73,9 +73,9 @@ public class MappingService
         };
     }
 
-    public static CategoryRule ToEntity(CategoryRuleDto dto)
+    public static cCategoryRule ToEntity(CategoryRuleDto dto)
     {
-        return new CategoryRule
+        return new cCategoryRule
         {
             Id = dto.Id,
             Keyword = dto.Keyword.ToLowerInvariant(),

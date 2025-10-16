@@ -10,7 +10,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 // Rejestracja serwisów
 builder.Services.AddScoped<ApiService>();
 builder.Services.AddScoped<TransactionService>();
-builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<cCategoryService>();
 builder.Services.AddScoped<CategoryRuleService>();
 
 await builder.Build().RunAsync();

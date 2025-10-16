@@ -18,7 +18,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<List<CategoryDto>>>> GetCategories()
+    public async Task<ActionResult<ApiResponse<List<cCategory_DTO>>>> GetCategories()
     {
         try
         {
@@ -28,16 +28,16 @@ public class CategoriesController : ControllerBase
                 .ToListAsync();
 
             var result = categories.Select(MappingService.ToDto).ToList();
-            return Ok(ApiResponse<List<CategoryDto>>.SuccessResult(result));
+            return Ok(ApiResponse<List<cCategory_DTO>>.SuccessResult(result));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResponse<List<CategoryDto>>.ErrorResult("B³¹d podczas pobierania kategorii", new List<string> { ex.Message }));
+            return StatusCode(500, ApiResponse<List<cCategory_DTO>>.ErrorResult("B³¹d podczas pobierania kategorii", new List<string> { ex.Message }));
         }
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<ApiResponse<CategoryDto>>> GetCategory(int id)
+    public async Task<ActionResult<ApiResponse<cCategory_DTO>>> GetCategory(int id)
     {
         try
         {
@@ -46,25 +46,25 @@ public class CategoriesController : ControllerBase
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (category == null)
-                return NotFound(ApiResponse<CategoryDto>.ErrorResult("Kategoria nie zosta³a znaleziona"));
+                return NotFound(ApiResponse<cCategory_DTO>.ErrorResult("Kategoria nie zosta³a znaleziona"));
 
-            return Ok(ApiResponse<CategoryDto>.SuccessResult(MappingService.ToDto(category)));
+            return Ok(ApiResponse<cCategory_DTO>.SuccessResult(MappingService.ToDto(category)));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResponse<CategoryDto>.ErrorResult("B³¹d podczas pobierania kategorii", new List<string> { ex.Message }));
+            return StatusCode(500, ApiResponse<cCategory_DTO>.ErrorResult("B³¹d podczas pobierania kategorii", new List<string> { ex.Message }));
         }
     }
 
     [HttpGet("{id}/subcategories")]
-    public async Task<ActionResult<ApiResponse<List<SubcategoryDto>>>> GetSubcategories(int id)
+    public async Task<ActionResult<ApiResponse<List<cSubcategory_DTO>>>> GetSubcategories(int id)
     {
         try
         {
             var subcategories = await _context.Subcategories
                 .Where(s => s.CategoryId == id)
                 .OrderBy(s => s.Name)
-                .Select(s => new SubcategoryDto
+                .Select(s => new cSubcategory_DTO
                 {
                     Id = s.Id,
                     Name = s.Name,
@@ -72,11 +72,11 @@ public class CategoriesController : ControllerBase
                 })
                 .ToListAsync();
 
-            return Ok(ApiResponse<List<SubcategoryDto>>.SuccessResult(subcategories));
+            return Ok(ApiResponse<List<cSubcategory_DTO>>.SuccessResult(subcategories));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResponse<List<SubcategoryDto>>.ErrorResult("B³¹d podczas pobierania podkategorii", new List<string> { ex.Message }));
+            return StatusCode(500, ApiResponse<List<cSubcategory_DTO>>.ErrorResult("B³¹d podczas pobierania podkategorii", new List<string> { ex.Message }));
         }
     }
 }

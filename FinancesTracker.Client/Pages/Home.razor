@@ -1,6 +1,6 @@
 @page "/"
 @using FinancesTracker.Client.Services
-@rendermode InteractiveWebAssembly
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @inject TransactionService TransactionService
 
 <PageTitle>Pulpit - FinancesTracker</PageTitle>

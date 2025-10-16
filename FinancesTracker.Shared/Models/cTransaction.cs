@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinancesTracker.Shared.Models;
 
-public class Transaction
+public class cTransaction
 {
     public int Id { get; set; }
     
@@ -19,10 +19,10 @@ public class Transaction
     public decimal Amount { get; set; }
     
     public int CategoryId { get; set; }
-    public virtual Category Category { get; set; } = null!;
+    public virtual cCategory Category { get; set; } = null!;
     
     public int SubcategoryId { get; set; }
-    public virtual Subcategory Subcategory { get; set; } = null!;
+    public virtual cSubcategory Subcategory { get; set; } = null!;
     
     public int MonthNumber { get; set; }
     public int Year { get; set; }

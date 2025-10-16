@@ -5,7 +5,7 @@
 @using Microsoft.AspNetCore.Components.Web
 @rendermode InteractiveWebAssembly
 @inject TransactionService TransactionService
-@inject CategoryService CategoryService
+@inject cCategoryService CategoryService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Transakcje</PageTitle>
@@ -234,8 +234,8 @@
 
 @code {
     private PagedResult<TransactionDto> transactions = new();
-    private List<CategoryDto> categories = new();
-    private List<SubcategoryDto> subcategories = new();
+    private List<cCategory_DTO> categories = new();
+    private List<cSubcategory_DTO> subcategories = new();
     private TransactionFilterDto Filter = new();
     private bool isLoading = true;
 
@@ -307,11 +307,11 @@
         if (Filter.CategoryId.HasValue)
         {
             var selectedCategory = categories.FirstOrDefault(c => c.Id == Filter.CategoryId.Value);
-            subcategories = selectedCategory?.Subcategories ?? new List<SubcategoryDto>();
+            subcategories = selectedCategory?.Subcategories ?? new List<cSubcategory_DTO>();
         }
         else
         {
-            subcategories = new List<SubcategoryDto>();
+            subcategories = new List<cSubcategory_DTO>();
         }
 
         Filter.SubcategoryId = null;
