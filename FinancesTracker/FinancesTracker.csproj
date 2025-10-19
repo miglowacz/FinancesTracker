@@ -21,6 +21,10 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
   <Import Project="..\FinancesTracker.Shared\FinancesTracker.Shared.projitems" Label="Shared" />
 
 </Project>

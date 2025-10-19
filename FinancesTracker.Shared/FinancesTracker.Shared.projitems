@@ -15,6 +15,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\CategoryRuleDto.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\CsvImportDto.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\PagedResult.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\SummaryDTO.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\TransactionDto.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\TransactionFilterDto.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\cCategory.cs" />

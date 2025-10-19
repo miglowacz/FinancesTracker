@@ -157,21 +157,22 @@ public class FinancesTrackerDbContext : DbContext
 
         modelBuilder.Entity<cSubcategory>().HasData(subcategories);
 
-        // Przyk³adowe regu³y kategoryzacji
+        // Przyk³adowe regu³y kategoryzacji - U¯YJ STA£EJ DATY!
+        var staticDate = new DateTime(2025, 10, 18, 5, 22, 37, 396, DateTimeKind.Utc);
         var categoryRules = new[]
         {
-            new cCategoryRule { Id = 1, Keyword = "wynagrodzenie", CategoryId = 1, SubcategoryId = 1, IsActive = true, CreatedAt = DateTime.UtcNow },
-            new cCategoryRule { Id = 2, Keyword = "pensja", CategoryId = 1, SubcategoryId = 1, IsActive = true, CreatedAt = DateTime.UtcNow },
-            new cCategoryRule { Id = 3, Keyword = "biedronka", CategoryId = 2, SubcategoryId = 5, IsActive = true, CreatedAt = DateTime.UtcNow },
-            new cCategoryRule { Id = 4, Keyword = "¿abka", CategoryId = 2, SubcategoryId = 5, IsActive = true, CreatedAt = DateTime.UtcNow },
-            new cCategoryRule { Id = 5, Keyword = "mcdonald", CategoryId = 2, SubcategoryId = 7, IsActive = true, CreatedAt = DateTime.UtcNow },
-            new cCategoryRule { Id = 6, Keyword = "kfc", CategoryId = 2, SubcategoryId = 7, IsActive = true, CreatedAt = DateTime.UtcNow },
-            new cCategoryRule { Id = 7, Keyword = "orlen", CategoryId = 3, SubcategoryId = 9, IsActive = true, CreatedAt = DateTime.UtcNow },
-            new cCategoryRule { Id = 8, Keyword = "shell", CategoryId = 3, SubcategoryId = 9, IsActive = true, CreatedAt = DateTime.UtcNow },
-            new cCategoryRule { Id = 9, Keyword = "netflix", CategoryId = 4, SubcategoryId = 14, IsActive = true, CreatedAt = DateTime.UtcNow },
-            new cCategoryRule { Id = 10, Keyword = "spotify", CategoryId = 4, SubcategoryId = 14, IsActive = true, CreatedAt = DateTime.UtcNow },
-            new cCategoryRule { Id = 11, Keyword = "apteka", CategoryId = 5, SubcategoryId = 17, IsActive = true, CreatedAt = DateTime.UtcNow },
-            new cCategoryRule { Id = 12, Keyword = "leki", CategoryId = 5, SubcategoryId = 17, IsActive = true, CreatedAt = DateTime.UtcNow }
+            new cCategoryRule { Id = 1, Keyword = "wynagrodzenie", CategoryId = 1, SubcategoryId = 1, IsActive = true, CreatedAt = staticDate },
+            new cCategoryRule { Id = 2, Keyword = "pensja", CategoryId = 1, SubcategoryId = 1, IsActive = true, CreatedAt = staticDate },
+            new cCategoryRule { Id = 3, Keyword = "biedronka", CategoryId = 2, SubcategoryId = 5, IsActive = true, CreatedAt = staticDate },
+            new cCategoryRule { Id = 4, Keyword = "¿abka", CategoryId = 2, SubcategoryId = 5, IsActive = true, CreatedAt = staticDate },
+            new cCategoryRule { Id = 5, Keyword = "mcdonald", CategoryId = 2, SubcategoryId = 7, IsActive = true, CreatedAt = staticDate },
+            new cCategoryRule { Id = 6, Keyword = "kfc", CategoryId = 2, SubcategoryId = 7, IsActive = true, CreatedAt = staticDate },
+            new cCategoryRule { Id = 7, Keyword = "orlen", CategoryId = 3, SubcategoryId = 9, IsActive = true, CreatedAt = staticDate },
+            new cCategoryRule { Id = 8, Keyword = "shell", CategoryId = 3, SubcategoryId = 9, IsActive = true, CreatedAt = staticDate },
+            new cCategoryRule { Id = 9, Keyword = "netflix", CategoryId = 4, SubcategoryId = 14, IsActive = true, CreatedAt = staticDate },
+            new cCategoryRule { Id = 10, Keyword = "spotify", CategoryId = 4, SubcategoryId = 14, IsActive = true, CreatedAt = staticDate },
+            new cCategoryRule { Id = 11, Keyword = "apteka", CategoryId = 5, SubcategoryId = 17, IsActive = true, CreatedAt = staticDate },
+            new cCategoryRule { Id = 12, Keyword = "leki", CategoryId = 5, SubcategoryId = 17, IsActive = true, CreatedAt = staticDate }
         };
 
         modelBuilder.Entity<cCategoryRule>().HasData(categoryRules);

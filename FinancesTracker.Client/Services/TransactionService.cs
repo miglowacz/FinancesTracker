@@ -47,6 +47,12 @@ public class TransactionService
         return await _apiService.GetAsync<object>(endpoint);
     }
 
+    public async Task<ApiResponse<SummaryDTO>> GetSummaryAsync(int year, int month)
+    {
+        var endpoint = $"{AppConstants.ApiEndpoints.Transactions}/summary?year={year}&month={month}";
+        return await _apiService.GetAsync<SummaryDTO>(endpoint);
+    }
+
     private static string BuildQueryString(TransactionFilterDto filter)
     {
         var queryParams = new List<string>();

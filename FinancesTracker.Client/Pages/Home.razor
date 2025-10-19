@@ -16,7 +16,7 @@
                     <div class="card bg-success text-white">
                         <div class="card-body">
                             <h5 class="card-title">Dochody w tym miesi¹cu</h5>
-                            <h3 class="card-text">@(summary?.TotalIncome?.ToString("C", polishCulture) ?? "0,00 z³")</h3>
+              <h3 class="card-text">@(summary?.TotalIncome.ToString("C", polishCulture) ?? "0,00 z³")</h3>
                         </div>
                     </div>
                 </div>
@@ -24,7 +24,7 @@
                     <div class="card bg-danger text-white">
                         <div class="card-body">
                             <h5 class="card-title">Wydatki w tym miesi¹cu</h5>
-                            <h3 class="card-text">@(summary?.TotalExpenses?.ToString("C", polishCulture) ?? "0,00 z³")</h3>
+                            <h3 class="card-text">@(summary?.TotalExpenses.ToString("C", polishCulture) ?? "0,00 z³")</h3>
                         </div>
                     </div>
                 </div>
@@ -32,7 +32,7 @@
                     <div class="card bg-info text-white">
                         <div class="card-body">
                             <h5 class="card-title">Bilans</h5>
-                            <h3 class="card-text">@(summary?.Balance?.ToString("C", polishCulture) ?? "0,00 z³")</h3>
+                            <h3 class="card-text">@(summary?.Balance.ToString("C", polishCulture) ?? "0,00 z³")</h3>
                         </div>
                     </div>
                 </div>
@@ -111,7 +111,7 @@
 </div>
 
 @code {
-    private dynamic? summary;
+    private SummaryDTO? summary;
     private bool isLoadingSummary = true;
     private readonly System.Globalization.CultureInfo polishCulture = new("pl-PL");
 
