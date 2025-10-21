@@ -5,9 +5,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
+
+    <!-- One Bootstrap include is enough -->
     <link rel="stylesheet" href="@(Assets["lib/bootstrap/dist/css/bootstrap.min.css"])" />
-    <link rel="stylesheet" href="@(Assets["app.css"])" />
+
+    <!-- Load the app-level CSS that styles the sidebar/toggler -->
+    <link rel="stylesheet" href="app.css" />
+
+    <!-- Component CSS isolation bundle -->
     <link rel="stylesheet" href="@(Assets["FinancesTracker.styles.css"])" />
+
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
+
     <ImportMap />
     <link rel="icon" type="image/png" href="favicon.png" />
     <HeadOutlet />

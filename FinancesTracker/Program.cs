@@ -2,6 +2,8 @@ using FinancesTracker.Client.Pages;
 using FinancesTracker.Components;
 using FinancesTracker.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Components;
+using FinancesTracker.Client.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +18,25 @@ builder.Services.AddDbContext<FinancesTrackerDbContext>(options =>
 // Dodaj kontrolery Web API
 builder.Services.AddControllers();
 
-// Dodaj HttpClient dla komunikacji Client-Server
+// Dodaj HttpClient dla komunikacji Client-Server (factory)
 builder.Services.AddHttpClient();
+
+// Rejestrowanie typed HttpClient dla serwisów u¿ywanych podczas prerenderingu
+builder.Services.AddHttpClient<cCategoryService>((sp, client) =>
+{
+    var nav = sp.GetRequiredService<NavigationManager>();
+    client.BaseAddress = new Uri(nav.BaseUri);
+});
+builder.Services.AddHttpClient<cSubcategoryService>((sp, client) =>
+{
+    var nav = sp.GetRequiredService<NavigationManager>();
+    client.BaseAddress = new Uri(nav.BaseUri);
+});
+builder.Services.AddHttpClient<cCategoryRuleService>((sp, client) =>
+{
+    var nav = sp.GetRequiredService<NavigationManager>();
+    client.BaseAddress = new Uri(nav.BaseUri);
+});
 
 // Dodaj CORS dla development
 if (builder.Environment.IsDevelopment())
@@ -44,7 +63,6 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
