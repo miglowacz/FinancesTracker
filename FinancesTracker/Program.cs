@@ -11,59 +11,36 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 
-// Dodaj Entity Framework
+//Dodaj Entity Framework
 builder.Services.AddDbContext<FinancesTrackerDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Dodaj kontrolery Web API
+//Dodaj kontrolery Web API
 builder.Services.AddControllers();
 
-// Dodaj HttpClient dla komunikacji Client-Server (factory)
+//Dodaj HttpClient dla komunikacji Client-Server (factory)
 builder.Services.AddHttpClient();
 
-// Rejestrowanie typed HttpClient dla serwisów u¿ywanych podczas prerenderingu
-builder.Services.AddHttpClient<cCategoryService>((sp, client) =>
-{
-    var nav = sp.GetRequiredService<NavigationManager>();
-    client.BaseAddress = new Uri(nav.BaseUri);
-});
-builder.Services.AddHttpClient<cSubcategoryService>((sp, client) =>
-{
-    var nav = sp.GetRequiredService<NavigationManager>();
-    client.BaseAddress = new Uri(nav.BaseUri);
-});
-builder.Services.AddHttpClient<cCategoryRuleService>((sp, client) =>
-{
-    var nav = sp.GetRequiredService<NavigationManager>();
-    client.BaseAddress = new Uri(nav.BaseUri);
-});
-
 // Dodaj CORS dla development
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddCors(options =>
-    {
-        options.AddDefaultPolicy(policy =>
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        });
+if (builder.Environment.IsDevelopment()) {
+  builder.Services.AddCors(options => {
+    options.AddDefaultPolicy(policy => {
+      policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
     });
+  });
 }
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseWebAssemblyDebugging();
-    app.UseCors();
-}
-else
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    app.UseHsts();
+if (app.Environment.IsDevelopment()) {
+  app.UseWebAssemblyDebugging();
+  app.UseCors();
+} else {
+  app.UseExceptionHandler("/Error", createScopeForErrors: true);
+  app.UseHsts();
 }
 
 app.UseHttpsRedirection();

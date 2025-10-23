@@ -2,7 +2,7 @@
 @using FinancesTracker.Client.Services
 @inject cCategoryService CategoryService
 @inject cSubcategoryService SubcategoryService
-@inject cCategoryRuleService CategoryRuleService
+@* @inject cCategoryRuleService CategoryRuleService *@
 
 <h3>Category & Subcategory Manager</h3>
 
@@ -108,7 +108,7 @@
     {
         categories = await CategoryService.GetAllAsync();
         subcategories = await SubcategoryService.GetAllAsync();
-        rules = await CategoryRuleService.GetAllAsync();
+        // rules = await CategoryRuleService.GetAllAsync();
     }
 
     async Task AddOrUpdateCategory()
@@ -151,12 +151,12 @@
 
     async Task AddOrUpdateRule()
     {
-        if (newRule.Id == 0)
-            await CategoryRuleService.AddAsync(newRule);
-        else
-            await CategoryRuleService.UpdateAsync(newRule);
+        // if (newRule.Id == 0)
+        //     await CategoryRuleService.AddAsync(newRule);
+        // else
+        //     await CategoryRuleService.UpdateAsync(newRule);
 
-        rules = await CategoryRuleService.GetAllAsync();
+        // rules = await CategoryRuleService.GetAllAsync();
         newRule = new();
     }
 
@@ -164,7 +164,7 @@
 
     async Task DeleteRule(int id)
     {
-        await CategoryRuleService.DeleteAsync(id);
-        rules = await CategoryRuleService.GetAllAsync();
+        // await CategoryRuleService.DeleteAsync(id);
+        // rules = await CategoryRuleService.GetAllAsync();
     }
 }
