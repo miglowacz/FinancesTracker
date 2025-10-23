@@ -6,8 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FinancesTracker.Controllers;
 
+[Route("api/category")]
 [ApiController]
-[Route("api/[controller]")]
 public class CategoriesController : ControllerBase
 {
     private readonly FinancesTrackerDbContext _context;

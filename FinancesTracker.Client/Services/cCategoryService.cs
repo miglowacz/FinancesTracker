@@ -44,8 +44,13 @@ public class cCategoryService {
 
   }
 
-  public async Task<List<cCategory>> GetAllAsync()
-    => await _http.GetFromJsonAsync<List<cCategory>>("api/category");
+  public async Task<List<cCategory>> GetAllAsync(){
+
+    List<cCategory> pCln = await _http.GetFromJsonAsync<List<cCategory>>("api/category");
+
+    return pCln;
+
+  }
 
   public async Task<cCategory?> GetByIdAsync(int id)
     => await _http.GetFromJsonAsync<cCategory>($"api/category/{id}");
