@@ -8,281 +8,460 @@
 <PageTitle>Kategorie i Podkategorie</PageTitle>
 
 <div class="container py-4">
-    <h3 class="mb-4">Zarz¹dzanie kategoriami i podkategoriami</h3>
-    <div class="row g-4">
-        <!-- Kategorie -->
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    Kategorie
-                </div>
-                <div class="card-body">
-                    <EditForm Model="@mNewCategory" OnValidSubmit="@AddOrUpdateCategory">
-                        <div class="input-group mb-3">
-                            <InputText @bind-Value="mNewCategory.Name" class="form-control" placeholder="Nazwa kategorii" />
-                            <button type="submit" class="btn btn-success">
-                                @(mNewCategory.Id == 0 ? "Dodaj" : "Aktualizuj")
-                            </button>
-                        </div>
-                    </EditForm>
-                    <ul class="list-group">
-                        @foreach (var pCategory in mCategories)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                @pCategory.Name
-                                <span>
-                                    <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => EditCategory(pCategory)">Edytuj</button>
-                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteCategory(pCategory.Id)">Usuñ</button>
-                                </span>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
+  <h3 class="mb-4">Zarz¹dzanie kategoriami i podkategoriami</h3>
+  <!-- Tabs navigation -->
+  <ul class="nav nav-tabs mb-3" id="categoryTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link @(activeTab == "categories" ? "active" : "")"
+              @onclick='() => activeTab = "categories"'
+              type="button" role="tab">
+        Kategorie
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link @(activeTab == "subcategories" ? "active" : "")"
+              @onclick='() => activeTab = "subcategories"'
+              type="button" role="tab">
+        Podkategorie
+      </button>
+    </li>
+  </ul>
+  <div class="tab-content">
+    <!-- Kategorie Tab -->
+    <div class="tab-pane fade @(activeTab == "categories" ? "show active" : "")" role="tabpanel">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <span>Kategorie</span>
+          <button class="btn btn-sm btn-success" @onclick="ShowAddCategoryForm" disabled="@showCategoryForm">Dodaj now¹ kategoriê</button>
         </div>
-        <!-- Podkategorie -->
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-secondary text-white">
-                    Podkategorie
-                </div>
-                <div class="card-body">
-                    <EditForm Model="@mNewSubcategory" OnValidSubmit="@AddOrUpdateSubcategory">
-                        <div class="row g-2 mb-3">
-                            <div class="col">
-                                <InputText @bind-Value="mNewSubcategory.Name" class="form-control" placeholder="Nazwa podkategorii" />
-                            </div>
-                            <div class="col">
-                                <InputSelect @bind-Value="mNewSubcategory.CategoryId" class="form-select">
-                                    <option value="">Wybierz kategoriê</option>
-                                    @foreach (var pCategory in mCategories)
-                                    {
-                                        <option value="@pCategory.Id">@pCategory.Name</option>
-                                    }
-                                </InputSelect>
-                            </div>
-                            <div class="col-auto">
-                                <button type="submit" class="btn btn-success">
-                                    @(mNewSubcategory.Id == 0 ? "Dodaj" : "Aktualizuj")
-                                </button>
-                            </div>
-                        </div>
-                    </EditForm>
-                    <ul class="list-group">
-                        @foreach (var pSubcategory in mSubcategories)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>
-                                    @pSubcategory.Name
-                                    <small class="text-muted ms-2">(@mCategories.FirstOrDefault(pCat => pCat.Id == pSubcategory.CategoryId)?.Name)</small>
-                                </span>
-                                <span>
-                                    <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => EditSubcategory(pSubcategory)">Edytuj</button>
-                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteSubcategory(pSubcategory.Id)">Usuñ</button>
-                                </span>
-                            </li>
-                        }
-                    </ul>
-                </div>
+        <div class="card-body">
+          @if (showCategoryForm)
+          {
+            <div class="card mb-3 border-primary">
+              <div class="card-header bg-primary text-white">
+                @(mNewCategory.Id == 0 ? "Dodaj now¹ kategoriê" : "Edytuj kategoriê")
+              </div>
+              <div class="card-body">
+                <EditForm Model="@mNewCategory" OnValidSubmit="OnValidSubmitCategory">
+                  <div class="mb-3">
+                    <InputText @bind-Value="mNewCategory.Name" class="form-control" placeholder="Nazwa kategorii" />
+                  </div>
+                  <div class="d-flex">
+                    <button type="button" class="btn btn-success me-2" @onclick="ApplyCategory">Apply</button>
+                    <button type="submit" class="btn btn-primary me-2">Zapisz i zamknij</button>
+                    <button type="button" class="btn btn-secondary" @onclick="CancelCategoryForm">Anuluj</button>
+                  </div>
+                </EditForm>
+              </div>
             </div>
+          }
+          <ul class="list-group">
+            @foreach (var pCategory in mCategories) {
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                @pCategory.Name
+                <span>
+                  <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => EditCategory(pCategory)">Edytuj</button>
+                  <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteCategory(pCategory.Id)">Usuñ</button>
+                </span>
+              </li>
+            }
+          </ul>
         </div>
+      </div>
     </div>
-
-    <!-- Regu³y kategorii -->
-    <div class="row g-4 mt-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-info text-white">
-                    Regu³y kategorii
-                </div>
-                <div class="card-body">
-                    <EditForm Model="@mNewRule" OnValidSubmit="@AddOrUpdateRule">
-                        <div class="row g-2 mb-3">
-                            <div class="col-md-4">
-                                <InputText @bind-Value="mNewRule.Keyword" class="form-control" placeholder="S³owo kluczowe" />
-                            </div>
-                            <div class="col-md-4">
-                                <InputSelect @bind-Value="mNewRule.CategoryId" class="form-select">
-                                    <option value="">Wybierz kategoriê</option>
-                                    @foreach (var pCategory in mCategories)
-                                    {
-                                        <option value="@pCategory.Id">@pCategory.Name</option>
-                                    }
-                                </InputSelect>
-                            </div>
-                            <div class="col-md-3">
-                                <InputSelect @bind-Value="mNewRule.SubcategoryId" class="form-select">
-                                    <option value="">Wybierz podkategoriê</option>
-                                    @foreach (var pSub in mSubcategories.Where(pSub => pSub.CategoryId == mNewRule.CategoryId))
-                                    {
-                                        <option value="@pSub.Id">@pSub.Name</option>
-                                    }
-                                </InputSelect>
-                            </div>
-                            <div class="col-md-1 d-grid">
-                                <button type="submit" class="btn btn-success">
-                                    @(mNewRule.Id == 0 ? "Dodaj" : "Aktualizuj")
-                                </button>
-                            </div>
-                        </div>
-                    </EditForm>
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>S³owo kluczowe</th>
-                                    <th>Kategoria</th>
-                                    <th>Podkategoria</th>
-                                    <th>Akcje</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var pRule in mRules)
-                                {
-                                    <tr>
-                                        <td>@pRule.Keyword</td>
-                                        <td>@mCategories.FirstOrDefault(pCat => pCat.Id == pRule.CategoryId)?.Name</td>
-                                        <td>@mSubcategories.FirstOrDefault(pSub => pSub.Id == pRule.SubcategoryId)?.Name</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => EditRule(pRule)">Edytuj</button>
-                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteRule(pRule.Id)">Usuñ</button>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+    <!-- Podkategorie Tab -->
+    <div class="tab-pane fade @(activeTab == "subcategories" ? "show active" : "")" role="tabpanel">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+          <span>Podkategorie</span>
+          <button class="btn btn-sm btn-success" @onclick="ShowAddSubcategoryForm" disabled="@showSubcategoryForm">Dodaj now¹ podkategoriê</button>
+        </div>
+        <div class="card-body">
+          <!-- Filtr kategorii -->
+          <div class="mb-3 row">
+            <label class="col-sm-3 col-form-label">Filtruj wed³ug kategorii:</label>
+            <div class="col-sm-6">
+              <InputSelect @bind-Value="subcategoryFilterCategoryId" class="form-select">
+                <option value="0">Wszystkie</option>
+                @foreach (var cat in mCategories) {
+                  <option value="@cat.Id">@cat.Name</option>
+                }
+              </InputSelect>
+            </div>
+          </div>
+          <!-- Formularz dodawania/edycji podkategorii -->
+          @if (showSubcategoryForm) {
+            <div class="card mb-3 border-primary">
+              <div class="card-header bg-primary text-white">
+                @(mNewSubcategory.Id == 0 ? "Dodaj now¹ podkategoriê" : "Edytuj podkategoriê")
+              </div>
+              <div class="card-body">
+                <EditForm Model="@mNewSubcategory" OnValidSubmit="OnValidSubmitSubcategory">
+                  <div class="row g-2 mb-3">
+                    <div class="col">
+                      <InputText @bind-Value="mNewSubcategory.Name" class="form-control" placeholder="Nazwa podkategorii" />
                     </div>
-                </div>
+                    <div class="col">
+                      <InputSelect @bind-Value="mNewSubcategory.CategoryId" class="form-select">
+                        <option value="0">Wybierz kategoriê</option>
+                        @foreach (var pCategory in mCategories) {
+                          <option value="@pCategory.Id">@pCategory.Name</option>
+                        }
+                      </InputSelect>
+                    </div>
+                  </div>
+                  <div class="d-flex">
+                    <button type="button" class="btn btn-success me-2" @onclick="ApplySubcategory">Apply</button>
+                    <button type="submit" class="btn btn-primary me-2">Zapisz i zamknij</button>
+                    <button type="button" class="btn btn-secondary" @onclick="CancelSubcategoryForm">Anuluj</button>
+                  </div>
+                </EditForm>
+              </div>
             </div>
+          }
+          <!-- Paging controls -->
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>Strona: @subcatPage + 1 / @subcatTotalPages</span>
+            <div>
+              <button class="btn btn-sm btn-outline-secondary me-1" @onclick="PrevSubcatPage" disabled="@(subcatPage == 0)">Poprzednia</button>
+              <button class="btn btn-sm btn-outline-secondary" @onclick="NextSubcatPage" disabled="@(subcatPage >= subcatTotalPages - 1)">Nastêpna</button>
+            </div>
+          </div>
+          <ul class="list-group">
+            @foreach (var pSubcategory in PagedFilteredSubcategories) {
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                  @pSubcategory.Name
+                  <small class="text-muted ms-2">(@mCategories.FirstOrDefault(pCat => pCat.Id == pSubcategory.CategoryId)?.Name)</small>
+                </span>
+                <span>
+                  <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => EditSubcategory(pSubcategory)">Edytuj</button>
+                  <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteSubcategory(pSubcategory.Id)">Usuñ</button>
+                </span>
+              </li>
+            }
+          </ul>
         </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Regu³y kategorii -->
+  <div class="row g-4 mt-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-info text-white">
+          Regu³y kategorii
+        </div>
+        <div class="card-body">
+          @if (!string.IsNullOrEmpty(ruleMessage))
+          {
+            <div class="alert @ruleMessageClass">@ruleMessage</div>
+          }
+          @if (showRuleForm)
+{
+  <div class="card mb-3 border-info">
+    <div class="card-header bg-info text-white">
+      @(mNewRule.Id == 0 ? "Dodaj now¹ regu³ê" : "Edytuj regu³ê")
+    </div>
+    <div class="card-body">
+      <EditForm Model="@mNewRule" OnValidSubmit="OnValidSubmitRule">
+        <div class="row g-2 mb-3">
+          <div class="col-md-3">
+            <InputText @bind-Value="mNewRule.Keyword" class="form-control" placeholder="S³owo kluczowe" />
+          </div>
+          <div class="col-md-3">
+            <InputSelect @bind-Value="mNewRule.CategoryId" class="form-select">
+              <option value="0">Wybierz kategoriê</option>
+              @foreach (var pCategory in mCategories) {
+                <option value="@pCategory.Id">@pCategory.Name</option>
+              }
+            </InputSelect>
+          </div>
+          <div class="col-md-3">
+            <InputSelect @bind-Value="mNewRule.SubcategoryId" class="form-select">
+              <option value="0">Wybierz podkategoriê</option>
+              @foreach (var pSub in mSubcategories.Where(pSub => pSub.CategoryId == mNewRule.CategoryId)) {
+                <option value="@pSub.Id">@pSub.Name</option>
+              }
+            </InputSelect>
+          </div>
+          <div class="col-md-2 d-flex align-items-center">
+            <div class="form-check">
+              <InputCheckbox @bind-Value="mNewRule.IsActive" class="form-check-input" id="isActiveRule" />
+              <label class="form-check-label ms-1" for="isActiveRule">Aktywna</label>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-primary">Zapisz i zamknij</button>
+          <button type="button" class="btn btn-secondary" @onclick="CancelRuleForm">Anuluj</button>
+        </div>
+      </EditForm>
+    </div>
+  </div>
+}
+else
+{
+  <button class="btn btn-sm btn-success mb-3" @onclick="ShowAddRuleForm">Dodaj now¹ regu³ê</button>
+}
+          <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>S³owo kluczowe</th>
+                  <th>Kategoria</th>
+                  <th>Podkategoria</th>
+                  <th>Aktywna</th>
+                  <th>Akcje</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach (var pRule in mRules) {
+                  <tr>
+                    <td>@pRule.Keyword</td>
+                    <td>@mCategories.FirstOrDefault(pCat => pCat.Id == pRule.CategoryId)?.Name</td>
+                    <td>@mSubcategories.FirstOrDefault(pSub => pSub.Id == pRule.SubcategoryId)?.Name</td>
+                    <td>
+                      <InputCheckbox @bind-Value="pRule.IsActive" @onchange="async _ => await ToggleRuleActive(pRule)" />
+                    </td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => EditRule(pRule)">Edytuj</button>
+                      <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteRule(pRule.Id)">Usuñ</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 @code {
-    //lista kategorii
-    private List<cCategory> mCategories = new();
-    //lista podkategorii
-    private List<cSubcategory> mSubcategories = new();
-    //lista regu³ kategorii
-    private List<cCategoryRule> mRules = new();
+  //lista kategorii
+  private List<cCategory> mCategories = new();
+  //lista podkategorii
+  private List<cSubcategory> mSubcategories = new();
+  //lista regu³ kategorii
+  private List<cCategoryRule> mRules = new();
 
-    //nowa kategoria do dodania/edycji
-    private cCategory mNewCategory = new();
-    //nowa podkategoria do dodania/edycji
-    private cSubcategory mNewSubcategory = new();
-    //nowa regu³a do dodania/edycji
-    private cCategoryRule mNewRule = new();
+  //nowa kategoria do dodania/edycji
+  private cCategory mNewCategory = new();
+  //nowa podkategoria do dodania/edycji
+  private cSubcategory mNewSubcategory = new();
+  //nowa regu³a do dodania/edycji
+  private cCategoryRule mNewRule = new();
 
-    //funkcja inicjalizuj¹ca dane po za³adowaniu komponentu
-    protected override async Task OnInitializedAsync() {
-        //pobiera wszystkie kategorie
-        mCategories = await CategoryService.GetAllAsync();
-        //pobiera wszystkie podkategorie
-        mSubcategories = await SubcategoryService.GetAllAsync();
-        //pobiera wszystkie regu³y kategorii
-        mRules = await CategoryRuleService.GetAllAsync();
+  // Tabs state
+  private string activeTab = "categories";
 
+  // Paging for subcategories
+  private int subcatPage = 0;
+  private int subcatPageSize = 10;
+  private int? subcategoryFilterCategoryId = null;
+  private bool showSubcategoryForm = false;
+  private bool showCategoryForm = false;
+  private bool showRuleForm = false;
+
+  private int subcatTotalPages => (int)Math.Ceiling((double)FilteredSubcategories.Count() / subcatPageSize);
+
+  private IEnumerable<cSubcategory> FilteredSubcategories =>
+      !subcategoryFilterCategoryId.HasValue || subcategoryFilterCategoryId == 0
+          ? mSubcategories
+          : mSubcategories.Where(s => s.CategoryId == subcategoryFilterCategoryId.Value);
+
+  private IEnumerable<cSubcategory> PagedFilteredSubcategories =>
+      FilteredSubcategories.Skip(subcatPage * subcatPageSize).Take(subcatPageSize);
+
+  private string? ruleMessage;
+  private string ruleMessageClass = "alert-success";
+
+  protected override async Task OnInitializedAsync() {
+    mCategories = await CategoryService.GetAllAsync();
+    mSubcategories = await SubcategoryService.GetAllAsync();
+    mRules = await CategoryRuleService.GetAllAsync();
+  }
+
+  private void EditCategory(cCategory xCat) {
+    mNewCategory = new cCategory { Id = xCat.Id, Name = xCat.Name };
+    showCategoryForm = true;
+  }
+
+  private async Task DeleteCategory(int xId) {
+    await CategoryService.DeleteCategoryAsync(xId);
+    mCategories = await CategoryService.GetAllAsync();
+  }
+
+  private void ShowAddSubcategoryForm() {
+    mNewSubcategory = new();
+    showSubcategoryForm = true;
+  }
+
+  private void CancelSubcategoryForm() {
+    mNewSubcategory = new();
+    showSubcategoryForm = false;
+  }
+
+  private void ShowAddRuleForm()
+{
+    mNewRule = new();
+    showRuleForm = true;
+}
+
+private void CancelRuleForm()
+{
+    mNewRule = new();
+    showRuleForm = false;
+}
+
+  private async Task OnValidSubmitCategory()
+  {
+    await ApplyCategory();
+    mNewCategory = new();
+    showCategoryForm = false;
+  }
+
+  private async Task AddOrUpdateCategory() // nie u¿ywane ju¿ w EditForm
+  {
+    await OnValidSubmitCategory();
+  }
+
+  private async Task ApplyCategory() {
+    if (mNewCategory.Id == 0)
+      await CategoryService.CreateCategoryAsync(mNewCategory);
+    else
+      await CategoryService.UpdateCategoryAsync(mNewCategory.Id, mNewCategory);
+
+    mCategories = await CategoryService.GetAllAsync();
+    // nie resetuj mNewCategory ani showCategoryForm tutaj, bo to robi OnValidSubmitCategory
+    StateHasChanged();
+  }
+
+  private async Task ApplySubcategory() {
+    if (mNewSubcategory.Id == 0)
+      await SubcategoryService.CreateAsync(mNewSubcategory.CategoryId, mNewSubcategory);
+    else
+      await SubcategoryService.UpdateAsync(mNewSubcategory.Id, mNewSubcategory);
+
+    mSubcategories = await SubcategoryService.GetAllAsync();
+    StateHasChanged();
+  }
+  private void EditSubcategory(cSubcategory xSub) {
+    mNewSubcategory = new cSubcategory {
+      Id = xSub.Id,
+      Name = xSub.Name,
+      CategoryId = xSub.CategoryId
+    };
+    showSubcategoryForm = true;
+  }
+
+  private async Task DeleteSubcategory(int xId) {
+    await SubcategoryService.DeleteAsync(xId);
+    mSubcategories = await SubcategoryService.GetAllAsync();
+    // Przesuñ stronê wstecz, jeœli usuniêcie spowodowa³o pust¹ stronê
+    if (subcatPage >= subcatTotalPages)
+      subcatPage = Math.Max(0, subcatTotalPages - 1);
+  }
+
+
+  private async Task OnValidSubmitSubcategory() {
+    await ApplySubcategory();
+    mNewSubcategory = new();
+    showSubcategoryForm = false;
+    subcatPage = 0;
+  }
+
+  private async Task AddOrUpdateRule() {
+    try {
+      ApiResponse? response = null;
+      if (mNewRule.Id == 0)
+        await CategoryRuleService.AddAsync(mNewRule);
+      else
+        await CategoryRuleService.UpdateAsync(mNewRule);
+
+      mRules = await CategoryRuleService.GetAllAsync();
+      mNewRule = new();
+
+    } catch (Exception ex) {
+      ruleMessage = $"B³¹d: {ex.Message}";
+      ruleMessageClass = "alert-danger";
     }
+  
+  }
 
-    //funkcja dodaje lub aktualizuje kategoriê
-    private async Task AddOrUpdateCategory() {
-        //jeœli Id kategorii jest równe 0, dodaje now¹ kategoriê
-        if (mNewCategory.Id == 0)
-            await CategoryService.AddAsync(mNewCategory);
-        //w przeciwnym razie aktualizuje istniej¹c¹ kategoriê
-        else
-            await CategoryService.UpdateAsync(mNewCategory);
+  //     if (response != null && response.Success) {
+  //       ruleMessage = response.Message ?? "Operacja zakoñczona sukcesem";
+  //       ruleMessageClass = "alert-success";
+  //       mRules = await CategoryRuleService.GetAllAsync();
+  //       mNewRule = new();
+  //     } else {
+  //       ruleMessage = response?.Message ?? "B³¹d operacji";
+  //       ruleMessageClass = "alert-danger";
+  //     }
+  //   } catch (Exception ex) {
+  //     ruleMessage = $"B³¹d: {ex.Message}";
+  //     ruleMessageClass = "alert-danger";
+  //   }
+  // }
 
-        //odœwie¿a listê kategorii
-        mCategories = await CategoryService.GetAllAsync();
-        //czyœci formularz kategorii
-        mNewCategory = new();
+  private void EditRule(cCategoryRule xRule) {
+    mNewRule = new cCategoryRule { Id = xRule.Id, Keyword = xRule.Keyword, CategoryId = xRule.CategoryId, SubcategoryId = xRule.SubcategoryId, IsActive = xRule.IsActive };
+    showRuleForm = true;
+}
 
+  private async Task DeleteRule(int xId) {
+    var response = await CategoryRuleService.DeleteAsync(xId);
+    // if (response.)
+    // {
+      ruleMessage = response.Message ?? "Regu³a usuniêta";
+      ruleMessageClass = "alert-success";
+      mRules = await CategoryRuleService.GetAllAsync();
+    // }
+    // else
+    // {
+    //   ruleMessage = response.Message ?? "B³¹d usuwania regu³y";
+    //   ruleMessageClass = "alert-danger";
+    // }
+  }
+
+  private async Task OnValidSubmitRule() {
+    await AddOrUpdateRule();
+    showRuleForm = false;
+  }
+
+  private async Task ToggleRuleActive(cCategoryRule rule)
+  {
+    rule.IsActive = !rule.IsActive;
+    var response = await CategoryRuleService.UpdateAsync(rule);
+    if (response.Success)
+    {
+      ruleMessage = "Status regu³y zaktualizowany";
+      ruleMessageClass = "alert-success";
+      mRules = await CategoryRuleService.GetAllAsync();
     }
-
-    //funkcja ustawia dane do edycji kategorii
-    private void EditCategory(cCategory xCat) {
-        //xCat - kategoria do edycji
-
-        mNewCategory = new cCategory { Id = xCat.Id, Name = xCat.Name };
-
+    else
+    {
+      ruleMessage = response.Message ?? "B³¹d zmiany statusu";
+      ruleMessageClass = "alert-danger";
     }
+  }
 
-    //funkcja usuwa kategoriê
-    private async Task DeleteCategory(int xId) {
-        //xId - id kategorii do usuniêcia
-
-        await CategoryService.DeleteAsync(xId);
-        //odœwie¿a listê kategorii
-        mCategories = await CategoryService.GetAllAsync();
-
-    }
-
-    //funkcja dodaje lub aktualizuje podkategoriê
-    private async Task AddOrUpdateSubcategory() {
-        //jeœli Id podkategorii jest równe 0, dodaje now¹ podkategoriê
-        if (mNewSubcategory.Id == 0)
-            await SubcategoryService.AddAsync(mNewSubcategory);
-        //w przeciwnym razie aktualizuje istniej¹c¹ podkategoriê
-        else
-            await SubcategoryService.UpdateAsync(mNewSubcategory);
-
-        //odœwie¿a listê podkategorii
-        mSubcategories = await SubcategoryService.GetAllAsync();
-        //czyœci formularz podkategorii
-        mNewSubcategory = new();
-
-    }
-
-    //funkcja ustawia dane do edycji podkategorii
-    private void EditSubcategory(cSubcategory xSub) {
-        //xSub - podkategoria do edycji
-
-        mNewSubcategory = new cSubcategory { Id = xSub.Id, Name = xSub.Name, CategoryId = xSub.CategoryId };
-
-    }
-
-    //funkcja usuwa podkategoriê
-    private async Task DeleteSubcategory(int xId) {
-        //xId - id podkategorii do usuniêcia
-
-        await SubcategoryService.DeleteAsync(xId);
-        //odœwie¿a listê podkategorii
-        mSubcategories = await SubcategoryService.GetAllAsync();
-
-    }
-
-    //funkcja dodaje lub aktualizuje regu³ê kategorii
-    private async Task AddOrUpdateRule() {
-        //jeœli Id regu³y jest równe 0, dodaje now¹ regu³ê
-        if (mNewRule.Id == 0)
-            await CategoryRuleService.AddAsync(mNewRule);
-        //w przeciwnym razie aktualizuje istniej¹c¹ regu³ê
-        else
-            await CategoryRuleService.UpdateAsync(mNewRule);
-
-        //odœwie¿a listê regu³
-        mRules = await CategoryRuleService.GetAllAsync();
-        //czyœci formularz regu³y
-        mNewRule = new();
-
-    }
-
-    //funkcja ustawia dane do edycji regu³y
-    private void EditRule(cCategoryRule xRule) {
-        //xRule - regu³a do edycji
-
-        mNewRule = new cCategoryRule { Id = xRule.Id, Keyword = xRule.Keyword, CategoryId = xRule.CategoryId, SubcategoryId = xRule.SubcategoryId };
-
-    }
-
-    //funkcja usuwa regu³ê kategorii
-    private async Task DeleteRule(int xId) {
-        //xId - id regu³y do usuniêcia
-
-        await CategoryRuleService.DeleteAsync(xId);
-        //odœwie¿a listê regu³
-        mRules = await CategoryRuleService.GetAllAsync();
-
-    }
+  // Paging methods
+  private void PrevSubcatPage() {
+    if (subcatPage > 0) subcatPage--;
+  }
+  private void NextSubcatPage() {
+    if (subcatPage < subcatTotalPages - 1) subcatPage++;
+  }
+  private void ShowAddCategoryForm() {
+    mNewCategory = new();
+    showCategoryForm = true;
+  }
+  private void CancelCategoryForm() {
+    mNewCategory = new();
+    showCategoryForm = false;
+  }
 }
