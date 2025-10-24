@@ -44,12 +44,24 @@ public class cCategoryService {
 
   }
 
-  public async Task<List<cCategory>> GetAllAsync(){
+  public async Task<List<cCategory>> GetAllAsync()
+{
+    var paa = await _http.GetFromJsonAsync<List<cCategory_DTO>>("api/categories");
 
-    List<cCategory> pCln = await _http.GetFromJsonAsync<List<cCategory>>("api/category");
+    // Konwersja DTO -> Model
+    var pCln = paa?.Select(dto => new cCategory
+    {
+        Id = dto.Id,
+        Name = dto.Name,
+        Subcategories = dto.Subcategories?.Select(subDto => new cSubcategory
+        {
+            Id = subDto.Id,
+            Name = subDto.Name,
+            CategoryId = subDto.CategoryId
+        }).ToList() ?? new List<cSubcategory>()
+    }).ToList() ?? new List<cCategory>();
 
     return pCln;
-
   }
 
   public async Task<cCategory?> GetByIdAsync(int id)

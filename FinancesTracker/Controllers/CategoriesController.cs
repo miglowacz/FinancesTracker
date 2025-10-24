@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FinancesTracker.Controllers;
 
-[Route("api/category")]
+[Route("api/categories")]
 [ApiController]
 public class CategoriesController : ControllerBase
 {
