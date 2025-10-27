@@ -297,21 +297,21 @@ public class TransactionsController : ControllerBase
         var errors = new List<string>();
         foreach (var dto in transactions)
         {
-            // SprawdŸ czy kategoria i podkategoria istniej¹
-            var category = await _context.Categories.Include(c => c.Subcategories)
-                .FirstOrDefaultAsync(c => c.Id == dto.CategoryId);
+            //// SprawdŸ czy kategoria i podkategoria istniej¹
+            //var category = await _context.Categories.Include(c => c.Subcategories)
+            //    .FirstOrDefaultAsync(c => c.Id == dto.CategoryId);
 
-            if (category == null)
-            {
-                errors.Add($"Kategoria o ID {dto.CategoryId} nie istnieje (transakcja: {dto.Description})");
-                continue;
-            }
+            //if (category == null)
+            //{
+            //    errors.Add($"Kategoria o ID {dto.CategoryId} nie istnieje (transakcja: {dto.Description})");
+            //    continue;
+            //}
 
-            if (!category.Subcategories.Any(s => s.Id == dto.SubcategoryId))
-            {
-                errors.Add($"Podkategoria o ID {dto.SubcategoryId} nie nale¿y do kategorii {dto.CategoryId} (transakcja: {dto.Description})");
-                continue;
-            }
+            //if (!category.Subcategories.Any(s => s.Id == dto.SubcategoryId))
+            //{
+            //    errors.Add($"Podkategoria o ID {dto.SubcategoryId} nie nale¿y do kategorii {dto.CategoryId} (transakcja: {dto.Description})");
+            //    continue;
+            //}
 
             var entity = MappingService.ToEntity(dto);
             _context.Transactions.Add(entity);

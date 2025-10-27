@@ -7,7 +7,13 @@
 
 @* <InputFile OnChange="OnFileSelected" accept=".csv" style="display:none" @ref="fileInputRef" />
 <button class="btn btn-primary" @onclick="OpenFileDialog">Importuj z CSV</button> *@
-<InputFile OnChange="OnFileSelected" accept=".csv" style="display:none" />
+@* <InputFile OnChange="OnFileSelected" accept=".csv" style="display:none" /> *@
+
+
+<label class="btn btn-sm btn-outline-secondary mb-0">
+  Importuj z CSV
+  <InputFile OnChange="OnFileSelected" accept=".csv" style="display:none" />
+</label>
 
 @if (isImporting)
 {

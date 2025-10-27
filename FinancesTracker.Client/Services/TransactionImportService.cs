@@ -84,13 +84,27 @@ public class TransactionImportService
     return result.ToArray();
   }
 
-  public async Task<bool> ImportTransactionsAsync(List<cTransaction> transactions)
-  {
+  public async Task<bool> ImportTransactionsAsync(List<cTransaction> transactions) {
 
 
+    //List<TransactionDto>
+    //   transactionDtos = transactions.Select(t => new TransactionDto {
+    //     Date = t.Date,
+    //     Description = t.Description,
+    //     Amount = t.Amount,
+    //     BankName = "mbank"
+    //   }).ToList();
 
+    List<TransactionDto> transactionDtos = new();
+    transactionDtos.Add(new TransactionDto {
+      Date = DateTime.Now,
+      Description = "Testowa transakcja",
+      Amount = 100.00m,
+      BankName = "mbank"
+    });
 
-    var response = await _http.PostAsJsonAsync("api/transactions/import", transactions);
+    var response = await _http.PostAsJsonAsync("api/transactions/import",transactionDtos);
+    //var response = await _http.PostAsJsonAsync("api/transactions/import", "test");
 
     return response.IsSuccessStatusCode;
   }

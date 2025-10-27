@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+ï»¿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinancesTracker.Shared.Models;
@@ -18,10 +18,10 @@ public class cTransaction
     [Column(TypeName = "decimal(18,2)")]
     public decimal Amount { get; set; }
     
-    public int CategoryId { get; set; }
+    public int? CategoryId { get; set; }
     public virtual cCategory Category { get; set; } = null!;
     
-    public int SubcategoryId { get; set; }
+    public int? SubcategoryId { get; set; }
     public virtual cSubcategory Subcategory { get; set; } = null!;
     
     public int MonthNumber { get; set; }
@@ -33,7 +33,7 @@ public class cTransaction
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     
-    // W³aœciwoœci pomocnicze dla Blazor (bez mapowania w EF)
+    // WÅ‚aÅ›ciwoÅ›ci pomocnicze dla Blazor (bez mapowania w EF)
     [NotMapped]
     public string MonthName => GetPolishMonthName(MonthNumber);
     
@@ -45,18 +45,18 @@ public class cTransaction
     
     private static string GetPolishMonthName(int month) => month switch
     {
-        1 => "Styczeñ",
+        1 => "StyczeÅ„",
         2 => "Luty", 
         3 => "Marzec",
-        4 => "Kwiecieñ",
+        4 => "KwiecieÅ„",
         5 => "Maj",
         6 => "Czerwiec",
         7 => "Lipiec",
-        8 => "Sierpieñ",
-        9 => "Wrzesieñ",
-        10 => "PaŸdziernik",
+        8 => "SierpieÅ„",
+        9 => "WrzesieÅ„",
+        10 => "PaÅºdziernik",
         11 => "Listopad",
-        12 => "Grudzieñ",
+        12 => "GrudzieÅ„",
         _ => "Nieznany"
     };
 }
