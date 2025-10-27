@@ -288,6 +288,43 @@ public class TransactionsController : ControllerBase
         }
     }
 
+    [HttpPost("import")]
+    public async Task<ActionResult<ApiResponse>> ImportTransactions([FromBody] List<TransactionDto> transactions)
+    {
+        if (transactions == null || !transactions.Any())
+            return BadRequest(ApiResponse.Error("Brak transakcji do zaimportowania"));
+
+        var errors = new List<string>();
+        foreach (var dto in transactions)
+        {
+            // SprawdŸ czy kategoria i podkategoria istniej¹
+            var category = await _context.Categories.Include(c => c.Subcategories)
+                .FirstOrDefaultAsync(c => c.Id == dto.CategoryId);
+
+            if (category == null)
+            {
+                errors.Add($"Kategoria o ID {dto.CategoryId} nie istnieje (transakcja: {dto.Description})");
+                continue;
+            }
+
+            if (!category.Subcategories.Any(s => s.Id == dto.SubcategoryId))
+            {
+                errors.Add($"Podkategoria o ID {dto.SubcategoryId} nie nale¿y do kategorii {dto.CategoryId} (transakcja: {dto.Description})");
+                continue;
+            }
+
+            var entity = MappingService.ToEntity(dto);
+            _context.Transactions.Add(entity);
+        }
+
+        await _context.SaveChangesAsync();
+
+        if (errors.Any())
+            return Ok(ApiResponse.Error("Czêœæ transakcji nie zosta³a zaimportowana", errors));
+
+        return Ok(ApiResponse.Success("Transakcje zosta³y zaimportowane"));
+    }
+
     private async Task<bool> TransactionExistsAsync(int id)
     {
         return await _context.Transactions.AnyAsync(e => e.Id == id);

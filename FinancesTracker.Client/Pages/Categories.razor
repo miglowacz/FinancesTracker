@@ -238,6 +238,11 @@ else
       </div>
     </div>
   </div>
+
+  <label class="btn btn-sm btn-outline-secondary mb-0">
+    Importuj z CSV
+    <InputFile OnChange="OnImportCategories" accept=".csv" style="display:none" />
+  </label>
 </div>
 
 @code {
@@ -464,4 +469,18 @@ private void CancelRuleForm()
     mNewCategory = new();
     showCategoryForm = false;
   }
+
+  private async Task OnImportCategories(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+        using var stream = file.OpenReadStream();
+        await CategoryService.ImportFromCsvAsync(stream, SubcategoryService, CategoryRuleService);
+
+        // Odœwie¿ dane po imporcie
+        mCategories = await CategoryService.GetAllAsync();
+        mSubcategories = await SubcategoryService.GetAllAsync();
+        mRules = await CategoryRuleService.GetAllAsync();
+        StateHasChanged();
+    }
 }

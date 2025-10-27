@@ -101,5 +101,76 @@ public class cCategoryService {
            ?? ApiResponse.Error("Brak odpowiedzi z serwera");
   }
 
+  public async Task ImportFromCsvAsync(
+    Stream csvStream,
+    cSubcategoryService subcategoryService,
+    cCategoryRuleService ruleService)
+  {
 
+
+    using (var reader = new StreamReader(csvStream)) {
+      int lineNo = 0;
+
+      // Pobierz aktualne kategorie i podkategorie do s³owników
+      var categories = await GetAllAsync();
+      var subcategories = await subcategoryService.GetAllAsync();
+      var categoriesDict = categories.ToDictionary(c => c.Name, c => c.Id, StringComparer.OrdinalIgnoreCase);
+      // U¿yj stringa jako klucza: "nazwa_kategorii|nazwa_podkategorii"
+      var subcategoriesDict = subcategories.ToDictionary(
+          s => $"{s.Name}|{s.CategoryId}", s => s.Id, StringComparer.OrdinalIgnoreCase);
+      string? line;
+      while ((line = await reader.ReadLineAsync()) != null){
+         
+        lineNo++;
+        if (lineNo == 1) continue; // pomiñ nag³ówek
+        if (string.IsNullOrWhiteSpace(line)) continue;
+
+        var parts = line.Split(',');
+        if (parts.Length < 3) continue;
+
+        var keyword = parts[0].Trim();
+        var categoryName = parts[1].Trim();
+        var subcategoryName = parts[2].Trim();
+
+        // Kategoria
+        int categoryId;
+        if (!categoriesDict.TryGetValue(categoryName, out categoryId))
+        {
+          var newCat = new cCategory { Name = categoryName };
+          var createdCatResp = await CreateCategoryAsync(newCat);
+          if (createdCatResp?.Data == null)
+            continue; // lub loguj b³¹d
+
+          categoryId = createdCatResp.Data.Id;
+          categoriesDict[categoryName] = categoryId;
+        }
+
+        // Podkategoria
+        int subcategoryId;
+        var subKey = $"{subcategoryName}|{categoryId}";
+        if (!subcategoriesDict.TryGetValue(subKey, out subcategoryId))
+        {
+          var newSub = new cSubcategory { Name = subcategoryName, CategoryId = categoryId };
+          var createdSub = await subcategoryService.CreateAsync(categoryId, newSub);
+          // Za³ó¿, ¿e CreateAsync zwraca cSubcategory lub cSubcategory_DTO z Id
+          subcategoryId = createdSub?.Data.Id ?? 0;
+          if (subcategoryId == 0)
+            continue; // lub loguj b³¹d
+
+          subcategoriesDict[subKey] = subcategoryId;
+        }
+
+        // Regu³a
+        var newRule = new cCategoryRule
+        {
+          Keyword = keyword,
+          CategoryId = categoryId,
+          SubcategoryId = subcategoryId,
+          IsActive = true
+        };
+        await ruleService.AddAsync(newRule);
+      }
+    }
+      
+  }
 }

@@ -1,0 +1,64 @@
+@page "/import"
+@using FinancesTracker.Client.Services
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject TransactionImportService ImportService
+
+@* <InputFile OnChange="OnFileSelected" accept=".csv" style="display:none" @ref="fileInputRef" />
+<button class="btn btn-primary" @onclick="OpenFileDialog">Importuj z CSV</button> *@
+<InputFile OnChange="OnFileSelected" accept=".csv" style="display:none" />
+
+@if (isImporting)
+{
+    <div>
+        <p>Importowanie...</p>
+    </div>
+}
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert alert-info">@message</div>
+}
+
+@code {
+    private ElementReference fileInputRef;
+    private bool isImporting = false;
+    private string? message;
+
+    private async Task OpenFileDialog()
+    {
+        await JS.InvokeVoidAsync("eval", "document.querySelector('[type=file]').click()");
+        // lub lepiej (bezpieczniej):
+        // await JS.InvokeVoidAsync("blazorFileInputClick", fileInputRef);
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        isImporting = true;
+        message = null;
+
+        var file = e.File;
+        if (file == null)
+        {
+            isImporting = false;
+            message = "Nie wybrano pliku.";
+            return;
+        }
+
+        try
+        {
+            using var stream = file.OpenReadStream();
+            var transactions = await ImportService.ImportFromMbankCsvAsync(stream);
+
+            var result = await ImportService.ImportTransactionsAsync(transactions);
+            message = result
+                ? "Transakcje zosta³y zaimportowane!"
+                : "B³¹d podczas importu transakcji.";
+        }
+        catch (Exception ex)
+        {
+            message = $"B³¹d importu: {ex.Message}";
+        }
+        isImporting = false;
+    }
+}

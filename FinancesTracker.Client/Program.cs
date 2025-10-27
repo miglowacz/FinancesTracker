@@ -24,5 +24,9 @@ builder.Services.AddHttpClient<cSubcategoryService>(client => {
 builder.Services.AddHttpClient<cCategoryRuleService>(client => {
   client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 });
+builder.Services.AddHttpClient<TransactionImportService>(client => {
+  client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+});
+//builder.Services.AddScoped<TransactionImportService>();
 
 await builder.Build().RunAsync();
