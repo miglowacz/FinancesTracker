@@ -1,144 +1,152 @@
-using System.Globalization;
+ï»¿using System.Globalization;
 using System.Text;
 using FinancesTracker.Shared.Models;
-using FinancesTracker.Shared.DTOs; // Upewnij siê, ¿e masz DTO
+using FinancesTracker.Shared.DTOs;
 using System.Net.Http.Json;
 
 namespace FinancesTracker.Client.Services;
 
-public class TransactionImportService
-{
-  private readonly HttpClient _http;
+public class TransactionImportService {
 
-  public TransactionImportService(HttpClient http)
-  {
-    _http = http;
+  private readonly HttpClient mHttp;
+
+  public TransactionImportService(HttpClient xHttp) {
+    //xHttp - klient HTTP do komunikacji z API
+
+    mHttp = xHttp;
+
   }
 
-  public async Task<List<cTransaction>> ImportFromMbankCsvAsync(Stream csvStream)
-  {
-    var transactions = new List<cTransaction>();
-    using var reader = new StreamReader(csvStream, Encoding.UTF8, true);
+  public async Task<List<cTransaction>> ImportFromMbankCsvAsync(Stream xCsvStream) {
+    //funkcja importuje transakcje z pliku CSV mbanku
+    //xCsvStream - strumieÅ„ pliku CSV mbanku
 
-    // Przewiñ do nag³ówka kolumn
-    string? line;
-    while ((line = await reader.ReadLineAsync()) != null)
-    {
-      if (line.Trim().StartsWith("#Data operacji")) break;
+    List<cTransaction> pTransactions = new();
+    using StreamReader pReader = new(xCsvStream, Encoding.UTF8, true);
+
+    //przewiÅ„ do nagÅ‚Ã³wka kolumn
+    string? pLine;
+
+    while ((pLine = await pReader.ReadLineAsync()) != null) {
+      if (pLine.Trim().StartsWith("#Data operacji")) break;
     }
 
-    // Parsuj transakcje
-    while ((line = await reader.ReadLineAsync()) != null)
-    {
-      if (string.IsNullOrWhiteSpace(line)) continue;
-      var parts = SplitCsvLine(line);
-      if (parts.Length < 5) continue;
+    //parsuj transakcje
+    while ((pLine = await pReader.ReadLineAsync()) != null) {
+      if (string.IsNullOrWhiteSpace(pLine)) continue;
+      string[] pParts = SplitCsvLine(pLine);
+      if (pParts.Length < 5) continue;
 
-      // Przyk³ad: 2024-01-31;"gopass.travel ...";"Bie¿¹ce ...";"Podró¿e ...";-25,00 PLN;
-      if (!DateTime.TryParse(parts[0], out var date)) continue;
+      //przykÅ‚ad: 2024-01-31;"gopass.travel ...";"BieÅ¼Ä…ce ...";"PodrÃ³Å¼e ...";-25,00 PLN;
+      if (!DateTime.TryParse(pParts[0], out DateTime pDate)) continue;
 
-      var description = parts[1].Trim('"');
-      var account = parts[2].Trim('"');
-      var category = parts[3].Trim('"');
-      var amountStr = parts[4].Replace("PLN", "").Replace(" ", "").Replace("\"", "");
-      if (!decimal.TryParse(amountStr, NumberStyles.Any, new CultureInfo("pl-PL"), out var amount)) continue;
+      string pDescription = pParts[1].Trim('"');
+      string pAccount = pParts[2].Trim('"');
+      string pCategory = pParts[3].Trim('"');
+      string pAmountStr = pParts[4].Replace("PLN", "").Replace(" ", "").Replace("\"", "");
+      if (!decimal.TryParse(pAmountStr, NumberStyles.Any, new CultureInfo("pl-PL"), out decimal pAmount)) continue;
 
-      transactions.Add(new cTransaction
-      {
-        Date = date,
-        Description = description,
-        //Account = account,
-        //Category = category,
-        Amount = amount
+      pTransactions.Add(new cTransaction {
+        Date = pDate,
+        Description = pDescription,
+        //Account = pAccount,
+        //Category = pCategory,
+        Amount = pAmount
       });
     }
 
-    return transactions;
+    return pTransactions;
+
   }
 
-  // Prosty parser CSV z obs³ug¹ pól w cudzys³owie
-  private static string[] SplitCsvLine(string line)
-  {
-    var result = new List<string>();
-    var sb = new StringBuilder();
-    bool inQuotes = false;
+  private static string[] SplitCsvLine(string xLine) {
+    //funkcja dzieli liniÄ™ CSV na czÄ™Å›ci, obsÅ‚uguje pola w cudzysÅ‚owie
+    //xLine - linia tekstu CSV
 
-    foreach (var c in line)
-    {
-      if (c == '"')
-      {
-        inQuotes = !inQuotes;
+    List<string> pResult = new();
+    StringBuilder pSb = new();
+    bool pInQuotes = false;
+
+    foreach (char pC in xLine) {
+      if (pC == '"') {
+        pInQuotes = !pInQuotes;
         continue;
       }
-      if (c == ';' && !inQuotes)
-      {
-        result.Add(sb.ToString());
-        sb.Clear();
-      }
-      else
-      {
-        sb.Append(c);
+      if (pC == ';' && !pInQuotes) {
+        pResult.Add(pSb.ToString());
+        pSb.Clear();
+      } else {
+        pSb.Append(pC);
       }
     }
-    result.Add(sb.ToString());
-    return result.ToArray();
+    pResult.Add(pSb.ToString());
+    return pResult.ToArray();
+
   }
 
-  public async Task<bool> ImportTransactionsAsync(List<cTransaction> transactions) {
+  public async Task<bool> ImportTransactionsAsync(List<cTransaction> xTransactions) {
+    //funkcja importuje listÄ™ transakcji do API
+    //xTransactions - lista transakcji do zaimportowania
 
+    List<TransactionDto> pTransactionDtos = new();
 
-    //List<TransactionDto>
-    //   transactionDtos = transactions.Select(t => new TransactionDto {
-    //     Date = t.Date,
-    //     Description = t.Description,
-    //     Amount = t.Amount,
-    //     BankName = "mbank"
-    //   }).ToList();
+    List<TransactionDto> pDtos = new();
+    foreach (cTransaction pT in xTransactions) {
+      //pobierz CategoryId na podstawie nazwy kategorii
+      //xCategoryNameToId.TryGetValue(pT.Category, out int pCategoryId);
 
-    List<TransactionDto> transactionDtos = new();
-    transactionDtos.Add(new TransactionDto {
-      Date = DateTime.Now,
-      Description = "Testowa transakcja",
-      Amount = 100.00m,
-      BankName = "mbank"
-    });
+      //pobierz SubcategoryId na podstawie CategoryId i nazwy podkategorii (jeÅ›li masz podkategoriÄ™ w cTransaction)
+      //int pSubcategoryId = 0;
+      //if (xSubcategoryKeyToId.TryGetValue((pCategoryId, pT.Subcategory ?? ""), out int pSubId))
+      //  pSubcategoryId = pSubId;
 
-    var response = await _http.PostAsJsonAsync("api/transactions/import",transactionDtos);
-    //var response = await _http.PostAsJsonAsync("api/transactions/import", "test");
+      pDtos.Add(new TransactionDto {
+        Date = pT.Date,
+        Description = pT.Description,
+        Amount = pT.Amount,
+        //CategoryId = pCategoryId,
+        //SubcategoryId = pSubcategoryId,
+        BankName = "mbank"
+      });
+    }
+    var pResponse = await mHttp.PostAsJsonAsync("api/transactions/import", pDtos);
 
-    return response.IsSuccessStatusCode;
+    return pResponse.IsSuccessStatusCode;
+
   }
 
   public async Task<bool> ImportTransactionsAsync(
-    List<cTransaction> transactions,
-    Dictionary<string, int> categoryNameToId,
-    Dictionary<(int categoryId, string subcategoryName), int> subcategoryKeyToId)
-  {
-    // Mapowanie cTransaction na TransactionDto
-    var dtos = new List<TransactionDto>();
-    foreach (var t in transactions)
-    {
-      // Pobierz CategoryId na podstawie nazwy kategorii
-      //categoryNameToId.TryGetValue(t.Category, out var categoryId);
+    List<cTransaction> xTransactions,
+    Dictionary<string, int> xCategoryNameToId,
+    Dictionary<(int xCategoryId, string xSubcategoryName), int> xSubcategoryKeyToId) {
+    //funkcja importuje transakcje z mapowaniem kategorii i podkategorii
+    //xTransactions - lista transakcji do zaimportowania
+    //xCategoryNameToId - sÅ‚ownik mapujÄ…cy nazwÄ™ kategorii na jej ID
+    //xSubcategoryKeyToId - sÅ‚ownik mapujÄ…cy (ID kategorii, nazwa podkategorii) na ID podkategorii
 
-      //// Pobierz SubcategoryId na podstawie CategoryId i nazwy podkategorii (jeœli masz podkategoriê w cTransaction)
-      //// Jeœli nie masz podkategorii, mo¿esz pomin¹æ lub ustawiæ na 0
-      //int subcategoryId = 0;
-      //if (subcategoryKeyToId.TryGetValue((categoryId, t.Subcategory ?? ""), out var subId))
-      //  subcategoryId = subId;
+    List<TransactionDto> pDtos = new();
+    foreach (cTransaction pT in xTransactions) {
+      //pobierz CategoryId na podstawie nazwy kategorii
+      //xCategoryNameToId.TryGetValue(pT.Category, out int pCategoryId);
 
-      dtos.Add(new TransactionDto
-      {
-        Date = t.Date,
-        Description = t.Description,
-        Amount = t.Amount,
-        //CategoryId = categoryId,
-        //SubcategoryId = subcategoryId,
+      //pobierz SubcategoryId na podstawie CategoryId i nazwy podkategorii (jeÅ›li masz podkategoriÄ™ w cTransaction)
+      //int pSubcategoryId = 0;
+      //if (xSubcategoryKeyToId.TryGetValue((pCategoryId, pT.Subcategory ?? ""), out int pSubId))
+      //  pSubcategoryId = pSubId;
+
+      pDtos.Add(new TransactionDto {
+        Date = pT.Date,
+        Description = pT.Description,
+        Amount = pT.Amount,
+        //CategoryId = pCategoryId,
+        //SubcategoryId = pSubcategoryId,
         BankName = "mbank"
       });
     }
 
-    var response = await _http.PostAsJsonAsync("api/transactions/import", dtos);
-    return response.IsSuccessStatusCode;
+    var pResponse = await mHttp.PostAsJsonAsync("api/transactions/import", pDtos);
+
+    return pResponse.IsSuccessStatusCode;
+
   }
 }

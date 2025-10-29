@@ -4,6 +4,7 @@
 - Wszystkie komentarze piszemy w języku polskim.
 - Komentarze zawsze zaczynają się małą literą, bez spacji po `//`.
 - Każda funkcja musi mieć komentarz opisujący jej działanie. Komentarze działania funkcji mają znajdować sie wewnątrz funkcji, patrz jak wygląda to w przykładzie Refresh_gdcOffers_AddSingleRow.
+- ważne, żeby komentarze działania funkcji zawsze były wewnątrz funkcji, niezelżnie, czy funkcja opatrzona jest atrybutami, czy nie.
 - Każdy parametr funkcji również musi być opisany w osobnej linii komentarza.
 
 ## 🧾 Nazewnictwo zmiennych

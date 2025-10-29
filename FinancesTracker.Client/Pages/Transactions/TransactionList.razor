@@ -1,9 +1,9 @@
-@page "/transactions"
+Ôªø@page "/transactions"
 @using FinancesTracker.Client.Services
 @using FinancesTracker.Shared.DTOs
 @using FinancesTracker.Shared.Constants
 @using Microsoft.AspNetCore.Components.Web
-@rendermode InteractiveWebAssembly
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @inject cTransactionService TransactionService
 @inject cCategoryService CategoryService
 @inject IJSRuntime JSRuntime
@@ -16,7 +16,7 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>Transakcje finansowe</h2>
                 <button class="btn btn-primary" @onclick="ShowAddTransactionModal">
-                    <i class="fas fa-plus"></i> Dodaj transakcjÍ
+                    <i class="fas fa-plus"></i> Dodaj transakcjƒô
                 </button>
             </div>
 
@@ -38,7 +38,7 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Miesiπc</label>
+                            <label class="form-label">MiesiƒÖc</label>
                             <select class="form-select" @bind="Filter.Month" @bind:after="OnFilterChanged">
                                 <option value="">Wszystkie</option>
                                 @foreach (var month in AppConstants.Months.Polish)
@@ -96,7 +96,7 @@
             {
                 <div class="text-center p-4">
                     <div class="spinner-border" role="status">
-                        <span class="visually-hidden">£adowanie...</span>
+                        <span class="visually-hidden">≈Åadowanie...</span>
                     </div>
                 </div>
             }
@@ -210,7 +210,7 @@
                             <div class="text-center mt-2">
                                 <small class="text-muted">
                                     Strona @Filter.PageNumber z @transactions.TotalPages 
-                                    (wyúwietlane @((Filter.PageNumber - 1) * Filter.PageSize + 1)-@Math.Min(Filter.PageNumber * Filter.PageSize, transactions.TotalCount) 
+                                    (wy≈õwietlane @((Filter.PageNumber - 1) * Filter.PageSize + 1)-@Math.Min(Filter.PageNumber * Filter.PageSize, transactions.TotalCount) 
                                     z @transactions.TotalCount transakcji)
                                 </small>
                             </div>
@@ -224,7 +224,7 @@
                     <div class="card-body text-center py-5">
                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">Brak transakcji</h5>
-                        <p class="text-muted">Nie znaleziono transakcji spe≥niajπcych kryteria wyszukiwania.</p>
+                        <p class="text-muted">Nie znaleziono transakcji spe≈ÇniajƒÖcych kryteria wyszukiwania.</p>
                     </div>
                 </div>
             }
@@ -252,7 +252,7 @@
             var resp = await CategoryService.GetCategoriesAsync();
             if (!resp.Success)
             {
-                Console.WriteLine($"B≥πd podczas ≥adowania kategorii: {BuildErrorMessage(resp)}");
+                Console.WriteLine($"B≈ÇƒÖd podczas ≈Çadowania kategorii: {BuildErrorMessage(resp)}");
                 categories = new();
                 return;
             }
@@ -261,7 +261,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"B≥πd podczas ≥adowania kategorii: {ex.Message}");
+            Console.WriteLine($"B≈ÇƒÖd podczas ≈Çadowania kategorii: {ex.Message}");
             categories = new();
         }
     }
@@ -276,7 +276,7 @@
             var resp = await TransactionService.GetTransactionsAsync(Filter);
             if (!resp.Success)
             {
-                Console.WriteLine($"B≥πd podczas ≥adowania transakcji: {BuildErrorMessage(resp)}");
+                Console.WriteLine($"B≈ÇƒÖd podczas ≈Çadowania transakcji: {BuildErrorMessage(resp)}");
                 transactions = new PagedResult<TransactionDto>();
             }
             else
@@ -286,7 +286,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"B≥πd podczas ≥adowania transakcji: {ex.Message}");
+            Console.WriteLine($"B≈ÇƒÖd podczas ≈Çadowania transakcji: {ex.Message}");
             transactions = new PagedResult<TransactionDto>();
         }
         finally
@@ -364,7 +364,7 @@
 
 private async Task DeleteTransaction(int transactionId)
 {
-    bool confirmDelete = await JSRuntime.InvokeAsync<bool>("confirm", "Czy na pewno chcesz usunπÊ tÍ transakcjÍ?");
+    bool confirmDelete = await JSRuntime.InvokeAsync<bool>("confirm", "Czy na pewno chcesz usunƒÖƒá tƒô transakcjƒô?");
     if (!confirmDelete)
         return;
 
@@ -372,15 +372,15 @@ private async Task DeleteTransaction(int transactionId)
     {
         var resp = await TransactionService.DeleteTransactionAsync(transactionId);
 
-        // Jawne rzutowanie, aby odczytaÊ w≥aúciwoúÊ Success (unikniÍcie kolizji ze statycznπ metodπ Success)
+        // Jawne rzutowanie, aby odczytaƒá w≈Ça≈õciwo≈õƒá Success (unikniƒôcie kolizji ze statycznƒÖ metodƒÖ Success)
         if (!((ApiResponse<object>)resp).Success)
         {
             var msg = resp.Message ?? (resp.Errors is { Count: > 0 }
                 ? string.Join(", ", resp.Errors)
-                : "Nie uda≥o siÍ usunπÊ transakcji.");
+                : "Nie uda≈Ço siƒô usunƒÖƒá transakcji.");
 
-            Console.WriteLine($"B≥πd podczas usuwania transakcji: {msg}");
-            await JSRuntime.InvokeVoidAsync("alert", $"Wystπpi≥ b≥πd podczas usuwania transakcji: {msg}");
+            Console.WriteLine($"B≈ÇƒÖd podczas usuwania transakcji: {msg}");
+            await JSRuntime.InvokeVoidAsync("alert", $"WystƒÖpi≈Ç b≈ÇƒÖd podczas usuwania transakcji: {msg}");
             return;
         }
 
@@ -388,12 +388,12 @@ private async Task DeleteTransaction(int transactionId)
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"B≥πd podczas usuwania transakcji: {ex.Message}");
-        await JSRuntime.InvokeVoidAsync("alert", "Wystπpi≥ b≥πd podczas usuwania transakcji.");
+        Console.WriteLine($"B≈ÇƒÖd podczas usuwania transakcji: {ex.Message}");
+        await JSRuntime.InvokeVoidAsync("alert", "WystƒÖpi≈Ç b≈ÇƒÖd podczas usuwania transakcji.");
     }
 }
 private static string BuildErrorMessage<T>(ApiResponse<T> resp)
-        => resp.Message ?? ((resp.Errors != null && resp.Errors.Count > 0) ? string.Join(", ", resp.Errors) : "Wystπpi≥ b≥πd.");
+        => resp.Message ?? ((resp.Errors != null && resp.Errors.Count > 0) ? string.Join(", ", resp.Errors) : "WystƒÖpi≈Ç b≈ÇƒÖd.");
 
     private static string BuildErrorMessage(ApiResponse resp)
         => BuildErrorMessage<object>(resp);

@@ -3,6 +3,7 @@ using System;
 using FinancesTracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinancesTracker.Migrations
 {
     [DbContext(typeof(FinancesTrackerDbContext))]
-    partial class FinancesTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251029122328_Changed null constraint")]
+    partial class Changednullconstraint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

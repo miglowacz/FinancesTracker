@@ -1,4 +1,4 @@
-using FinancesTracker.Data;
+ï»¿using FinancesTracker.Data;
 using FinancesTracker.Services;
 using FinancesTracker.Shared.DTOs;
 using FinancesTracker.Shared.Models;
@@ -9,324 +9,303 @@ namespace FinancesTracker.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TransactionsController : ControllerBase
-{
-    private readonly FinancesTrackerDbContext _context;
+public class TransactionsController : ControllerBase {
+  private readonly FinancesTrackerDbContext mContext;
 
-    public TransactionsController(FinancesTrackerDbContext context)
-    {
-        _context = context;
+  public TransactionsController(FinancesTrackerDbContext xContext) {
+    //konstruktor kontrolera transakcji
+    //xContext - kontekst bazy danych
+
+    mContext = xContext;
+
+  }
+
+  [HttpGet]
+  public async Task<ActionResult<ApiResponse<PagedResult<TransactionDto>>>> GetTransactions([FromQuery] TransactionFilterDto xFilter) {
+    //funkcja pobiera listÄ™ transakcji z filtrowaniem, sortowaniem i paginacjÄ…
+    //xFilter - obiekt filtrujÄ…cy transakcje
+
+    var pQuery = mContext.Transactions
+        .Include(t => t.Category)
+        .Include(t => t.Subcategory)
+        .AsQueryable();
+
+    //filtrowanie po roku
+    if (xFilter.Year.HasValue)
+      pQuery = pQuery.Where(t => t.Year == xFilter.Year.Value);
+
+    //filtrowanie po miesiÄ…cu
+    if (xFilter.Month.HasValue)
+      pQuery = pQuery.Where(t => t.MonthNumber == xFilter.Month.Value);
+
+    //filtrowanie po kategorii
+    if (xFilter.CategoryId.HasValue)
+      pQuery = pQuery.Where(t => t.CategoryId == xFilter.CategoryId.Value);
+
+    //filtrowanie po podkategorii
+    if (xFilter.SubcategoryId.HasValue)
+      pQuery = pQuery.Where(t => t.SubcategoryId == xFilter.SubcategoryId.Value);
+
+    //filtrowanie po minimalnej kwocie
+    if (xFilter.MinAmount.HasValue)
+      pQuery = pQuery.Where(t => t.Amount >= xFilter.MinAmount.Value);
+
+    //filtrowanie po maksymalnej kwocie
+    if (xFilter.MaxAmount.HasValue)
+      pQuery = pQuery.Where(t => t.Amount <= xFilter.MaxAmount.Value);
+
+    //filtrowanie po dacie poczÄ…tkowej
+    if (xFilter.StartDate.HasValue)
+      pQuery = pQuery.Where(t => t.Date >= xFilter.StartDate.Value);
+
+    //filtrowanie po dacie koÅ„cowej
+    if (xFilter.EndDate.HasValue)
+      pQuery = pQuery.Where(t => t.Date <= xFilter.EndDate.Value);
+
+    //filtrowanie po opisie
+    if (!string.IsNullOrEmpty(xFilter.SearchTerm))
+      pQuery = pQuery.Where(t => t.Description.Contains(xFilter.SearchTerm));
+
+    //filtrowanie po nazwie banku
+    if (!string.IsNullOrEmpty(xFilter.BankName))
+      pQuery = pQuery.Where(t => t.BankName == xFilter.BankName);
+
+    //sortowanie wedÅ‚ug wybranego pola
+    pQuery = xFilter.SortBy?.ToLower() switch {
+      "description" => xFilter.SortDescending
+          ? pQuery.OrderByDescending(t => t.Description)
+          : pQuery.OrderBy(t => t.Description),
+      "amount" => xFilter.SortDescending
+          ? pQuery.OrderByDescending(t => t.Amount)
+          : pQuery.OrderBy(t => t.Amount),
+      "category" => xFilter.SortDescending
+          ? pQuery.OrderByDescending(t => t.Category.Name)
+          : pQuery.OrderBy(t => t.Category.Name),
+      _ => xFilter.SortDescending
+          ? pQuery.OrderByDescending(t => t.Date)
+          : pQuery.OrderBy(t => t.Date)
+    };
+
+    //pobiera liczbÄ™ wszystkich pasujÄ…cych transakcji
+    int pTotalCount = await pQuery.CountAsync();
+
+    //pobiera transakcje z paginacjÄ…
+    var pTransactions = await pQuery
+        .Skip((xFilter.PageNumber - 1) * xFilter.PageSize)
+        .Take(xFilter.PageSize)
+        .ToListAsync();
+
+    //tworzy wynik z transakcjami i informacjami o paginacji
+    var pResult = new PagedResult<TransactionDto> {
+      Items = pTransactions.Select(MappingService.ToDto).ToList(),
+      TotalCount = pTotalCount,
+      PageNumber = xFilter.PageNumber,
+      PageSize = xFilter.PageSize
+    };
+
+    return Ok(ApiResponse<PagedResult<TransactionDto>>.SuccessResult(pResult));
+
+  }
+
+  [HttpGet("{id}")]
+  public async Task<ActionResult<ApiResponse<TransactionDto>>> GetTransaction(int xId) {
+    //funkcja pobiera pojedynczÄ… transakcjÄ™ po id
+    //xId - identyfikator transakcji
+
+    var pTransaction = await mContext.Transactions
+        .Include(t => t.Category)
+        .Include(t => t.Subcategory)
+        .FirstOrDefaultAsync(t => t.Id == xId);
+
+    if (pTransaction == null)
+      return NotFound(ApiResponse<TransactionDto>.ErrorResult("Transakcja nie zostaÅ‚a znaleziona"));
+
+    return Ok(ApiResponse<TransactionDto>.SuccessResult(MappingService.ToDto(pTransaction)));
+
+  }
+
+  [HttpPost]
+  public async Task<ActionResult<ApiResponse<TransactionDto>>> CreateTransaction(TransactionDto xTransactionDto) {
+    //funkcja tworzy nowÄ… transakcjÄ™
+    //xTransactionDto - dane nowej transakcji
+
+    if (!ModelState.IsValid) {
+      var pErrors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Dane transakcji sÄ… nieprawidÅ‚owe", pErrors));
     }
 
-    [HttpGet]
-    public async Task<ActionResult<ApiResponse<PagedResult<TransactionDto>>>> GetTransactions([FromQuery] TransactionFilterDto filter)
-    {
-        try
-        {
-            var query = _context.Transactions
-                .Include(t => t.Category)
-                .Include(t => t.Subcategory)
-                .AsQueryable();
+    //sprawdza czy kategoria i podkategoria istniejÄ…
+    var pCategory = await mContext.Categories.Include(c => c.Subcategories)
+        .FirstOrDefaultAsync(c => c.Id == xTransactionDto.CategoryId);
 
-            // Filtrowanie
-            if (filter.Year.HasValue)
-                query = query.Where(t => t.Year == filter.Year.Value);
+    if (pCategory == null)
+      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Wybrana kategoria nie istnieje"));
 
-            if (filter.Month.HasValue)
-                query = query.Where(t => t.MonthNumber == filter.Month.Value);
+    if (!pCategory.Subcategories.Any(s => s.Id == xTransactionDto.SubcategoryId))
+      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Wybrana podkategoria nie naleÅ¼y do wybranej kategorii"));
 
-            if (filter.CategoryId.HasValue)
-                query = query.Where(t => t.CategoryId == filter.CategoryId.Value);
+    var pTransaction = MappingService.ToEntity(xTransactionDto);
+    mContext.Transactions.Add(pTransaction);
+    await mContext.SaveChangesAsync();
 
-            if (filter.SubcategoryId.HasValue)
-                query = query.Where(t => t.SubcategoryId == filter.SubcategoryId.Value);
+    //pobiera utworzonÄ… transakcjÄ™ z relacjami
+    var pCreatedTransaction = await mContext.Transactions
+        .Include(t => t.Category)
+        .Include(t => t.Subcategory)
+        .FirstAsync(t => t.Id == pTransaction.Id);
 
-            if (filter.MinAmount.HasValue)
-                query = query.Where(t => t.Amount >= filter.MinAmount.Value);
+    return CreatedAtAction(nameof(GetTransaction),
+        new { id = pTransaction.Id },
+        ApiResponse<TransactionDto>.SuccessResult(MappingService.ToDto(pCreatedTransaction), "Transakcja zostaÅ‚a utworzona"));
 
-            if (filter.MaxAmount.HasValue)
-                query = query.Where(t => t.Amount <= filter.MaxAmount.Value);
+  }
 
-            if (filter.StartDate.HasValue)
-                query = query.Where(t => t.Date >= filter.StartDate.Value);
+  [HttpPut("{id}")]
+  public async Task<ActionResult<ApiResponse<TransactionDto>>> UpdateTransaction(int xId, TransactionDto xTransactionDto) {
+    //funkcja aktualizuje istniejÄ…cÄ… transakcjÄ™
+    //xId - identyfikator transakcji
+    //xTransactionDto - dane do aktualizacji transakcji
 
-            if (filter.EndDate.HasValue)
-                query = query.Where(t => t.Date <= filter.EndDate.Value);
+    if (xId != xTransactionDto.Id)
+      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("ID transakcji nie pasuje"));
 
-            if (!string.IsNullOrEmpty(filter.SearchTerm))
-                query = query.Where(t => t.Description.Contains(filter.SearchTerm));
-
-            if (!string.IsNullOrEmpty(filter.BankName))
-                query = query.Where(t => t.BankName == filter.BankName);
-
-            // Sortowanie
-            query = filter.SortBy?.ToLower() switch
-            {
-                "description" => filter.SortDescending 
-                    ? query.OrderByDescending(t => t.Description)
-                    : query.OrderBy(t => t.Description),
-                "amount" => filter.SortDescending
-                    ? query.OrderByDescending(t => t.Amount)
-                    : query.OrderBy(t => t.Amount),
-                "category" => filter.SortDescending
-                    ? query.OrderByDescending(t => t.Category.Name)
-                    : query.OrderBy(t => t.Category.Name),
-                _ => filter.SortDescending
-                    ? query.OrderByDescending(t => t.Date)
-                    : query.OrderBy(t => t.Date)
-            };
-
-            // Paginacja
-            var totalCount = await query.CountAsync();
-            var transactions = await query
-                .Skip((filter.PageNumber - 1) * filter.PageSize)
-                .Take(filter.PageSize)
-                .ToListAsync();
-
-            var result = new PagedResult<TransactionDto>
-            {
-                Items = transactions.Select(MappingService.ToDto).ToList(),
-                TotalCount = totalCount,
-                PageNumber = filter.PageNumber,
-                PageSize = filter.PageSize
-            };
-
-            return Ok(ApiResponse<PagedResult<TransactionDto>>.SuccessResult(result));
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ApiResponse<PagedResult<TransactionDto>>.ErrorResult("B³¹d podczas pobierania transakcji", new List<string> { ex.Message }));
-        }
+    if (!ModelState.IsValid) {
+      var pErrors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Dane transakcji sÄ… nieprawidÅ‚owe", pErrors));
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<ApiResponse<TransactionDto>>> GetTransaction(int id)
-    {
-        try
-        {
-            var transaction = await _context.Transactions
-                .Include(t => t.Category)
-                .Include(t => t.Subcategory)
-                .FirstOrDefaultAsync(t => t.Id == id);
+    var pExistingTransaction = await mContext.Transactions.FindAsync(xId);
+    if (pExistingTransaction == null)
+      return NotFound(ApiResponse<TransactionDto>.ErrorResult("Transakcja nie zostaÅ‚a znaleziona"));
 
-            if (transaction == null)
-                return NotFound(ApiResponse<TransactionDto>.ErrorResult("Transakcja nie zosta³a znaleziona"));
+    //sprawdza czy kategoria i podkategoria istniejÄ…
+    var pCategory = await mContext.Categories.Include(c => c.Subcategories)
+        .FirstOrDefaultAsync(c => c.Id == xTransactionDto.CategoryId);
 
-            return Ok(ApiResponse<TransactionDto>.SuccessResult(MappingService.ToDto(transaction)));
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ApiResponse<TransactionDto>.ErrorResult("B³¹d podczas pobierania transakcji", new List<string> { ex.Message }));
-        }
+    if (pCategory == null)
+      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Wybrana kategoria nie istnieje"));
+
+    if (!pCategory.Subcategories.Any(s => s.Id == xTransactionDto.SubcategoryId))
+      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Wybrana podkategoria nie naleÅ¼y do wybranej kategorii"));
+
+    //aktualizuje wÅ‚aÅ›ciwoÅ›ci transakcji
+    pExistingTransaction.Date = xTransactionDto.Date;
+    pExistingTransaction.Description = xTransactionDto.Description;
+    pExistingTransaction.Amount = xTransactionDto.Amount;
+    pExistingTransaction.CategoryId = xTransactionDto.CategoryId;
+    pExistingTransaction.SubcategoryId = xTransactionDto.SubcategoryId;
+    pExistingTransaction.BankName = xTransactionDto.BankName;
+    pExistingTransaction.MonthNumber = xTransactionDto.Date.Month;
+    pExistingTransaction.Year = xTransactionDto.Date.Year;
+    pExistingTransaction.UpdatedAt = DateTime.UtcNow;
+
+    await mContext.SaveChangesAsync();
+
+    //pobiera zaktualizowanÄ… transakcjÄ™ z relacjami
+    var pUpdatedTransaction = await mContext.Transactions
+        .Include(t => t.Category)
+        .Include(t => t.Subcategory)
+        .FirstAsync(t => t.Id == xId);
+
+    return Ok(ApiResponse<TransactionDto>.SuccessResult(MappingService.ToDto(pUpdatedTransaction), "Transakcja zostaÅ‚a zaktualizowana"));
+
+  }
+
+  [HttpDelete("{id}")]
+  public async Task<ActionResult<ApiResponse>> DeleteTransaction(int xId) {
+    //funkcja usuwa transakcjÄ™ po id
+    //xId - identyfikator transakcji do usuniÄ™cia
+
+    var pTransaction = await mContext.Transactions.FindAsync(xId);
+    if (pTransaction == null)
+      return NotFound(ApiResponse.Error("Transakcja nie zostaÅ‚a znaleziona"));
+
+    mContext.Transactions.Remove(pTransaction);
+    await mContext.SaveChangesAsync();
+
+    return Ok(ApiResponse.Success("Transakcja zostaÅ‚a usuniÄ™ta"));
+
+  }
+
+  [HttpGet("summary")]
+  public async Task<ActionResult<ApiResponse<object>>> GetSummary(int xYear, int? xMonth = null) {
+    //funkcja pobiera podsumowanie transakcji dla danego roku i opcjonalnie miesiÄ…ca
+    //xYear - rok podsumowania
+    //xMonth - opcjonalny miesiÄ…c podsumowania
+
+    var pQuery = mContext.Transactions
+        .Include(t => t.Category)
+        .Where(t => t.Year == xYear);
+
+    if (xMonth.HasValue)
+      pQuery = pQuery.Where(t => t.MonthNumber == xMonth.Value);
+
+    var pSummary = await pQuery
+        .GroupBy(t => new { t.CategoryId, t.Category.Name })
+        .Select(g => new {
+          CategoryId = g.Key.CategoryId,
+          CategoryName = g.Key.Name,
+          TotalAmount = g.Sum(t => t.Amount),
+          TransactionCount = g.Count(),
+          Income = g.Where(t => t.Amount > 0).Sum(t => t.Amount),
+          Expenses = g.Where(t => t.Amount < 0).Sum(t => t.Amount)
+        })
+        .OrderByDescending(s => Math.Abs(s.TotalAmount))
+        .ToListAsync();
+
+    decimal pTotalIncome = pSummary.Sum(s => s.Income);
+    decimal pTotalExpenses = Math.Abs(pSummary.Sum(s => s.Expenses));
+    decimal pBalance = pTotalIncome - pTotalExpenses;
+
+    var pResult = new {
+      TotalIncome = pTotalIncome,
+      TotalExpenses = pTotalExpenses,
+      Balance = pBalance,
+      Categories = pSummary
+    };
+
+    return Ok(ApiResponse<object>.SuccessResult(pResult));
+
+  }
+
+  [HttpPost("import")]
+  public async Task<ActionResult<ApiResponse>> ImportTransactions([FromBody] List<TransactionDto> xTransactions) {
+    //funkcja importuje listÄ™ transakcji
+    //xTransactions - lista transakcji do zaimportowania
+
+    if (xTransactions == null || !xTransactions.Any())
+      return BadRequest(ApiResponse.Error("Brak transakcji do zaimportowania"));
+
+    var ruleService = new FinancesTracker.Services.cCategoryRuleService(mContext);
+
+    var pErrors = new List<string>();
+    foreach (var pDto in xTransactions) {
+
+      pDto.Date = pDto.Date.ToUniversalTime();//konwertuje datÄ™ na UTC
+      //mapuje dto na encjÄ™ i dodaje do kontekstu
+      cTransaction pTransaction = MappingService.ToEntity(pDto);
+
+      var (categoryId, subcategoryId) = await ruleService.MatchCategoryAsync(pTransaction.Description);
+      pTransaction.CategoryId = categoryId;
+      pTransaction.SubcategoryId = subcategoryId;
+
+      mContext.Transactions.Add(pTransaction);
     }
 
-    [HttpPost]
-    public async Task<ActionResult<ApiResponse<TransactionDto>>> CreateTransaction(TransactionDto transactionDto)
-    {
-        try
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-                return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Dane transakcji s¹ nieprawid³owe", errors));
-            }
+    await mContext.SaveChangesAsync();
 
-            // SprawdŸ czy kategoria i podkategoria istniej¹
-            var category = await _context.Categories.Include(c => c.Subcategories)
-                .FirstOrDefaultAsync(c => c.Id == transactionDto.CategoryId);
+    if (pErrors.Any())
+      return Ok(ApiResponse.Error("CzÄ™Å›Ä‡ transakcji nie zostaÅ‚a zaimportowana", pErrors));
 
-            if (category == null)
-                return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Wybrana kategoria nie istnieje"));
+    return Ok(ApiResponse.Success("Transakcje zostaÅ‚y zaimportowane"));
 
-            if (!category.Subcategories.Any(s => s.Id == transactionDto.SubcategoryId))
-                return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Wybrana podkategoria nie nale¿y do wybranej kategorii"));
+  }
 
-            var transaction = MappingService.ToEntity(transactionDto);
-            _context.Transactions.Add(transaction);
-            await _context.SaveChangesAsync();
+  private async Task<bool> TransactionExistsAsync(int xId) {
+    //funkcja sprawdza czy transakcja o podanym id istnieje
+    //xId - identyfikator transakcji
 
-            // Pobierz utworzon¹ transakcjê z relacjami
-            var createdTransaction = await _context.Transactions
-                .Include(t => t.Category)
-                .Include(t => t.Subcategory)
-                .FirstAsync(t => t.Id == transaction.Id);
+    return await mContext.Transactions.AnyAsync(e => e.Id == xId);
 
-            return CreatedAtAction(nameof(GetTransaction), 
-                new { id = transaction.Id }, 
-                ApiResponse<TransactionDto>.SuccessResult(MappingService.ToDto(createdTransaction), "Transakcja zosta³a utworzona"));
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ApiResponse<TransactionDto>.ErrorResult("B³¹d podczas tworzenia transakcji", new List<string> { ex.Message }));
-        }
-    }
-
-    [HttpPut("{id}")]
-    public async Task<ActionResult<ApiResponse<TransactionDto>>> UpdateTransaction(int id, TransactionDto transactionDto)
-    {
-        try
-        {
-            if (id != transactionDto.Id)
-                return BadRequest(ApiResponse<TransactionDto>.ErrorResult("ID transakcji nie pasuje"));
-
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-                return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Dane transakcji s¹ nieprawid³owe", errors));
-            }
-
-            var existingTransaction = await _context.Transactions.FindAsync(id);
-            if (existingTransaction == null)
-                return NotFound(ApiResponse<TransactionDto>.ErrorResult("Transakcja nie zosta³a znaleziona"));
-
-            // SprawdŸ czy kategoria i podkategoria istniej¹
-            var category = await _context.Categories.Include(c => c.Subcategories)
-                .FirstOrDefaultAsync(c => c.Id == transactionDto.CategoryId);
-
-            if (category == null)
-                return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Wybrana kategoria nie istnieje"));
-
-            if (!category.Subcategories.Any(s => s.Id == transactionDto.SubcategoryId))
-                return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Wybrana podkategoria nie nale¿y do wybranej kategorii"));
-
-            // Aktualizuj w³aœciwoœci
-            existingTransaction.Date = transactionDto.Date;
-            existingTransaction.Description = transactionDto.Description;
-            existingTransaction.Amount = transactionDto.Amount;
-            existingTransaction.CategoryId = transactionDto.CategoryId;
-            existingTransaction.SubcategoryId = transactionDto.SubcategoryId;
-            existingTransaction.BankName = transactionDto.BankName;
-            existingTransaction.MonthNumber = transactionDto.Date.Month;
-            existingTransaction.Year = transactionDto.Date.Year;
-            existingTransaction.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-
-            // Pobierz zaktualizowan¹ transakcjê z relacjami
-            var updatedTransaction = await _context.Transactions
-                .Include(t => t.Category)
-                .Include(t => t.Subcategory)
-                .FirstAsync(t => t.Id == id);
-
-            return Ok(ApiResponse<TransactionDto>.SuccessResult(MappingService.ToDto(updatedTransaction), "Transakcja zosta³a zaktualizowana"));
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!await TransactionExistsAsync(id))
-                return NotFound(ApiResponse<TransactionDto>.ErrorResult("Transakcja nie zosta³a znaleziona"));
-            throw;
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ApiResponse<TransactionDto>.ErrorResult("B³¹d podczas aktualizacji transakcji", new List<string> { ex.Message }));
-        }
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<ActionResult<ApiResponse>> DeleteTransaction(int id)
-    {
-        try
-        {
-            var transaction = await _context.Transactions.FindAsync(id);
-            if (transaction == null)
-                return NotFound(ApiResponse.Error("Transakcja nie zosta³a znaleziona"));
-
-            _context.Transactions.Remove(transaction);
-            await _context.SaveChangesAsync();
-
-            return Ok(ApiResponse.Success("Transakcja zosta³a usuniêta"));
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ApiResponse.Error("B³¹d podczas usuwania transakcji", new List<string> { ex.Message }));
-        }
-    }
-
-    [HttpGet("summary")]
-    public async Task<ActionResult<ApiResponse<object>>> GetSummary(int year, int? month = null)
-    {
-        try
-        {
-            var query = _context.Transactions
-                .Include(t => t.Category)
-                .Where(t => t.Year == year);
-
-            if (month.HasValue)
-                query = query.Where(t => t.MonthNumber == month.Value);
-
-            var summary = await query
-                .GroupBy(t => new { t.CategoryId, t.Category.Name })
-                .Select(g => new
-                {
-                    CategoryId = g.Key.CategoryId,
-                    CategoryName = g.Key.Name,
-                    TotalAmount = g.Sum(t => t.Amount),
-                    TransactionCount = g.Count(),
-                    Income = g.Where(t => t.Amount > 0).Sum(t => t.Amount),
-                    Expenses = g.Where(t => t.Amount < 0).Sum(t => t.Amount)
-                })
-                .OrderByDescending(s => Math.Abs(s.TotalAmount))
-                .ToListAsync();
-
-            var totalIncome = summary.Sum(s => s.Income);
-            var totalExpenses = Math.Abs(summary.Sum(s => s.Expenses));
-            var balance = totalIncome - totalExpenses;
-
-            var result = new
-            {
-                TotalIncome = totalIncome,
-                TotalExpenses = totalExpenses,
-                Balance = balance,
-                Categories = summary
-            };
-
-            return Ok(ApiResponse<object>.SuccessResult(result));
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ApiResponse<object>.ErrorResult("B³¹d podczas pobierania podsumowania", new List<string> { ex.Message }));
-        }
-    }
-
-    [HttpPost("import")]
-    public async Task<ActionResult<ApiResponse>> ImportTransactions([FromBody] List<TransactionDto> transactions)
-    {
-        if (transactions == null || !transactions.Any())
-            return BadRequest(ApiResponse.Error("Brak transakcji do zaimportowania"));
-
-        var errors = new List<string>();
-        foreach (var dto in transactions)
-        {
-            //// SprawdŸ czy kategoria i podkategoria istniej¹
-            //var category = await _context.Categories.Include(c => c.Subcategories)
-            //    .FirstOrDefaultAsync(c => c.Id == dto.CategoryId);
-
-            //if (category == null)
-            //{
-            //    errors.Add($"Kategoria o ID {dto.CategoryId} nie istnieje (transakcja: {dto.Description})");
-            //    continue;
-            //}
-
-            //if (!category.Subcategories.Any(s => s.Id == dto.SubcategoryId))
-            //{
-            //    errors.Add($"Podkategoria o ID {dto.SubcategoryId} nie nale¿y do kategorii {dto.CategoryId} (transakcja: {dto.Description})");
-            //    continue;
-            //}
-
-            var entity = MappingService.ToEntity(dto);
-            _context.Transactions.Add(entity);
-        }
-
-        await _context.SaveChangesAsync();
-
-        if (errors.Any())
-            return Ok(ApiResponse.Error("Czêœæ transakcji nie zosta³a zaimportowana", errors));
-
-        return Ok(ApiResponse.Success("Transakcje zosta³y zaimportowane"));
-    }
-
-    private async Task<bool> TransactionExistsAsync(int id)
-    {
-        return await _context.Transactions.AnyAsync(e => e.Id == id);
-    }
+  }
 }
