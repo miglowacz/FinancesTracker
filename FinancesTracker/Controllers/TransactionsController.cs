@@ -279,9 +279,23 @@ public class TransactionsController : ControllerBase {
     var ruleService = new FinancesTracker.Services.cCategoryRuleService(mContext);
 
     var pErrors = new List<string>();
-    foreach (var pDto in xTransactions) {
+    int importedCount = 0;
 
-      pDto.Date = pDto.Date.ToUniversalTime();//konwertuje datę na UTC
+    foreach (var pDto in xTransactions) {
+      pDto.Date = pDto.Date.ToUniversalTime(); //konwertuje datę na UTC
+
+      // Sprawdź, czy istnieje już transakcja z tą samą nazwą, datą i kwotą
+      bool exists = await mContext.Transactions.AnyAsync(t =>
+        t.Description == pDto.Description &&
+        t.Date == pDto.Date &&
+        t.Amount == pDto.Amount
+      );
+
+      if (exists) {
+        pErrors.Add($"Transakcja \"{pDto.Description}\" z dnia {pDto.Date:d} o kwocie {pDto.Amount} już istnieje.");
+        continue;
+      }
+
       //mapuje dto na encję i dodaje do kontekstu
       cTransaction pTransaction = MappingService.ToEntity(pDto);
 
@@ -290,12 +304,13 @@ public class TransactionsController : ControllerBase {
       pTransaction.SubcategoryId = subcategoryId;
 
       mContext.Transactions.Add(pTransaction);
+      importedCount++;
     }
 
     await mContext.SaveChangesAsync();
 
     if (pErrors.Any())
-      return Ok(ApiResponse.Error("Część transakcji nie została zaimportowana", pErrors));
+      return Ok(ApiResponse.Error($"Zaimportowano {importedCount} transakcji. Część transakcji nie została zaimportowana", pErrors));
 
     return Ok(ApiResponse.Success("Transakcje zostały zaimportowane"));
 
