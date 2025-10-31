@@ -3,6 +3,7 @@
 @using FinancesTracker.Shared.DTOs
 @using FinancesTracker.Shared.Constants
 @using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @inject cTransactionService TransactionService
 @inject cCategoryService CategoryService
@@ -95,138 +96,100 @@
             @if (isLoading)
             {
                 <div class="text-center p-4">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Ładowanie...</span>
-                    </div>
+                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
                 </div>
             }
             else if (transactions?.Items?.Any() == true)
             {
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th @onclick="() => SortBy(nameof(TransactionDto.Date))" style="cursor: pointer;">
-                                            Data
-                                            @if (Filter.SortBy == nameof(TransactionDto.Date))
-                                            {
-                                                <i class="fas @(Filter.SortDescending ? "fa-sort-down" : "fa-sort-up")"></i>
-                                            }
-                                        </th>
-                                        <th @onclick="() => SortBy(nameof(TransactionDto.Description))" style="cursor: pointer;">
-                                            Opis
-                                            @if (Filter.SortBy == nameof(TransactionDto.Description))
-                                            {
-                                                <i class="fas @(Filter.SortDescending ? "fa-sort-down" : "fa-sort-up")"></i>
-                                            }
-                                        </th>
-                                        <th @onclick="() => SortBy(nameof(TransactionDto.Amount))" style="cursor: pointer;">
-                                            Kwota
-                                            @if (Filter.SortBy == nameof(TransactionDto.Amount))
-                                            {
-                                                <i class="fas @(Filter.SortDescending ? "fa-sort-down" : "fa-sort-up")"></i>
-                                            }
-                                        </th>
-                                        <th @onclick="() => SortBy(nameof(TransactionDto.CategoryName))" style="cursor: pointer;">
-                                            Kategoria
-                                            @if (Filter.SortBy == nameof(TransactionDto.CategoryName))
-                                            {
-                                                <i class="fas @(Filter.SortDescending ? "fa-sort-down" : "fa-sort-up")"></i>
-                                            }
-                                        </th>
-                                        <th>Podkategoria</th>
-                                        <th>Bank</th>
-                                        <th>Akcje</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var transaction in transactions.Items)
-                                    {
-                                        <tr>
-                                            <td>@transaction.Date.ToString("dd.MM.yyyy")</td>
-                                            <td>@transaction.Description</td>
-                                            <td class="@(transaction.Amount >= 0 ? "text-success" : "text-danger")">
-                                                @transaction.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
-                                            </td>
-                                            <td>@transaction.CategoryName</td>
-                                            <td>@transaction.SubcategoryName</td>
-                                            <td>@transaction.BankName</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => EditTransaction(transaction)">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteTransaction(transaction.Id)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                <MudPaper Class="pa-4">
+                    <MudTable Items="transactions.Items" Hover="true" Dense="true" Bordered="true" Striped="true">
+                        <HeaderContent>
+                            <MudTh>
+                                <MudTableSortLabel T="string"
+                                    Active="@(Filter.SortBy == nameof(TransactionDto.Date))"
+                                    Direction="@(Filter.SortBy == nameof(TransactionDto.Date) && Filter.SortDescending ? SortDirection.Descending : SortDirection.Ascending)"
+                                    OnClick="() => SortBy(nameof(TransactionDto.Date))">
+                                    Data
+                                </MudTableSortLabel>
+                            </MudTh>
+                            <MudTh>
+                                <MudTableSortLabel T="string"
+                                    Active="@(Filter.SortBy == nameof(TransactionDto.Description))"
+                                    Direction="@(Filter.SortBy == nameof(TransactionDto.Description) && Filter.SortDescending ? SortDirection.Descending : SortDirection.Ascending)"
+                                    OnClick="() => SortBy(nameof(TransactionDto.Description))">
+                                    Opis
+                                </MudTableSortLabel>
+                            </MudTh>
+                            <MudTh>
+                                <MudTableSortLabel T="string"
+                                    Active="@(Filter.SortBy == nameof(TransactionDto.Amount))"
+                                    Direction="@(Filter.SortBy == nameof(TransactionDto.Amount) && Filter.SortDescending ? SortDirection.Descending : SortDirection.Ascending)"
+                                    OnClick="() => SortBy(nameof(TransactionDto.Amount))">
+                                    Kwota
+                                </MudTableSortLabel>
+                            </MudTh>
+                            <MudTh>
+                                <MudTableSortLabel T="string"
+                                    Active="@(Filter.SortBy == nameof(TransactionDto.CategoryName))"
+                                    Direction="@(Filter.SortBy == nameof(TransactionDto.CategoryName) && Filter.SortDescending ? SortDirection.Descending : SortDirection.Ascending)"
+                                    OnClick="() => SortBy(nameof(TransactionDto.CategoryName))">
+                                    Kategoria
+                                </MudTableSortLabel>
+                            </MudTh>
+                            <MudTh>Podkategoria</MudTh>
+                            <MudTh>Bank</MudTh>
+                            <MudTh>Akcje</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Data">@context.Date.ToString("dd.MM.yyyy")</MudTd>
+                            <MudTd DataLabel="Opis">@context.Description</MudTd>
+                            <MudTd DataLabel="Kwota">
+                                <span class="@(context.Amount >= 0 ? "text-success" : "text-danger")">
+                                    @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
+                                </span>
+                            </MudTd>
+                            <MudTd DataLabel="Kategoria">@context.CategoryName</MudTd>
+                            <MudTd DataLabel="Podkategoria">@context.SubcategoryName</MudTd>
+                            <MudTd DataLabel="Bank">@context.BankName</MudTd>
+                            <MudTd DataLabel="Akcje">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="() => EditTransaction(context)">
+                                    <MudIcon Icon="@Icons.Material.Filled.Edit" />
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="() => DeleteTransaction(context.Id)">
+                                    <MudIcon Icon="@Icons.Material.Filled.Delete" />
+                                </MudButton>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+
+                    @if (transactions.TotalPages > 1)
+                    {
+                        <MudPagination Page="@Filter.PageNumber"
+                                       PageSize="@Filter.PageSize"
+                                       TotalItems="@transactions.TotalCount"
+                                       OnPageChanged="@(async (int page) => await ChangePage(page))"
+                                       HideNext="false"
+                                       HidePrev="false"
+                                       HideFirst="false"
+                                       HideLast="false"
+                                       Class="mt-4 justify-content-center" />
+                        <div class="text-center mt-2">
+                            <small class="text-muted">
+                                Strona @Filter.PageNumber z @transactions.TotalPages 
+                                (wyświetlane @((Filter.PageNumber - 1) * Filter.PageSize + 1)-@Math.Min(Filter.PageNumber * Filter.PageSize, transactions.TotalCount) 
+                                z @transactions.TotalCount transakcji)
+                            </small>
                         </div>
-
-                        <!-- Paginacja -->
-                        @if (transactions.TotalPages > 1)
-                        {
-                            <nav aria-label="Nawigacja stron">
-                                <ul class="pagination justify-content-center mt-3">
-                                    <li class="page-item @(transactions.HasPreviousPage ? "" : "disabled")">
-                                        <button class="page-link" @onclick="() => ChangePage(1)" disabled="@(!transactions.HasPreviousPage)">
-                                            <i class="fas fa-angle-double-left"></i>
-                                        </button>
-                                    </li>
-                                    <li class="page-item @(transactions.HasPreviousPage ? "" : "disabled")">
-                                        <button class="page-link" @onclick="() => ChangePage(Filter.PageNumber - 1)" disabled="@(!transactions.HasPreviousPage)">
-                                            <i class="fas fa-angle-left"></i>
-                                        </button>
-                                    </li>
-                                    
-                                    @{
-                                        int startPage = Math.Max(1, Filter.PageNumber - 2);
-                                        int endPage = Math.Min(transactions.TotalPages, Filter.PageNumber + 2);
-                                    }
-
-                  @for (int pageNumber = startPage; pageNumber <= endPage; pageNumber++) {
-                    <li class="page-item @(pageNumber == Filter.PageNumber ? "active" : "")">
-                      <button class="page-link" @onclick="() => ChangePage(pageNumber)">@pageNumber</button>
-                    </li>
-                  }
-                                    
-                                    <li class="page-item @(transactions.HasNextPage ? "" : "disabled")">
-                                        <button class="page-link" @onclick="() => ChangePage(Filter.PageNumber + 1)" disabled="@(!transactions.HasNextPage)">
-                                            <i class="fas fa-angle-right"></i>
-                                        </button>
-                                    </li>
-                                    <li class="page-item @(transactions.HasNextPage ? "" : "disabled")">
-                                        <button class="page-link" @onclick="() => ChangePage(transactions.TotalPages)" disabled="@(!transactions.HasNextPage)">
-                                            <i class="fas fa-angle-double-right"></i>
-                                        </button>
-                                    </li>
-                                </ul>
-                            </nav>
-                            
-                            <div class="text-center mt-2">
-                                <small class="text-muted">
-                                    Strona @Filter.PageNumber z @transactions.TotalPages 
-                                    (wyświetlane @((Filter.PageNumber - 1) * Filter.PageSize + 1)-@Math.Min(Filter.PageNumber * Filter.PageSize, transactions.TotalCount) 
-                                    z @transactions.TotalCount transakcji)
-                                </small>
-                            </div>
-                        }
-                    </div>
-                </div>
+                    }
+                </MudPaper>
             }
             else
             {
-                <div class="card">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">Brak transakcji</h5>
-                        <p class="text-muted">Nie znaleziono transakcji spełniających kryteria wyszukiwania.</p>
-                    </div>
-                </div>
+                <MudPaper Class="pa-4 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" Color="Color.Default" Class="mb-3" />
+                    <h5 class="text-muted">Brak transakcji</h5>
+                    <p class="text-muted">Nie znaleziono transakcji spełniających kryteria wyszukiwania.</p>
+                </MudPaper>
             }
         </div>
     </div>
