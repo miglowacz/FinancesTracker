@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace FinancesTracker.Components.Pages
+namespace FinancesTracker.Pages
 {
     public class _HostModel : PageModel
     {

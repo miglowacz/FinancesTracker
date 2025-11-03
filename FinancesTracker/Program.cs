@@ -1,30 +1,25 @@
-using FinancesTracker.Client.Pages;
-using FinancesTracker.Components;
-using FinancesTracker.Data;
+﻿using FinancesTracker.Data;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Components;
-using FinancesTracker.Client.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveWebAssemblyComponents();
+builder.Services.AddRazorPages();        // obsługa stron Razor (_Host.cshtml)
+builder.Services.AddControllers();       // obsługa Web API
+builder.Services.AddHttpClient();        // HttpClient dla Client
+builder.Services.AddServerSideBlazor();  // opcjonalne — jeśli używasz komponentów SSR
 
-//Dodaj Entity Framework
+// Entity Framework + PostgreSQL
 builder.Services.AddDbContext<FinancesTrackerDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-//Dodaj kontrolery Web API
-builder.Services.AddControllers();
-
-//Dodaj HttpClient dla komunikacji Client-Server (factory)
-builder.Services.AddHttpClient();
-
-// Dodaj CORS dla development
+// Dodaj CORS dla development (jeśli Client działa osobno w trybie dev)
 if (builder.Environment.IsDevelopment()) {
-  builder.Services.AddCors(options => {
-    options.AddDefaultPolicy(policy => {
+  builder.Services.AddCors(options =>
+  {
+    options.AddDefaultPolicy(policy =>
+    {
       policy.AllowAnyOrigin()
             .AllowAnyMethod()
             .AllowAnyHeader();
@@ -39,20 +34,17 @@ if (app.Environment.IsDevelopment()) {
   app.UseWebAssemblyDebugging();
   app.UseCors();
 } else {
-  app.UseExceptionHandler("/Error", createScopeForErrors: true);
+  app.UseExceptionHandler("/Error");
   app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();   // potrzebne dla plików z wwwroot
+app.UseRouting();
 
-app.UseAntiforgery();
-
-// Mapuj kontrolery API
 app.MapControllers();
 
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveWebAssemblyRenderMode()
-    .AddAdditionalAssemblies(typeof(FinancesTracker.Client._Imports).Assembly);
+// Ta linia ładuje Twoją aplikację Blazor WebAssembly z Client
+app.MapFallbackToPage("/_Host");
 
 app.Run();
