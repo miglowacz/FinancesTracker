@@ -4,6 +4,9 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+	  <BlazorEnableLinking>true</BlazorEnableLinking>
+  <DebugType>none</DebugType>
+  <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
