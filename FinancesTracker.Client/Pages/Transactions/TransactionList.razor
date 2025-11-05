@@ -4,7 +4,7 @@
 @using FinancesTracker.Shared.Constants
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
-@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@* @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false)) *@
 @inject cTransactionService TransactionService
 @inject cCategoryService CategoryService
 @inject IJSRuntime JSRuntime
@@ -16,7 +16,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>Transakcje finansowe</h2>
-                <button class="btn btn-primary" @onclick="ShowAddTransactionModal">
+                <button class="btn btn-primary">
                     <i class="fas fa-plus"></i> Dodaj transakcję
                 </button>
             </div>
@@ -30,46 +30,40 @@
                     <div class="row g-3">
                         <div class="col-md-3">
                             <label class="form-label">Rok</label>
-                            <select class="form-select" @bind="Filter.Year" @bind:after="OnFilterChanged">
+                            <select class="form-select" @bind="mFilter.Year" >
                                 <option value="">Wszystkie</option>
-                                @for (int year = DateTime.Now.Year; year >= DateTime.Now.Year - 5; year--)
-                                {
-                                    <option value="@year">@year</option>
+                                @for (int pYear = DateTime.Now.Year; pYear >= DateTime.Now.Year - 5; pYear--) {
+                                    <option value="@pYear">@pYear</option>
                                 }
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Miesiąc</label>
-                            <select class="form-select" @bind="Filter.Month" @bind:after="OnFilterChanged">
+                            <select class="form-select" @bind="mFilter.Month">
                                 <option value="">Wszystkie</option>
-                                @foreach (var month in AppConstants.Months.Polish)
-                                {
-                                    <option value="@month.Key">@month.Value</option>
+                                @foreach (var pMonth in AppConstants.Months.Polish) {
+                                    <option value="@pMonth.Key">@pMonth.Value</option>
                                 }
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Kategoria</label>
-                            <select class="form-select" @bind="Filter.CategoryId" @bind:after="OnCategoryChanged">
+                            <select class="form-select" @bind="mFilter.CategoryId">
                                 <option value="">Wszystkie</option>
-                                @if (categories != null)
-                                {
-                                    @foreach (var category in categories)
-                                    {
-                                        <option value="@category.Id">@category.Name</option>
+                                @if (mCategories != null) {
+                                    @foreach (var pCategory in mCategories) {
+                                        <option value="@pCategory.Id">@pCategory.Name</option>
                                     }
                                 }
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Podkategoria</label>
-                            <select class="form-select" @bind="Filter.SubcategoryId" @bind:after="OnFilterChanged">
+                            <select class="form-select" @bind="mFilter.SubcategoryId">
                                 <option value="">Wszystkie</option>
-                                @if (subcategories != null)
-                                {
-                                    @foreach (var subcategory in subcategories)
-                                    {
-                                        <option value="@subcategory.Id">@subcategory.Name</option>
+                                @if (mSubcategories != null) {
+                                    @foreach (var pSubcategory in mSubcategories) {
+                                        <option value="@pSubcategory.Id">@pSubcategory.Name</option>
                                     }
                                 }
                             </select>
@@ -78,28 +72,28 @@
                     <div class="row g-3 mt-2">
                         <div class="col-md-6">
                             <label class="form-label">Szukaj</label>
-                            <input type="text" class="form-control" @bind="Filter.SearchTerm" @onkeypress="OnSearchKeyPress" placeholder="Szukaj w opisie...">
+                            <input type="text" class="form-control" @bind="mFilter.SearchTerm"  placeholder="Szukaj w opisie...">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Kwota od</label>
-                            <input type="number" class="form-control" @bind="Filter.MinAmount" @bind:after="OnFilterChanged" step="0.01">
+                            <input type="number" class="form-control" @bind="mFilter.MinAmount" step="0.01">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Kwota do</label>
-                            <input type="number" class="form-control" @bind="Filter.MaxAmount" @bind:after="OnFilterChanged" step="0.01">
+                            <input type="number" class="form-control" @bind="mFilter.MaxAmount" step="0.01">
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Lista transakcji -->
-            @if (isLoading) {
+            @if (mIsLoading) {
                 <div class="text-center p-4">
                     <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
                 </div>
-            } else if (transactions?.Items?.Any() == true) {
+            } else if (mTransactions?.Items?.Any() == true) {
                 <MudPaper Class="pa-4">
-                    <MudTable Items="transactions.Items" Hover="true" Dense="true" Bordered="true" Striped="true">
+                    <MudTable Items="mTransactions.Items" Hover="true" Dense="true" Bordered="true" Striped="true">
                         <HeaderContent>
                             <MudTh>Data</MudTh>
                             <MudTh>Opis</MudTh>
@@ -117,11 +111,11 @@
                                     @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
                                 </span>
                             </MudTd>
-                     @*        <MudTd DataLabel="Kategoria">@context.CategoryName</MudTd>
-                            <MudTd DataLabel="Podkategoria">@context.SubcategoryName</MudTd> *@
+                            <MudTd DataLabel="Kategoria">@context.CategoryName</MudTd>
+                            <MudTd DataLabel="Podkategoria">@context.SubcategoryName</MudTd>
                             <MudTd DataLabel="Bank">@context.BankName</MudTd>
                             <MudTd DataLabel="Akcje">
-                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="() => EditTransaction(context)">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small">
                                     <MudIcon Icon="@Icons.Material.Filled.Edit" />
                                 </MudButton>
                                 <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="() => DeleteTransaction(context.Id)">
@@ -130,32 +124,8 @@
                             </MudTd>
                         </RowTemplate>
                     </MudTable>
-
-                    @* 
-@if (transactions.TotalPages > 1)
-{
-    <MudPagination Page="@Filter.PageNumber"
-                   PageSize="@Filter.PageSize"
-                   TotalItems="@transactions.TotalCount"
-                   OnPageChanged="@(async (int page) => await ChangePage(page))"
-                   HideNext="false"
-                   HidePrev="false"
-                   HideFirst="false"
-                   HideLast="false"
-                   Class="mt-4 justify-content-center" />
-    <div class="text-center mt-2">
-        <small class="text-muted">
-            Strona @Filter.PageNumber z @transactions.TotalPages 
-            (wyświetlane @((Filter.PageNumber - 1) * Filter.PageSize + 1)-@Math.Min(Filter.PageNumber * Filter.PageSize, transactions.TotalCount) 
-            z @transactions.TotalCount transakcji)
-        </small>
-    </div>
-}
-*@
                 </MudPaper>
-            }
-            else
-            {
+            } else {
                 <MudPaper Class="pa-4 text-center">
                     <MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" Color="Color.Default" Class="mb-3" />
                     <h5 class="text-muted">Brak transakcji</h5>
@@ -167,170 +137,89 @@
 </div>
 
 @code {
-  private PagedResult<TransactionDto> transactions = new();
-  private List<cCategory_DTO> categories = new();
-  private List<cSubcategory_DTO> subcategories = new();
-  private TransactionFilterDto Filter = new();
-  private bool isLoading = true;
+    //przechowuje listę transakcji
+    private PagedResult<TransactionDto> mTransactions = new();
 
-  protected override async Task OnInitializedAsync()
-  {
-    //  await LoadCategories();
-    await LoadTransactions();
-  }
+    //przechowuje listę kategorii
+    private List<cCategory_DTO> mCategories = new();
 
-  private async Task LoadCategories()
-  {
-    try
-    {
-      var resp = await CategoryService.GetCategoriesAsync();
-      if (!resp.Success)
-      {
-        Console.WriteLine($"Błąd podczas ładowania kategorii: {BuildErrorMessage(resp)}");
-        categories = new();
-        return;
-      }
+    //przechowuje listę podkategorii
+    private List<cSubcategory_DTO> mSubcategories = new();
 
-      categories = resp.Data ?? new();
+    //przechowuje aktualne filtry
+    private TransactionFilterDto mFilter = new();
+
+    //przechowuje informację o ładowaniu danych
+    private bool mIsLoading = true;
+
+    //metoda wywoływana podczas inicjalizacji komponentu
+    protected override async Task OnInitializedAsync() {
+        //ładuje transakcje przy starcie komponentu
+        await LoadTransactions();
     }
-    catch (Exception ex)
-    {
-      Console.WriteLine($"Błąd podczas ładowania kategorii: {ex.Message}");
-      categories = new();
-    }
-  }
 
-  private async Task LoadTransactions()
-  {
-    isLoading = true;
-    //StateHasChanged();
+    //ładuje transakcje z serwisu na podstawie filtrów
+    //brak parametrów
+    private async Task LoadTransactions() {
+        mIsLoading = true;
 
-    Console.WriteLine("TEST");
+        Console.WriteLine("TEST");
 
-        try
-        {
-            var resp = await TransactionService.GetTransactionsAsync(Filter);
-            if (!resp.Success)
-            {
-                Console.WriteLine($"Błąd podczas ładowania transakcji: {BuildErrorMessage(resp)}");
-                transactions = new PagedResult<TransactionDto>();
+        try {
+            var pResp = await TransactionService.GetTransactionsAsync(mFilter);
+            if (!pResp.Success) {
+                Console.WriteLine($"Błąd podczas ładowania transakcji: {BuildErrorMessage(pResp)}");
+                mTransactions = new PagedResult<TransactionDto>();
+            } else {
+                mTransactions = pResp.Data ?? new PagedResult<TransactionDto>();
             }
-            else
-            {
-                transactions = resp.Data ?? new PagedResult<TransactionDto>();
-            }
+        } catch (Exception pEx) {
+            Console.WriteLine($"Błąd podczas ładowania transakcji: {pEx.Message}");
+            mTransactions = new PagedResult<TransactionDto>();
+        } finally {
+            mIsLoading = false;
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Błąd podczas ładowania transakcji: {ex.Message}");
-            transactions = new PagedResult<TransactionDto>();
-        }
-        finally
-        {
-            isLoading = false;
-            //StateHasChanged();
-        }
+
     }
 
-    private async Task OnFilterChanged()
-    {
-        Filter.PageNumber = 1;
-        await LoadTransactions();
-    }
-
-    private async Task OnCategoryChanged()
-    {
-        if (Filter.CategoryId.HasValue)
-        {
-            var selectedCategory = categories.FirstOrDefault(c => c.Id == Filter.CategoryId.Value);
-            subcategories = selectedCategory?.Subcategories ?? new List<cSubcategory_DTO>();
-        }
-        else
-        {
-            subcategories = new List<cSubcategory_DTO>();
-        }
-
-        Filter.SubcategoryId = null;
-        Filter.PageNumber = 1;
-        await LoadTransactions();
-    }
-
-    private async Task OnSearchKeyPress(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-        {
-            Filter.PageNumber = 1;
-            await LoadTransactions();
-        }
-    }
-
-    private async Task SortBy(string sortBy)
-    {
-        if (Filter.SortBy == sortBy)
-        {
-            Filter.SortDescending = !Filter.SortDescending;
-        }
-        else
-        {
-            Filter.SortBy = sortBy;
-            Filter.SortDescending = true;
-        }
-        
-        await LoadTransactions();
-    }
-
-    private async Task ChangePage(int pageNumber)
-    {
-        if (pageNumber >= 1 && pageNumber <= transactions.TotalPages)
-        {
-            Filter.PageNumber = pageNumber;
-            await LoadTransactions();
-        }
-    }
-
-    private async Task ShowAddTransactionModal()
-    {
-        await JSRuntime.InvokeVoidAsync("showModal", "addTransactionModal");
-    }
-
-    private async Task EditTransaction(TransactionDto transaction)
-    {
-        await JSRuntime.InvokeVoidAsync("showEditModal", transaction.Id);
-    }
-
-private async Task DeleteTransaction(int transactionId)
-{
-    bool confirmDelete = await JSRuntime.InvokeAsync<bool>("confirm", "Czy na pewno chcesz usunąć tę transakcję?");
-    if (!confirmDelete)
-        return;
-
-    try
-    {
-        var resp = await TransactionService.DeleteTransactionAsync(transactionId);
-
-        // Jawne rzutowanie, aby odczytać właściwość Success (uniknięcie kolizji ze statyczną metodą Success)
-        if (!((ApiResponse<object>)resp).Success)
-        {
-            var msg = resp.Message ?? (resp.Errors is { Count: > 0 }
-                ? string.Join(", ", resp.Errors)
-                : "Nie udało się usunąć transakcji.");
-
-            Console.WriteLine($"Błąd podczas usuwania transakcji: {msg}");
-            await JSRuntime.InvokeVoidAsync("alert", $"Wystąpił błąd podczas usuwania transakcji: {msg}");
+    //usuwa transakcję o podanym identyfikatorze
+    //xTransactionId - identyfikator transakcji do usunięcia
+    private async Task DeleteTransaction(int xTransactionId) {
+        //potwierdzenie usunięcia
+        bool pConfirmDelete = await JSRuntime.InvokeAsync<bool>("confirm", "Czy na pewno chcesz usunąć tę transakcję?");
+        if (!pConfirmDelete)
             return;
+
+        try {
+            var pResp = await TransactionService.DeleteTransactionAsync(xTransactionId);
+
+            //jawne rzutowanie, aby odczytać właściwość Success (uniknięcie kolizji ze statyczną metodą Success)
+            if (!((ApiResponse<object>)pResp).Success) {
+                var pMsg = pResp.Message ?? (pResp.Errors is { Count: > 0 }
+                    ? string.Join(", ", pResp.Errors)
+                    : "Nie udało się usunąć transakcji.");
+
+                Console.WriteLine($"Błąd podczas usuwania transakcji: {pMsg}");
+                await JSRuntime.InvokeVoidAsync("alert", $"Wystąpił błąd podczas usuwania transakcji: {pMsg}");
+                return;
+            }
+
+            await LoadTransactions();
+        } catch (Exception pEx) {
+            Console.WriteLine($"Błąd podczas usuwania transakcji: {pEx.Message}");
+            await JSRuntime.InvokeVoidAsync("alert", "Wystąpił błąd podczas usuwania transakcji.");
         }
 
-        await LoadTransactions();
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Błąd podczas usuwania transakcji: {ex.Message}");
-        await JSRuntime.InvokeVoidAsync("alert", "Wystąpił błąd podczas usuwania transakcji.");
-    }
-}
-private static string BuildErrorMessage<T>(ApiResponse<T> resp)
-        => resp.Message ?? ((resp.Errors != null && resp.Errors.Count > 0) ? string.Join(", ", resp.Errors) : "Wystąpił błąd.");
 
-    private static string BuildErrorMessage(ApiResponse resp)
-        => BuildErrorMessage<object>(resp);
+    //buduje komunikat błędu na podstawie odpowiedzi z serwera
+    //xResp - odpowiedź z serwera
+    private static string BuildErrorMessage<T>(ApiResponse<T> xResp)
+        => xResp.Message ?? ((xResp.Errors != null && xResp.Errors.Count > 0) ? string.Join(", ", xResp.Errors) : "Wystąpił błąd.");
+
+    //buduje komunikat błędu na podstawie odpowiedzi z serwera (przeciążenie)
+    //xResp - odpowiedź z serwera
+    private static string BuildErrorMessage(ApiResponse xResp)
+        => BuildErrorMessage<object>(xResp);
+
 }

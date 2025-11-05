@@ -1,6 +1,7 @@
 ﻿using FinancesTracker.Data;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,7 @@ builder.Services.AddRazorPages();        // obsługa stron Razor (_Host.cshtml)
 builder.Services.AddControllers();       // obsługa Web API
 builder.Services.AddHttpClient();        // HttpClient dla Client
 builder.Services.AddServerSideBlazor();  // opcjonalne — jeśli używasz komponentów SSR
+builder.Services.AddMudServices();       // dodaj MudBlazor
 
 // Entity Framework + PostgreSQL
 builder.Services.AddDbContext<FinancesTrackerDbContext>(options =>
@@ -41,6 +43,8 @@ if (app.Environment.IsDevelopment()) {
 app.UseHttpsRedirection();
 app.UseStaticFiles();   // potrzebne dla plików z wwwroot
 app.UseRouting();
+app.UseBlazorFrameworkFiles();
+
 
 app.MapControllers();
 

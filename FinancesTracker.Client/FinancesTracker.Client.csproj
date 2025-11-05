@@ -8,8 +8,10 @@
     <StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
   <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <BlazorEnableLinking>true</BlazorEnableLinking>
-  <DebugType>none</DebugType>
-  <DebugSymbols>false</DebugSymbols>
+	 <BlazorEnableCompression>false</BlazorEnableCompression>
+	  <BlazorWebAssemblyEnableDebugging>true</BlazorWebAssemblyEnableDebugging>
+  <DebugType>portable</DebugType>
+  <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
