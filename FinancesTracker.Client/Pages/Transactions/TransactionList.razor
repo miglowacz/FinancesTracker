@@ -104,24 +104,63 @@
                             <MudTh>Akcje</MudTh>
                         </HeaderContent>
                         <RowTemplate>
-                            <MudTd DataLabel="Data">@context.Date.ToString("dd.MM.yyyy")</MudTd>
-                            <MudTd DataLabel="Opis">@context.Description</MudTd>
-                            <MudTd DataLabel="Kwota">
-                                <span class="@(context.Amount >= 0 ? "text-success" : "text-danger")">
-                                    @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
-                                </span>
-                            </MudTd>
-                            <MudTd DataLabel="Kategoria">@context.CategoryName</MudTd>
-                            <MudTd DataLabel="Podkategoria">@context.SubcategoryName</MudTd>
-                            <MudTd DataLabel="Bank">@context.BankName</MudTd>
-                            <MudTd DataLabel="Akcje">
-                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small">
-                                    <MudIcon Icon="@Icons.Material.Filled.Edit" />
-                                </MudButton>
-                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="() => DeleteTransaction(context.Id)">
-                                    <MudIcon Icon="@Icons.Material.Filled.Delete" />
-                                </MudButton>
-                            </MudTd>
+                            @if (context.Id == mEditTransactionId)
+                            {
+                                <MudTd DataLabel="Data">@context.Date.ToString("dd.MM.yyyy")</MudTd>
+                                <MudTd DataLabel="Opis">@context.Description</MudTd>
+                                <MudTd DataLabel="Kwota">
+                                    <span class="@(context.Amount >= 0 ? "text-success" : "text-danger")">
+                                        @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
+                                    </span>
+                                </MudTd>
+                                <MudTd DataLabel="Kategoria">
+                  <select class="form-select" @onchange="OnEditCategoryChanged">
+                    <option value="">Wybierz...</option>
+                    @foreach (var pCategory in mCategories) {
+                      <option value="@pCategory.Id">@pCategory.Name</option>
+                    }
+                  </select>
+                                </MudTd>
+                                <MudTd DataLabel="Podkategoria">
+                                    <select class="form-select" @bind="mEditTransaction.SubcategoryId">
+                                        <option value="">Wybierz...</option>
+                                        @foreach (var sub in mEditSubcategories)
+                                        {
+                                            <option value="@sub.Id">@sub.Name</option>
+                                        }
+                                    </select>
+                                </MudTd>
+                                <MudTd DataLabel="Bank">@context.BankName</MudTd>
+                                <MudTd DataLabel="Akcje">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="SaveEdit">
+                                        <MudIcon Icon="@Icons.Material.Filled.Save" />
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small" OnClick="CancelEdit">
+                                        <MudIcon Icon="@Icons.Material.Filled.Cancel" />
+                                    </MudButton>
+                                </MudTd>
+                            }
+                            else
+                            {
+                                <MudTd DataLabel="Data">@context.Date.ToString("dd.MM.yyyy")</MudTd>
+                                <MudTd DataLabel="Opis">@context.Description</MudTd>
+                                <MudTd DataLabel="Kwota">
+                                    <span class="@(context.Amount >= 0 ? "text-success" : "text-danger")">
+                                        @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
+                                    </span>
+                                </MudTd>
+                                <MudTd DataLabel="Kategoria">@context.CategoryName</MudTd>
+                                <MudTd DataLabel="Podkategoria">@context.SubcategoryName</MudTd>
+                                <MudTd DataLabel="Bank">@context.BankName</MudTd>
+                                <MudTd DataLabel="Akcje">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="() => StartEdit(context)">
+                                        <MudIcon Icon="@Icons.Material.Filled.Edit" />
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="() => DeleteTransaction(context.Id)">
+                                        <MudIcon Icon="@Icons.Material.Filled.Delete" />
+                                    </MudButton>
+                                </MudTd>
+                            }
                         </RowTemplate>
                     </MudTable>
                 </MudPaper>
@@ -152,10 +191,35 @@
     //przechowuje informację o ładowaniu danych
     private bool mIsLoading = true;
 
+    //przechowuje identyfikator edytowanej transakcji
+    private int? mEditTransactionId = null;
+
+    //przechowuje edytowaną transakcję
+    private TransactionDto mEditTransaction = new();
+
+    //przechowuje listę podkategorii dla edytowanej transakcji
+    private List<cSubcategory_DTO> mEditSubcategories = new();
+
     //metoda wywoływana podczas inicjalizacji komponentu
     protected override async Task OnInitializedAsync() {
+        //ładuje kategorie przy starcie komponentu
+        await LoadCategories();
+
         //ładuje transakcje przy starcie komponentu
         await LoadTransactions();
+    }
+
+    //ładuje kategorie z serwisu
+    //brak parametrów
+    private async Task LoadCategories() {
+        //pobiera kategorie z serwisu
+        var pResp = await CategoryService.GetCategoriesAsync();
+        if (pResp.Success) {
+            mCategories = pResp.Data ?? new List<cCategory_DTO>();
+        } else {
+            mCategories = new List<cCategory_DTO>();
+            Console.WriteLine($"błąd podczas ładowania kategorii: {BuildErrorMessage(pResp)}");
+        }
     }
 
     //ładuje transakcje z serwisu na podstawie filtrów
@@ -168,13 +232,13 @@
         try {
             var pResp = await TransactionService.GetTransactionsAsync(mFilter);
             if (!pResp.Success) {
-                Console.WriteLine($"Błąd podczas ładowania transakcji: {BuildErrorMessage(pResp)}");
+                Console.WriteLine($"błąd podczas ładowania transakcji: {BuildErrorMessage(pResp)}");
                 mTransactions = new PagedResult<TransactionDto>();
             } else {
                 mTransactions = pResp.Data ?? new PagedResult<TransactionDto>();
             }
         } catch (Exception pEx) {
-            Console.WriteLine($"Błąd podczas ładowania transakcji: {pEx.Message}");
+            Console.WriteLine($"błąd podczas ładowania transakcji: {pEx.Message}");
             mTransactions = new PagedResult<TransactionDto>();
         } finally {
             mIsLoading = false;
@@ -210,6 +274,65 @@
             await JSRuntime.InvokeVoidAsync("alert", "Wystąpił błąd podczas usuwania transakcji.");
         }
 
+    }
+
+    //rozpoczyna edycję transakcji
+    //transaction - transakcja do edytowania
+    private void StartEdit(TransactionDto transaction)
+    {
+        mEditTransactionId = transaction.Id;
+        mEditTransaction = new TransactionDto
+        {
+            Id = transaction.Id,
+            Date = transaction.Date,
+            Description = transaction.Description,
+            Amount = transaction.Amount,
+            CategoryId = transaction.CategoryId,
+            SubcategoryId = transaction.SubcategoryId,
+            BankName = transaction.BankName
+        };
+        UpdateEditSubcategories();
+    }
+
+    //anuluje edycję transakcji
+    private void CancelEdit()
+    {
+        mEditTransactionId = null;
+        mEditTransaction = new();
+        mEditSubcategories = new();
+    }
+
+    //zapisuje zmiany edytowanej transakcji
+    private async Task SaveEdit()
+    {
+        // Call your update service here, e.g.:
+        var resp = await TransactionService.UpdateTransactionAsync(mEditTransaction.Id, mEditTransaction);
+        if (resp.Success)
+        {
+            await LoadTransactions();
+            CancelEdit();
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Błąd: {BuildErrorMessage(resp)}");
+        }
+    }
+
+    //metoda wywoływana po zmianie kategorii w edytowanej transakcji
+    //e - argument zdarzenia zmiany
+    private void OnEditCategoryChanged(ChangeEventArgs e)
+    {
+        mEditTransaction.CategoryId = int.TryParse(e.Value?.ToString(), out var id) ? id : (int?)null;
+        mEditTransaction.SubcategoryId = null;
+        UpdateEditSubcategories();
+    }
+
+    //aktualizuje listę podkategorii dla edytowanej transakcji
+    private void UpdateEditSubcategories()
+    {
+        mEditSubcategories = mCategories
+            .FirstOrDefault(c => c.Id == mEditTransaction.CategoryId)?.Subcategories
+            ?? new List<cSubcategory_DTO>();
     }
 
     //buduje komunikat błędu na podstawie odpowiedzi z serwera
