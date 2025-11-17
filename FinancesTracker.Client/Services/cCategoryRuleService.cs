@@ -1,4 +1,4 @@
-using FinancesTracker.Shared.DTOs;
+﻿using FinancesTracker.Shared.DTOs;
 using FinancesTracker.Shared.Models;
 using System.Net.Http.Json;
 
@@ -44,7 +44,7 @@ public class cCategoryRuleService {
     };
     var response = await _http.PostAsJsonAsync("api/categoryrules", dto);
     return await response.Content.ReadFromJsonAsync<ApiResponse<CategoryRuleDto>>()
-           ?? ApiResponse<CategoryRuleDto>.ErrorResult("Brak odpowiedzi z serwera");
+           ?? ApiResponse<CategoryRuleDto>.Error("Brak odpowiedzi z serwera");
   }
 
   public async Task<ApiResponse<CategoryRuleDto>> UpdateAsync(cCategoryRule rule) {
@@ -57,7 +57,7 @@ public class cCategoryRuleService {
     };
     var response = await _http.PutAsJsonAsync($"api/categoryrules/{rule.Id}", dto);
     return await response.Content.ReadFromJsonAsync<ApiResponse<CategoryRuleDto>>()
-           ?? ApiResponse<CategoryRuleDto>.ErrorResult("Brak odpowiedzi z serwera");
+           ?? ApiResponse<CategoryRuleDto>.Error("Brak odpowiedzi z serwera");
   }
 
   public async Task<ApiResponse> DeleteAsync(int id) {

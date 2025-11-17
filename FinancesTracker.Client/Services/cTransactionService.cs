@@ -1,4 +1,4 @@
-using FinancesTracker.Shared.Constants;
+﻿using FinancesTracker.Shared.Constants;
 using FinancesTracker.Shared.DTOs;
 
 namespace FinancesTracker.Client.Services;
@@ -28,9 +28,10 @@ public class cTransactionService
     return await _apiService.PostAsync<TransactionDto>(AppConstants.ApiEndpoints.Transactions, transaction);
   }
 
-  public async Task<ApiResponse<TransactionDto>> UpdateTransactionAsync(int id, TransactionDto transaction)
-  {
+  public async Task<ApiResponse<TransactionDto>> UpdateTransactionAsync(int id, TransactionDto transaction) {
+
     return await _apiService.PutAsync<TransactionDto>($"{AppConstants.ApiEndpoints.Transactions}/{id}", transaction);
+  
   }
 
   public async Task<ApiResponse> DeleteTransactionAsync(int id)

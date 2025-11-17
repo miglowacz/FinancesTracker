@@ -114,12 +114,14 @@
                                     </span>
                                 </MudTd>
                                 <MudTd DataLabel="Kategoria">
-                  <select class="form-select" @onchange="OnEditCategoryChanged">
-                    <option value="">Wybierz...</option>
-                    @foreach (var pCategory in mCategories) {
-                      <option value="@pCategory.Id">@pCategory.Name</option>
-                    }
-                  </select>
+                                    <select class="form-select" @onchange="OnEditCategoryChanged">
+                                        <option value="">Wybierz...</option>
+                                        @if (mCategories != null) {
+                                            @foreach (var pCategory in mCategories) {
+                                                <option value="@pCategory.Id">@pCategory.Name</option>
+                                            }
+                                        }
+                                    </select>
                                 </MudTd>
                                 <MudTd DataLabel="Podkategoria">
                                     <select class="form-select" @bind="mEditTransaction.SubcategoryId">
@@ -320,11 +322,17 @@
 
     //metoda wywoływana po zmianie kategorii w edytowanej transakcji
     //e - argument zdarzenia zmiany
-    private void OnEditCategoryChanged(ChangeEventArgs e)
-    {
-        mEditTransaction.CategoryId = int.TryParse(e.Value?.ToString(), out var id) ? id : (int?)null;
+    private void OnEditCategoryChanged(ChangeEventArgs e) {
+        //parsuje wartość wybranej kategorii
+        mEditTransaction.CategoryId = int.TryParse(e.Value?.ToString(), out var val) ? val : null;
+        
+        //czyści wybór podkategorii
         mEditTransaction.SubcategoryId = null;
+        
+        //aktualizuje dostępne podkategorie
         UpdateEditSubcategories();
+        
+        //Blazor automatycznie wywoła re-render po zakończeniu handlera
     }
 
     //aktualizuje listę podkategorii dla edytowanej transakcji

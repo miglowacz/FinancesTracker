@@ -1,4 +1,4 @@
-using FinancesTracker.Data;
+ï»¿using FinancesTracker.Data;
 using FinancesTracker.Services;
 using FinancesTracker.Shared.DTOs;
 using FinancesTracker.Shared.Models;
@@ -30,7 +30,7 @@ public class CategoriesController : ControllerBase {
       var pCln_Categories_DTO = pCln_Categories.Select(MappingService.ToDto).ToList();
       return Ok(ApiResponse<List<cCategory_DTO>>.SuccessResult(pCln_Categories_DTO));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse<List<cCategory_DTO>>.ErrorResult("B³¹d podczas pobierania kategorii", new List<string> { ex.Message }));
+      return StatusCode(500, ApiResponse<List<cCategory_DTO>>.Error("BÅ‚Ä…d podczas pobierania kategorii", new List<string> { ex.Message }));
     }
 
   }
@@ -44,11 +44,11 @@ public class CategoriesController : ControllerBase {
           .FirstOrDefaultAsync(c => c.Id == xCategoryId);
 
       if (category == null)
-        return NotFound(ApiResponse<cCategory_DTO>.ErrorResult("Kategoria nie zosta³a znaleziona"));
+        return NotFound(ApiResponse<cCategory_DTO>.Error("Kategoria nie zostaÅ‚a znaleziona"));
 
       return Ok(ApiResponse<cCategory_DTO>.SuccessResult(MappingService.ToDto(category)));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse<cCategory_DTO>.ErrorResult("B³¹d podczas pobierania kategorii", new List<string> { ex.Message }));
+      return StatusCode(500, ApiResponse<cCategory_DTO>.Error("BÅ‚Ä…d podczas pobierania kategorii", new List<string> { ex.Message }));
     }
 
   }
@@ -69,7 +69,7 @@ public class CategoriesController : ControllerBase {
 
       return Ok(ApiResponse<List<cSubcategory_DTO>>.SuccessResult(subcategories));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse<List<cSubcategory_DTO>>.ErrorResult("B³¹d podczas pobierania podkategorii", new List<string> { ex.Message }));
+      return StatusCode(500, ApiResponse<List<cSubcategory_DTO>>.Error("BÅ‚Ä…d podczas pobierania podkategorii", new List<string> { ex.Message }));
     }
 
 
@@ -90,8 +90,8 @@ public class CategoriesController : ControllerBase {
 
       return Ok(ApiResponse<List<cSubcategory_DTO>>.SuccessResult(subcategories));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse<List<cSubcategory_DTO>>.ErrorResult(
-          "B³¹d podczas pobierania wszystkich podkategorii", new List<string> { ex.Message }));
+      return StatusCode(500, ApiResponse<List<cSubcategory_DTO>>.Error(
+          "BÅ‚Ä…d podczas pobierania wszystkich podkategorii", new List<string> { ex.Message }));
     }
   }
   // --- CATEGORY CRUD ---
@@ -106,7 +106,7 @@ public class CategoriesController : ControllerBase {
       await mDBContext.SaveChangesAsync();
       return Ok(ApiResponse<cCategory_DTO>.SuccessResult(MappingService.ToDto(category), "Kategoria utworzona"));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse<cCategory_DTO>.ErrorResult("B³¹d podczas tworzenia kategorii", new List<string> { ex.Message }));
+      return StatusCode(500, ApiResponse<cCategory_DTO>.Error("BÅ‚Ä…d podczas tworzenia kategorii", new List<string> { ex.Message }));
     }
   }
 
@@ -115,13 +115,13 @@ public class CategoriesController : ControllerBase {
     try {
       var category = await mDBContext.Categories.FindAsync(id);
       if (category == null)
-        return NotFound(ApiResponse<cCategory_DTO>.ErrorResult("Kategoria nie znaleziona"));
+        return NotFound(ApiResponse<cCategory_DTO>.Error("Kategoria nie znaleziona"));
 
       category.Name = dto.Name;
       await mDBContext.SaveChangesAsync();
       return Ok(ApiResponse<cCategory_DTO>.SuccessResult(MappingService.ToDto(category), "Kategoria zaktualizowana"));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse<cCategory_DTO>.ErrorResult("B³¹d podczas aktualizacji kategorii", new List<string> { ex.Message }));
+      return StatusCode(500, ApiResponse<cCategory_DTO>.Error("BÅ‚Ä…d podczas aktualizacji kategorii", new List<string> { ex.Message }));
     }
   }
 
@@ -134,13 +134,13 @@ public class CategoriesController : ControllerBase {
       if (category == null)
         return NotFound(ApiResponse.Error("Kategoria nie znaleziona"));
 
-      // Usuwanie powi¹zanych podkategorii
+      // Usuwanie powiÄ…zanych podkategorii
       mDBContext.Subcategories.RemoveRange(category.Subcategories);
       mDBContext.Categories.Remove(category);
       await mDBContext.SaveChangesAsync();
-      return Ok(ApiResponse.Success("Kategoria usuniêta"));
+      return Ok(ApiResponse.SuccessResult("Kategoria usuniÄ™ta"));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse.Error("B³¹d podczas usuwania kategorii", new List<string> { ex.Message }));
+      return StatusCode(500, ApiResponse.Error("BÅ‚Ä…d podczas usuwania kategorii", new List<string> { ex.Message }));
     }
   }
 
@@ -151,7 +151,7 @@ public class CategoriesController : ControllerBase {
     try {
       var category = await mDBContext.Categories.FindAsync(categoryId);
       if (category == null)
-        return NotFound(ApiResponse<cSubcategory_DTO>.ErrorResult("Kategoria nie znaleziona"));
+        return NotFound(ApiResponse<cSubcategory_DTO>.Error("Kategoria nie znaleziona"));
 
       var subcategory = new cSubcategory {
         Name = dto.Name,
@@ -165,7 +165,7 @@ public class CategoriesController : ControllerBase {
         CategoryId = subcategory.CategoryId
       }, "Podkategoria utworzona"));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse<cSubcategory_DTO>.ErrorResult("B³¹d podczas tworzenia podkategorii", new List<string> { ex.Message }));
+      return StatusCode(500, ApiResponse<cSubcategory_DTO>.Error("BÅ‚Ä…d podczas tworzenia podkategorii", new List<string> { ex.Message }));
     }
   }
 
@@ -174,7 +174,7 @@ public class CategoriesController : ControllerBase {
     try {
       var subcategory = await mDBContext.Subcategories.FindAsync(id);
       if (subcategory == null)
-        return NotFound(ApiResponse<cSubcategory_DTO>.ErrorResult("Podkategoria nie znaleziona"));
+        return NotFound(ApiResponse<cSubcategory_DTO>.Error("Podkategoria nie znaleziona"));
 
       subcategory.Name = dto.Name;
       await mDBContext.SaveChangesAsync();
@@ -184,7 +184,7 @@ public class CategoriesController : ControllerBase {
         CategoryId = subcategory.CategoryId
       }, "Podkategoria zaktualizowana"));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse<cSubcategory_DTO>.ErrorResult("B³¹d podczas aktualizacji podkategorii", new List<string> { ex.Message }));
+      return StatusCode(500, ApiResponse<cSubcategory_DTO>.Error("BÅ‚Ä…d podczas aktualizacji podkategorii", new List<string> { ex.Message }));
     }
   }
 
@@ -197,9 +197,9 @@ public class CategoriesController : ControllerBase {
 
       mDBContext.Subcategories.Remove(subcategory);
       await mDBContext.SaveChangesAsync();
-      return Ok(ApiResponse.Success("Podkategoria usuniêta"));
+      return Ok(ApiResponse.SuccessResult("Podkategoria usuniÄ™ta"));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse.Error("B³¹d podczas usuwania podkategorii", new List<string> { ex.Message }));
+      return StatusCode(500, ApiResponse.Error("BÅ‚Ä…d podczas usuwania podkategorii", new List<string> { ex.Message }));
     }
   }
 }

@@ -91,6 +91,7 @@ public class TransactionImportService {
     List<TransactionDto> pTransactionDtos = new();
 
     List<TransactionDto> pDtos = new();
+
     foreach (cTransaction pT in xTransactions) {
       //pobierz CategoryId na podstawie nazwy kategorii
       //xCategoryNameToId.TryGetValue(pT.Category, out int pCategoryId);

@@ -1,0 +1,245 @@
+﻿@page "/reports"
+@using System.Globalization
+@using FinancesTracker.Client.Services
+@using FinancesTracker.Shared.DTOs
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Forms
+@inject cTransactionService TransactionService
+
+<PageTitle>Raporty</PageTitle>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <h2 class="mb-3">Raporty finansowe</h2>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Zakres czasu</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label">Od</label>
+              <InputDate @bind-Value="mStartDate" class="form-control" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Do</label>
+              <InputDate @bind-Value="mEndDate" class="form-control" />
+            </div>
+            <div class="col-md-6 d-flex gap-2">
+              <button class="btn btn-primary" @onclick="ApplyRange">Pokaż</button>
+              <button class="btn btn-outline-secondary" @onclick="SetThisMonth">Bieżący miesiąc</button>
+              <button class="btn btn-outline-secondary" @onclick="SetLastMonth">Poprzedni miesiąc</button>
+              <button class="btn btn-outline-secondary" @onclick="SetLast3Months">Ostatnie 3 mies.</button>
+              <button class="btn btn-outline-secondary" @onclick="SetYtd">YTD</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      @if (mIsLoading)
+      {
+        <div class="text-center p-4">
+          <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+        </div>
+      }
+      else
+      {
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <MudPaper Class="pa-4">
+              <div class="text-muted">Przychody</div>
+              <h4 class="mb-0 text-success">@mTotalIncome.ToString("C", CultureInfo.GetCultureInfo("pl-PL"))</h4>
+            </MudPaper>
+          </div>
+          <div class="col-md-4">
+            <MudPaper Class="pa-4">
+              <div class="text-muted">Wydatki</div>
+              <h4 class="mb-0 text-danger">@mTotalExpenses.ToString("C", CultureInfo.GetCultureInfo("pl-PL"))</h4>
+            </MudPaper>
+          </div>
+          <div class="col-md-4">
+            <MudPaper Class="pa-4">
+              <div class="text-muted">Bilans</div>
+              <h4 class="mb-0 @(mBalance >= 0 ? "text-success" : "text-danger")">
+                @mBalance.ToString("C", CultureInfo.GetCultureInfo("pl-PL"))
+              </h4>
+            </MudPaper>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-lg-5">
+            <MudPaper Class="pa-4">
+              <h6 class="mb-3">Wydatki wg kategorii</h6>
+              @if (mCategoryLabels.Length == 0)
+              {
+                <div class="text-muted">Brak danych.</div>
+              }
+              else
+              {
+                <MudChart ChartType="ChartType.Pie"
+                          Labels="mCategoryLabels"
+                          Data="new double[][] { mCategoryData }" />
+              }
+              @if (mCategoryLabels.Length > 0)
+              {
+                <div class="table-responsive mt-3">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr><th>Kategoria</th><th class="text-end">Kwota</th><th class="text-end">Udział</th></tr>
+                    </thead>
+                    <tbody>
+                      @for (int i = 0; i < mCategoryLabels.Length; i++)
+                      {
+                        var amount = (decimal)mCategoryData[i];
+                        var pct = mCategoryData.Sum() > 0 ? (amount / (decimal)mCategoryData.Sum()) * 100m : 0m;
+                        <tr>
+                          <td>@mCategoryLabels[i]</td>
+                          <td class="text-end">@amount.ToString("C", CultureInfo.GetCultureInfo("pl-PL"))</td>
+                          <td class="text-end">@pct.ToString("0.0")%</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+            </MudPaper>
+          </div>
+
+          <div class="col-lg-7">
+            <MudPaper Class="pa-4">
+              <h6 class="mb-3">Cashflow w czasie</h6>
+              @if (mTimelineLabels.Length == 0)
+              {
+                <div class="text-muted">Brak danych.</div>
+              }
+              else
+              {
+                <MudChart ChartType="ChartType.Line"
+                          Labels="mTimelineLabels"
+                          Data="new double[][] { mTimelineIncome, mTimelineExpenses }"
+                          Datasets="@(new ChartSeries[]
+                          {
+                              new ChartSeries() { Name = "Przychody", Data = mTimelineIncome },
+                              new ChartSeries() { Name = "Wydatki", Data = mTimelineExpenses }
+                          })" />
+              }
+            </MudPaper>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@code {
+  private DateTime? mStartDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+  private DateTime? mEndDate = DateTime.Today;
+  private bool mIsLoading = false;
+  private List<TransactionDto> mAll = new();
+
+  private decimal mTotalIncome, mTotalExpenses, mBalance;
+
+  private string[] mCategoryLabels = Array.Empty<string>();
+  private double[] mCategoryData = Array.Empty<double>();
+
+  private string[] mTimelineLabels = Array.Empty<string>();
+  private double[] mTimelineIncome = Array.Empty<double>();
+  private double[] mTimelineExpenses = Array.Empty<double>();
+
+  protected override async Task OnInitializedAsync() => await LoadData();
+
+  private async Task ApplyRange() => await LoadData();
+
+  private async Task SetThisMonth() {
+    var now = DateTime.Today;
+    mStartDate = new DateTime(now.Year, now.Month, 1);
+    mEndDate = now;
+    await LoadData();
+  }
+
+  private async Task SetLastMonth() {
+    var now = DateTime.Today;
+    var firstThis = new DateTime(now.Year, now.Month, 1);
+    var lastMonthLastDay = firstThis.AddDays(-1);
+    mStartDate = new DateTime(lastMonthLastDay.Year, lastMonthLastDay.Month, 1);
+    mEndDate = lastMonthLastDay;
+    await LoadData();
+  }
+
+  private async Task SetLast3Months() {
+    var now = DateTime.Today;
+    mEndDate = now;
+    var threeMonthsAgoStart = new DateTime(now.AddMonths(-2).Year, now.AddMonths(-2).Month, 1); // inclusive 3 months window start
+    mStartDate = threeMonthsAgoStart;
+    await LoadData();
+  }
+
+  private async Task SetYtd() {
+    var now = DateTime.Today;
+    mStartDate = new DateTime(now.Year, 1, 1);
+    mEndDate = now;
+    await LoadData();
+  }
+
+  private async Task LoadData() {
+    if (!mStartDate.HasValue || !mEndDate.HasValue) return;
+
+    mIsLoading = true;
+    mAll.Clear();
+
+    var pFilter = new TransactionFilterDto {
+      StartDate = mStartDate.Value.Date,
+      EndDate = mEndDate.Value.Date.AddDays(1).AddTicks(-1),
+      PageNumber = 1,
+      PageSize = 1000,
+      SortBy = "Date",
+      SortDescending = false
+    };
+
+    while (true) {
+      var pResp = await TransactionService.GetTransactionsAsync(pFilter);
+      if (!pResp.Success || pResp.Data is null) break;
+
+      mAll.AddRange(pResp.Data.Items);
+
+      if (pFilter.PageNumber >= pResp.Data.TotalPages) break;
+      pFilter.PageNumber++;
+    }
+
+    BuildAggregates();
+    mIsLoading = false;
+  }
+
+  private void BuildAggregates() {
+    mTotalIncome = mAll.Where(t => t.Amount > 0).Sum(t => t.Amount);
+    mTotalExpenses = Math.Abs(mAll.Where(t => t.Amount < 0).Sum(t => t.Amount));
+    mBalance = mTotalIncome - mTotalExpenses;
+
+    var cat = mAll.Where(t => t.Amount < 0)
+                  .GroupBy(t => string.IsNullOrWhiteSpace(t.CategoryName) ? "Nieprzypisane" : t.CategoryName)
+                  .Select(g => new { Name = g.Key, Sum = Math.Abs(g.Sum(x => x.Amount)) })
+                  .OrderByDescending(x => x.Sum)
+                  .ToList();
+
+    mCategoryLabels = cat.Select(x => x.Name).ToArray();
+    mCategoryData = cat.Select(x => (double)x.Sum).ToArray();
+
+    var totalDays = (mEndDate!.Value.Date - mStartDate!.Value.Date).TotalDays;
+    bool byMonth = totalDays > 60;
+
+    var tl = mAll.GroupBy(t => byMonth ? new DateTime(t.Date.Year, t.Date.Month, 1) : t.Date.Date)
+                 .OrderBy(g => g.Key)
+                 .Select(g => new {
+                   Label = byMonth ? g.Key.ToString("yyyy-MM") : g.Key.ToString("dd.MM"),
+                   Income = g.Where(x => x.Amount > 0).Sum(x => x.Amount),
+                   Expenses = Math.Abs(g.Where(x => x.Amount < 0).Sum(x => x.Amount))
+                 }).ToList();
+
+    mTimelineLabels = tl.Select(x => x.Label).ToArray();
+    mTimelineIncome = tl.Select(x => (double)x.Income).ToArray();
+    mTimelineExpenses = tl.Select(x => (double)x.Expenses).ToArray();
+  }
+}

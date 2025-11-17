@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+ï»¿using System.Net.Http.Json;
 using FinancesTracker.Shared.DTOs;
 using FinancesTracker.Shared.Models;
 
@@ -17,15 +17,15 @@ public class cSubcategoryService {
       Id = dto.Id,
       Name = dto.Name,
       CategoryId = dto.CategoryId
-      // Dodaj mapowanie innych w³aœciwoœci, jeœli s¹ w DTO
+      // Dodaj mapowanie innych wÅ‚aÅ›ciwoÅ›ci, jeÅ›li sÄ… w DTO
     }).ToList();
 
     return subcategories;
   }
 
   public async Task<ApiResponse<cSubcategory_DTO>?> GetByIdAsync(int id) {
-    // Jeœli chcesz pobieraæ subkategoriê po ID, musisz dodaæ odpowiedni endpoint w API.
-    // Przyk³ad (jeœli endpoint istnieje):
+    // JeÅ›li chcesz pobieraÄ‡ subkategoriÄ™ po ID, musisz dodaÄ‡ odpowiedni endpoint w API.
+    // PrzykÅ‚ad (jeÅ›li endpoint istnieje):
     return await _http.GetFromJsonAsync<ApiResponse<cSubcategory_DTO>>($"api/categories/subcategories/{id}");
   }
 
@@ -37,7 +37,7 @@ public class cSubcategoryService {
     };
     var response = await _http.PostAsJsonAsync($"api/categories/{categoryId}/subcategories", dto);
     return await response.Content.ReadFromJsonAsync<ApiResponse<cSubcategory_DTO>>()
-           ?? ApiResponse<cSubcategory_DTO>.ErrorResult("Brak odpowiedzi z serwera");
+           ?? ApiResponse<cSubcategory_DTO>.Error("Brak odpowiedzi z serwera");
   }
 
   public async Task<ApiResponse<cSubcategory_DTO>> UpdateAsync(int subcategoryId, cSubcategory subcategory) {
@@ -48,7 +48,7 @@ public class cSubcategoryService {
     };
     var response = await _http.PutAsJsonAsync($"api/categories/subcategories/{subcategoryId}", dto);
     return await response.Content.ReadFromJsonAsync<ApiResponse<cSubcategory_DTO>>()
-           ?? ApiResponse<cSubcategory_DTO>.ErrorResult("Brak odpowiedzi z serwera");
+           ?? ApiResponse<cSubcategory_DTO>.Error("Brak odpowiedzi z serwera");
   }
 
   public async Task<ApiResponse> DeleteAsync(int subcategoryId) {

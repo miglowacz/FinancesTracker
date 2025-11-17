@@ -5,33 +5,26 @@ using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddRazorPages();        // obsługa stron Razor (_Host.cshtml)
-builder.Services.AddControllers();       // obsługa Web API
-builder.Services.AddHttpClient();        // HttpClient dla Client
-builder.Services.AddServerSideBlazor();  // opcjonalne — jeśli używasz komponentów SSR
-builder.Services.AddMudServices();       // dodaj MudBlazor
+// Add services
+builder.Services.AddRazorPages();
+builder.Services.AddControllers();
+builder.Services.AddHttpClient();
+builder.Services.AddServerSideBlazor();
+builder.Services.AddMudServices();
 
-// Entity Framework + PostgreSQL
 builder.Services.AddDbContext<FinancesTrackerDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Dodaj CORS dla development (jeśli Client działa osobno w trybie dev)
 if (builder.Environment.IsDevelopment()) {
-  builder.Services.AddCors(options =>
-  {
-    options.AddDefaultPolicy(policy =>
-    {
-      policy.AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader();
+  builder.Services.AddCors(options => {
+    options.AddDefaultPolicy(policy => {
+      policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
   });
 }
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
   app.UseWebAssemblyDebugging();
   app.UseCors();
@@ -41,14 +34,14 @@ if (app.Environment.IsDevelopment()) {
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();   // potrzebne dla plików z wwwroot
-app.UseRouting();
-app.UseBlazorFrameworkFiles();
 
+// Serve Blazor client files and static assets
+app.UseBlazorFrameworkFiles();
+app.UseStaticFiles();
+
+app.UseRouting();
 
 app.MapControllers();
-
-// Ta linia ładuje Twoją aplikację Blazor WebAssembly z Client
-app.MapFallbackToPage("/_Host");
+app.MapFallbackToPage("/_Host"); // hosting WASM via _Host
 
 app.Run();

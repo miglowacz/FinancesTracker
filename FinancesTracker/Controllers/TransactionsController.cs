@@ -54,13 +54,15 @@ public class TransactionsController : ControllerBase {
     if (xFilter.MaxAmount.HasValue)
       pQuery = pQuery.Where(t => t.Amount <= xFilter.MaxAmount.Value);
 
-    //filtrowanie po dacie początkowej
-    if (xFilter.StartDate.HasValue)
-      pQuery = pQuery.Where(t => t.Date >= xFilter.StartDate.Value);
+    if (xFilter.StartDate.HasValue) {
+      var s = xFilter.StartDate.Value.ToUniversalTime();
+      pQuery = pQuery.Where(t => t.Date >= s);
+    }
 
-    //filtrowanie po dacie końcowej
-    if (xFilter.EndDate.HasValue)
-      pQuery = pQuery.Where(t => t.Date <= xFilter.EndDate.Value);
+    if (xFilter.EndDate.HasValue) {
+      var e = xFilter.EndDate.Value.ToUniversalTime();
+      pQuery = pQuery.Where(t => t.Date <= e);
+    }
 
     //filtrowanie po opisie
     if (!string.IsNullOrEmpty(xFilter.SearchTerm))
@@ -118,7 +120,7 @@ public class TransactionsController : ControllerBase {
         .FirstOrDefaultAsync(t => t.Id == xId);
 
     if (pTransaction == null)
-      return NotFound(ApiResponse<TransactionDto>.ErrorResult("Transakcja nie została znaleziona"));
+      return NotFound(ApiResponse<TransactionDto>.Error("Transakcja nie została znaleziona"));
 
     return Ok(ApiResponse<TransactionDto>.SuccessResult(MappingService.ToDto(pTransaction)));
 
@@ -131,7 +133,7 @@ public class TransactionsController : ControllerBase {
 
     if (!ModelState.IsValid) {
       var pErrors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Dane transakcji są nieprawidłowe", pErrors));
+      return BadRequest(ApiResponse<TransactionDto>.Error("Dane transakcji są nieprawidłowe", pErrors));
     }
 
     //sprawdza czy kategoria i podkategoria istnieją
@@ -139,10 +141,10 @@ public class TransactionsController : ControllerBase {
         .FirstOrDefaultAsync(c => c.Id == xTransactionDto.CategoryId);
 
     if (pCategory == null)
-      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Wybrana kategoria nie istnieje"));
+      return BadRequest(ApiResponse<TransactionDto>.Error("Wybrana kategoria nie istnieje"));
 
     if (!pCategory.Subcategories.Any(s => s.Id == xTransactionDto.SubcategoryId))
-      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Wybrana podkategoria nie należy do wybranej kategorii"));
+      return BadRequest(ApiResponse<TransactionDto>.Error("Wybrana podkategoria nie należy do wybranej kategorii"));
 
     var pTransaction = MappingService.ToEntity(xTransactionDto);
     mContext.Transactions.Add(pTransaction);
@@ -161,32 +163,32 @@ public class TransactionsController : ControllerBase {
   }
 
   [HttpPut("{id}")]
-  public async Task<ActionResult<ApiResponse<TransactionDto>>> UpdateTransaction(int xId, TransactionDto xTransactionDto) {
+  public async Task<ActionResult<ApiResponse<TransactionDto>>> UpdateTransaction(int id, TransactionDto xTransactionDto) {
     //funkcja aktualizuje istniejącą transakcję
     //xId - identyfikator transakcji
     //xTransactionDto - dane do aktualizacji transakcji
 
-    if (xId != xTransactionDto.Id)
-      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("ID transakcji nie pasuje"));
+    if (id != xTransactionDto.Id)
+      return BadRequest(ApiResponse<TransactionDto>.Error("ID transakcji nie pasuje"));
 
     if (!ModelState.IsValid) {
       var pErrors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Dane transakcji są nieprawidłowe", pErrors));
+      return BadRequest(ApiResponse<TransactionDto>.Error("Dane transakcji są nieprawidłowe", pErrors));
     }
 
-    var pExistingTransaction = await mContext.Transactions.FindAsync(xId);
+    var pExistingTransaction = await mContext.Transactions.FindAsync(id);
     if (pExistingTransaction == null)
-      return NotFound(ApiResponse<TransactionDto>.ErrorResult("Transakcja nie została znaleziona"));
+      return NotFound(ApiResponse<TransactionDto>.Error("Transakcja nie została znaleziona"));
 
     //sprawdza czy kategoria i podkategoria istnieją
     var pCategory = await mContext.Categories.Include(c => c.Subcategories)
         .FirstOrDefaultAsync(c => c.Id == xTransactionDto.CategoryId);
 
     if (pCategory == null)
-      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Wybrana kategoria nie istnieje"));
+      return BadRequest(ApiResponse<TransactionDto>.Error("Wybrana kategoria nie istnieje"));
 
     if (!pCategory.Subcategories.Any(s => s.Id == xTransactionDto.SubcategoryId))
-      return BadRequest(ApiResponse<TransactionDto>.ErrorResult("Wybrana podkategoria nie należy do wybranej kategorii"));
+      return BadRequest(ApiResponse<TransactionDto>.Error("Wybrana podkategoria nie należy do wybranej kategorii"));
 
     //aktualizuje właściwości transakcji
     pExistingTransaction.Date = xTransactionDto.Date;
@@ -205,7 +207,7 @@ public class TransactionsController : ControllerBase {
     var pUpdatedTransaction = await mContext.Transactions
         .Include(t => t.Category)
         .Include(t => t.Subcategory)
-        .FirstAsync(t => t.Id == xId);
+        .FirstAsync(t => t.Id == id);
 
     return Ok(ApiResponse<TransactionDto>.SuccessResult(MappingService.ToDto(pUpdatedTransaction), "Transakcja została zaktualizowana"));
 
@@ -223,7 +225,7 @@ public class TransactionsController : ControllerBase {
     mContext.Transactions.Remove(pTransaction);
     await mContext.SaveChangesAsync();
 
-    return Ok(ApiResponse.Success("Transakcja została usunięta"));
+    return Ok(ApiResponse.SuccessResult("Transakcja została usunięta"));
 
   }
 
@@ -312,7 +314,7 @@ public class TransactionsController : ControllerBase {
     if (pErrors.Any())
       return Ok(ApiResponse.Error($"Zaimportowano {importedCount} transakcji. Część transakcji nie została zaimportowana", pErrors));
 
-    return Ok(ApiResponse.Success("Transakcje zostały zaimportowane"));
+    return Ok(ApiResponse.SuccessResult("Transakcje zostały zaimportowane"));
 
   }
 

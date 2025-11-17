@@ -1,6 +1,5 @@
 ﻿using FinancesTracker.Client;
 using FinancesTracker.Client.Services;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 using MudBlazor.Services;

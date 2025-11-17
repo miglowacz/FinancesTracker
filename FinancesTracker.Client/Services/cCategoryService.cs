@@ -1,4 +1,4 @@
-using FinancesTracker.Shared.Constants;
+ï»¿using FinancesTracker.Shared.Constants;
 using FinancesTracker.Shared.DTOs;
 using System.Net.Http.Json;
 using FinancesTracker.Shared.Models;
@@ -76,7 +76,7 @@ public class cCategoryService {
 
     var response = await _http.PostAsJsonAsync("api/categories", dto);
     return await response.Content.ReadFromJsonAsync<ApiResponse<cCategory_DTO>>()
-           ?? ApiResponse<cCategory_DTO>.ErrorResult("Brak odpowiedzi z serwera");
+           ?? ApiResponse<cCategory_DTO>.Error("Brak odpowiedzi z serwera");
   }
 
   public async Task<ApiResponse<cCategory_DTO>> UpdateCategoryAsync(int id, cCategory category) {
@@ -92,7 +92,7 @@ public class cCategoryService {
 
     var response = await _http.PutAsJsonAsync($"api/categories/{id}", dto);
     return await response.Content.ReadFromJsonAsync<ApiResponse<cCategory_DTO>>()
-           ?? ApiResponse<cCategory_DTO>.ErrorResult("Brak odpowiedzi z serwera");
+           ?? ApiResponse<cCategory_DTO>.Error("Brak odpowiedzi z serwera");
   }
 
   public async Task<ApiResponse> DeleteCategoryAsync(int id) {
@@ -111,18 +111,18 @@ public class cCategoryService {
     using (var reader = new StreamReader(csvStream)) {
       int lineNo = 0;
 
-      // Pobierz aktualne kategorie i podkategorie do s³owników
+      // Pobierz aktualne kategorie i podkategorie do sÅ‚ownikÃ³w
       var categories = await GetAllAsync();
       var subcategories = await subcategoryService.GetAllAsync();
       var categoriesDict = categories.ToDictionary(c => c.Name, c => c.Id, StringComparer.OrdinalIgnoreCase);
-      // U¿yj stringa jako klucza: "nazwa_kategorii|nazwa_podkategorii"
+      // UÅ¼yj stringa jako klucza: "nazwa_kategorii|nazwa_podkategorii"
       var subcategoriesDict = subcategories.ToDictionary(
           s => $"{s.Name}|{s.CategoryId}", s => s.Id, StringComparer.OrdinalIgnoreCase);
       string? line;
       while ((line = await reader.ReadLineAsync()) != null){
          
         lineNo++;
-        if (lineNo == 1) continue; // pomiñ nag³ówek
+        if (lineNo == 1) continue; // pomiÅ„ nagÅ‚Ã³wek
         if (string.IsNullOrWhiteSpace(line)) continue;
 
         var parts = line.Split(',');
@@ -139,7 +139,7 @@ public class cCategoryService {
           var newCat = new cCategory { Name = categoryName };
           var createdCatResp = await CreateCategoryAsync(newCat);
           if (createdCatResp?.Data == null)
-            continue; // lub loguj b³¹d
+            continue; // lub loguj bÅ‚Ä…d
 
           categoryId = createdCatResp.Data.Id;
           categoriesDict[categoryName] = categoryId;
@@ -152,15 +152,15 @@ public class cCategoryService {
         {
           var newSub = new cSubcategory { Name = subcategoryName, CategoryId = categoryId };
           var createdSub = await subcategoryService.CreateAsync(categoryId, newSub);
-          // Za³ó¿, ¿e CreateAsync zwraca cSubcategory lub cSubcategory_DTO z Id
+          // ZaÅ‚Ã³Å¼, Å¼e CreateAsync zwraca cSubcategory lub cSubcategory_DTO z Id
           subcategoryId = createdSub?.Data.Id ?? 0;
           if (subcategoryId == 0)
-            continue; // lub loguj b³¹d
+            continue; // lub loguj bÅ‚Ä…d
 
           subcategoriesDict[subKey] = subcategoryId;
         }
 
-        // Regu³a
+        // ReguÅ‚a
         var newRule = new cCategoryRule
         {
           Keyword = keyword,

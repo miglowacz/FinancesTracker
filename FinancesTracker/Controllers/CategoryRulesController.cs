@@ -1,4 +1,4 @@
-using FinancesTracker.Data;
+Ôªøusing FinancesTracker.Data;
 using FinancesTracker.Services;
 using FinancesTracker.Shared.DTOs;
 using Microsoft.AspNetCore.Mvc;
@@ -33,7 +33,7 @@ public class CategoryRulesController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResponse<List<CategoryRuleDto>>.ErrorResult("B≥πd podczas pobierania regu≥", new List<string> { ex.Message }));
+            return StatusCode(500, ApiResponse<List<CategoryRuleDto>>.Error("B≈ÇƒÖd podczas pobierania regu≈Ç", new List<string> { ex.Message }));
         }
     }
 
@@ -48,13 +48,13 @@ public class CategoryRulesController : ControllerBase
                 .FirstOrDefaultAsync(r => r.Id == id);
 
             if (rule == null)
-                return NotFound(ApiResponse<CategoryRuleDto>.ErrorResult("Regu≥a nie zosta≥a znaleziona"));
+                return NotFound(ApiResponse<CategoryRuleDto>.Error("Regu≈Ça nie zosta≈Ça znaleziona"));
 
             return Ok(ApiResponse<CategoryRuleDto>.SuccessResult(MappingService.ToDto(rule)));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResponse<CategoryRuleDto>.ErrorResult("B≥πd podczas pobierania regu≥y", new List<string> { ex.Message }));
+            return StatusCode(500, ApiResponse<CategoryRuleDto>.Error("B≈ÇƒÖd podczas pobierania regu≈Çy", new List<string> { ex.Message }));
         }
     }
 
@@ -67,16 +67,16 @@ public class CategoryRulesController : ControllerBase
                 .FirstOrDefaultAsync(c => c.Id == ruleDto.CategoryId);
 
             if (category == null)
-                return BadRequest(ApiResponse<CategoryRuleDto>.ErrorResult("Wybrana kategoria nie istnieje"));
+                return BadRequest(ApiResponse<CategoryRuleDto>.Error("Wybrana kategoria nie istnieje"));
 
             if (!category.Subcategories.Any(s => s.Id == ruleDto.SubcategoryId))
-                return BadRequest(ApiResponse<CategoryRuleDto>.ErrorResult("Wybrana podkategoria nie naleøy do wybranej kategorii"));
+                return BadRequest(ApiResponse<CategoryRuleDto>.Error("Wybrana podkategoria nie nale≈ºy do wybranej kategorii"));
 
             var existingRule = await _context.CategoryRules
                 .FirstOrDefaultAsync(r => r.Keyword.ToLower() == ruleDto.Keyword.ToLower());
 
             if (existingRule != null)
-                return BadRequest(ApiResponse<CategoryRuleDto>.ErrorResult("Regu≥a dla tego s≥owa kluczowego juø istnieje"));
+                return BadRequest(ApiResponse<CategoryRuleDto>.Error("Regu≈Ça dla tego s≈Çowa kluczowego ju≈º istnieje"));
 
             var rule = MappingService.ToEntity(ruleDto);
             _context.CategoryRules.Add(rule);
@@ -87,11 +87,11 @@ public class CategoryRulesController : ControllerBase
                 .Include(r => r.Subcategory)
                 .FirstAsync(r => r.Id == rule.Id);
 
-            return Ok(ApiResponse<CategoryRuleDto>.SuccessResult(MappingService.ToDto(createdRule), "Regu≥a zosta≥a utworzona"));
+            return Ok(ApiResponse<CategoryRuleDto>.SuccessResult(MappingService.ToDto(createdRule), "Regu≈Ça zosta≈Ça utworzona"));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResponse<CategoryRuleDto>.ErrorResult("B≥πd podczas tworzenia regu≥y", new List<string> { ex.Message }));
+            return StatusCode(500, ApiResponse<CategoryRuleDto>.Error("B≈ÇƒÖd podczas tworzenia regu≈Çy", new List<string> { ex.Message }));
         }
     }
 
@@ -101,26 +101,26 @@ public class CategoryRulesController : ControllerBase
         try
         {
             if (id != ruleDto.Id)
-                return BadRequest(ApiResponse<CategoryRuleDto>.ErrorResult("ID regu≥y nie pasuje"));
+                return BadRequest(ApiResponse<CategoryRuleDto>.Error("ID regu≈Çy nie pasuje"));
 
             var existingRule = await _context.CategoryRules.FindAsync(id);
             if (existingRule == null)
-                return NotFound(ApiResponse<CategoryRuleDto>.ErrorResult("Regu≥a nie zosta≥a znaleziona"));
+                return NotFound(ApiResponse<CategoryRuleDto>.Error("Regu≈Ça nie zosta≈Ça znaleziona"));
 
             var category = await _context.Categories.Include(c => c.Subcategories)
                 .FirstOrDefaultAsync(c => c.Id == ruleDto.CategoryId);
 
             if (category == null)
-                return BadRequest(ApiResponse<CategoryRuleDto>.ErrorResult("Wybrana kategoria nie istnieje"));
+                return BadRequest(ApiResponse<CategoryRuleDto>.Error("Wybrana kategoria nie istnieje"));
 
             if (!category.Subcategories.Any(s => s.Id == ruleDto.SubcategoryId))
-                return BadRequest(ApiResponse<CategoryRuleDto>.ErrorResult("Wybrana podkategoria nie naleøy do wybranej kategorii"));
+                return BadRequest(ApiResponse<CategoryRuleDto>.Error("Wybrana podkategoria nie nale≈ºy do wybranej kategorii"));
 
             var duplicateRule = await _context.CategoryRules
                 .FirstOrDefaultAsync(r => r.Keyword.ToLower() == ruleDto.Keyword.ToLower() && r.Id != id);
 
             if (duplicateRule != null)
-                return BadRequest(ApiResponse<CategoryRuleDto>.ErrorResult("Regu≥a dla tego s≥owa kluczowego juø istnieje"));
+                return BadRequest(ApiResponse<CategoryRuleDto>.Error("Regu≈Ça dla tego s≈Çowa kluczowego ju≈º istnieje"));
 
             existingRule.Keyword = ruleDto.Keyword.ToLowerInvariant();
             existingRule.CategoryId = ruleDto.CategoryId;
@@ -134,11 +134,11 @@ public class CategoryRulesController : ControllerBase
                 .Include(r => r.Subcategory)
                 .FirstAsync(r => r.Id == id);
 
-            return Ok(ApiResponse<CategoryRuleDto>.SuccessResult(MappingService.ToDto(updatedRule), "Regu≥a zosta≥a zaktualizowana"));
+            return Ok(ApiResponse<CategoryRuleDto>.SuccessResult(MappingService.ToDto(updatedRule), "Regu≈Ça zosta≈Ça zaktualizowana"));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResponse<CategoryRuleDto>.ErrorResult("B≥πd podczas aktualizacji regu≥y", new List<string> { ex.Message }));
+            return StatusCode(500, ApiResponse<CategoryRuleDto>.Error("B≈ÇƒÖd podczas aktualizacji regu≈Çy", new List<string> { ex.Message }));
         }
     }
 
@@ -149,16 +149,16 @@ public class CategoryRulesController : ControllerBase
         {
             var rule = await _context.CategoryRules.FindAsync(id);
             if (rule == null)
-                return NotFound(ApiResponse.Error("Regu≥a nie zosta≥a znaleziona"));
+                return NotFound(ApiResponse.Error("Regu≈Ça nie zosta≈Ça znaleziona"));
 
             _context.CategoryRules.Remove(rule);
             await _context.SaveChangesAsync();
 
-            return Ok(ApiResponse.Success("Regu≥a zosta≥a usuniÍta"));
+            return Ok(ApiResponse.SuccessResult("Regu≈Ça zosta≈Ça usuniƒôta"));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResponse.Error("B≥πd podczas usuwania regu≥y", new List<string> { ex.Message }));
+            return StatusCode(500, ApiResponse.Error("B≈ÇƒÖd podczas usuwania regu≈Çy", new List<string> { ex.Message }));
         }
     }
 }

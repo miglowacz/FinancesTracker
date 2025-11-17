@@ -1,4 +1,4 @@
-using FinancesTracker.Shared.DTOs;
+ï»¿using FinancesTracker.Shared.DTOs;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -24,15 +24,15 @@ public class ApiService
         try
         {
             var response = await _httpClient.GetFromJsonAsync<ApiResponse<T>>(endpoint, _jsonOptions);
-            return response ?? ApiResponse<T>.ErrorResult("Pusta odpowiedŸ z serwera");
+            return response ?? ApiResponse<T>.Error("Pusta odpowiedÅº z serwera");
         }
         catch (HttpRequestException ex)
         {
-            return ApiResponse<T>.ErrorResult($"B³¹d sieci: {ex.Message}");
+            return ApiResponse<T>.Error($"BÅ‚Ä…d sieci: {ex.Message}");
         }
         catch (Exception ex)
         {
-            return ApiResponse<T>.ErrorResult($"Nieoczekiwany b³¹d: {ex.Message}");
+            return ApiResponse<T>.Error($"Nieoczekiwany bÅ‚Ä…d: {ex.Message}");
         }
     }
 
@@ -49,17 +49,17 @@ public class ApiService
             if (response.IsSuccessStatusCode)
             {
                 var result = JsonSerializer.Deserialize<ApiResponse<T>>(responseContent, _jsonOptions);
-                return result ?? ApiResponse<T>.ErrorResult("B³¹d deserializacji odpowiedzi");
+                return result ?? ApiResponse<T>.Error("BÅ‚Ä…d deserializacji odpowiedzi");
             }
             else
             {
-                var errorResult = JsonSerializer.Deserialize<ApiResponse<T>>(responseContent, _jsonOptions);
-                return errorResult ?? ApiResponse<T>.ErrorResult($"B³¹d HTTP {response.StatusCode}");
+                var Error = JsonSerializer.Deserialize<ApiResponse<T>>(responseContent, _jsonOptions);
+                return Error ?? ApiResponse<T>.Error($"BÅ‚Ä…d HTTP {response.StatusCode}");
             }
         }
         catch (Exception ex)
         {
-            return ApiResponse<T>.ErrorResult($"B³¹d podczas wysy³ania ¿¹dania: {ex.Message}");
+            return ApiResponse<T>.Error($"BÅ‚Ä…d podczas wysyÅ‚ania Å¼Ä…dania: {ex.Message}");
         }
     }
 
@@ -76,17 +76,17 @@ public class ApiService
             if (response.IsSuccessStatusCode)
             {
                 var result = JsonSerializer.Deserialize<ApiResponse<T>>(responseContent, _jsonOptions);
-                return result ?? ApiResponse<T>.ErrorResult("B³¹d deserializacji odpowiedzi");
+                return result ?? ApiResponse<T>.Error("BÅ‚Ä…d deserializacji odpowiedzi");
             }
             else
             {
-                var errorResult = JsonSerializer.Deserialize<ApiResponse<T>>(responseContent, _jsonOptions);
-                return errorResult ?? ApiResponse<T>.ErrorResult($"B³¹d HTTP {response.StatusCode}");
+                var error = JsonSerializer.Deserialize<ApiResponse<T>>(responseContent, _jsonOptions);
+                return error ?? ApiResponse<T>.Error($"BÅ‚Ä…d HTTP {response.StatusCode}");
             }
         }
         catch (Exception ex)
         {
-            return ApiResponse<T>.ErrorResult($"B³¹d podczas aktualizacji: {ex.Message}");
+            return ApiResponse<T>.Error($"BÅ‚Ä…d podczas aktualizacji: {ex.Message}");
         }
     }
 
@@ -100,17 +100,18 @@ public class ApiService
             if (response.IsSuccessStatusCode)
             {
                 var result = JsonSerializer.Deserialize<ApiResponse>(responseContent, _jsonOptions);
-                return result ?? ApiResponse.Success("Operacja zakoñczona pomyœlnie");
+                return result ?? ApiResponse.SuccessResult("Operacja zakoÅ„czona pomyÅ›lnie");
             }
             else
             {
-                var errorResult = JsonSerializer.Deserialize<ApiResponse>(responseContent, _jsonOptions);
-                return errorResult ?? ApiResponse.Error($"B³¹d HTTP {response.StatusCode}");
+                var Error = JsonSerializer.Deserialize<ApiResponse>(responseContent, _jsonOptions);
+                return Error ?? ApiResponse.Error($"BÅ‚Ä…d HTTP {response.StatusCode}");
             }
         }
         catch (Exception ex)
         {
-            return ApiResponse.Error($"B³¹d podczas usuwania: {ex.Message}");
+            return ApiResponse.Error($"BÅ‚Ä…d podczas usuwania: {ex.Message}");
         }
     }
 }
+
