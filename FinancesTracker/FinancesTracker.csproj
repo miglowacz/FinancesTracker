@@ -29,6 +29,12 @@
     <Folder Include="Migrations\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\app.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <Import Project="..\FinancesTracker.Shared\FinancesTracker.Shared.projitems" Label="Shared" />
 
 </Project>

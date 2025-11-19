@@ -4,178 +4,196 @@
 @using FinancesTracker.Shared.Constants
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
-@* @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false)) *@
 @inject cTransactionService TransactionService
 @inject cCategoryService CategoryService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Transakcje</PageTitle>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>Transakcje finansowe</h2>
-                <button class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Dodaj transakcję
-                </button>
-            </div>
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-0">
+  <MudGrid>
+    <MudItem xs="12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Transakcje finansowe</h2>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ms-2" OnClick="AddTransaction">
+          <MudIcon Icon="@Icons.Material.Filled.Add" /> Dodaj transakcję
+        </MudButton>
+      </div>
+    </MudItem>
 
-            <!-- Filtry -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Filtry</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label">Rok</label>
-                            <select class="form-select" @bind="mFilter.Year" >
-                                <option value="">Wszystkie</option>
-                                @for (int pYear = DateTime.Now.Year; pYear >= DateTime.Now.Year - 5; pYear--) {
-                                    <option value="@pYear">@pYear</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Miesiąc</label>
-                            <select class="form-select" @bind="mFilter.Month">
-                                <option value="">Wszystkie</option>
-                                @foreach (var pMonth in AppConstants.Months.Polish) {
-                                    <option value="@pMonth.Key">@pMonth.Value</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Kategoria</label>
-                            <select class="form-select" @bind="mFilter.CategoryId">
-                                <option value="">Wszystkie</option>
-                                @if (mCategories != null) {
-                                    @foreach (var pCategory in mCategories) {
-                                        <option value="@pCategory.Id">@pCategory.Name</option>
-                                    }
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Podkategoria</label>
-                            <select class="form-select" @bind="mFilter.SubcategoryId">
-                                <option value="">Wszystkie</option>
-                                @if (mSubcategories != null) {
-                                    @foreach (var pSubcategory in mSubcategories) {
-                                        <option value="@pSubcategory.Id">@pSubcategory.Name</option>
-                                    }
-                                }
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row g-3 mt-2">
-                        <div class="col-md-6">
-                            <label class="form-label">Szukaj</label>
-                            <input type="text" class="form-control" @bind="mFilter.SearchTerm"  placeholder="Szukaj w opisie...">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Kwota od</label>
-                            <input type="number" class="form-control" @bind="mFilter.MinAmount" step="0.01">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Kwota do</label>
-                            <input type="number" class="form-control" @bind="mFilter.MaxAmount" step="0.01">
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- Filtry -->
+ @*    <MudItem xs="12">
+      <MudCard Class="mb-4">
+        <MudCardHeader>
+          <div class="card-title mb-0">Filtry</div>
+        </MudCardHeader>
+        <MudCardContent>
+          <MudGrid GutterSize="3">
+            <MudItem xs="12" md="3">
+              <MudSelect T="int?" Label="Rok" @bind-Value="mFilter.Year" Dense="true" FullWidth="true">
+                <MudSelectItem T="int?" Value="@(null)">Wszystkie</MudSelectItem>
+                @for (int pYear = DateTime.Now.Year; pYear >= DateTime.Now.Year - 5; pYear--) {
+                  <MudSelectItem T="int?" Value="@pYear">@pYear</MudSelectItem>
+                }
+              </MudSelect>
+            </MudItem>
 
-            <!-- Lista transakcji -->
-            @if (mIsLoading) {
-                <div class="text-center p-4">
-                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
-                </div>
-            } else if (mTransactions?.Items?.Any() == true) {
-                <MudPaper Class="pa-4">
-                    <MudTable Items="mTransactions.Items" Hover="true" Dense="true" Bordered="true" Striped="true">
-                        <HeaderContent>
-                            <MudTh>Data</MudTh>
-                            <MudTh>Opis</MudTh>
-                            <MudTh>Kwota</MudTh>
-                            <MudTh>Kategoria</MudTh>
-                            <MudTh>Podkategoria</MudTh>
-                            <MudTh>Bank</MudTh>
-                            <MudTh>Akcje</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            @if (context.Id == mEditTransactionId)
-                            {
-                                <MudTd DataLabel="Data">@context.Date.ToString("dd.MM.yyyy")</MudTd>
-                                <MudTd DataLabel="Opis">@context.Description</MudTd>
-                                <MudTd DataLabel="Kwota">
-                                    <span class="@(context.Amount >= 0 ? "text-success" : "text-danger")">
-                                        @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
-                                    </span>
-                                </MudTd>
-                                <MudTd DataLabel="Kategoria">
-                                    <select class="form-select" @onchange="OnEditCategoryChanged">
-                                        <option value="">Wybierz...</option>
-                                        @if (mCategories != null) {
-                                            @foreach (var pCategory in mCategories) {
-                                                <option value="@pCategory.Id">@pCategory.Name</option>
-                                            }
-                                        }
-                                    </select>
-                                </MudTd>
-                                <MudTd DataLabel="Podkategoria">
-                                    <select class="form-select" @bind="mEditTransaction.SubcategoryId">
-                                        <option value="">Wybierz...</option>
-                                        @foreach (var sub in mEditSubcategories)
-                                        {
-                                            <option value="@sub.Id">@sub.Name</option>
-                                        }
-                                    </select>
-                                </MudTd>
-                                <MudTd DataLabel="Bank">@context.BankName</MudTd>
-                                <MudTd DataLabel="Akcje">
-                                    <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="SaveEdit">
-                                        <MudIcon Icon="@Icons.Material.Filled.Save" />
-                                    </MudButton>
-                                    <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small" OnClick="CancelEdit">
-                                        <MudIcon Icon="@Icons.Material.Filled.Cancel" />
-                                    </MudButton>
-                                </MudTd>
-                            }
-                            else
-                            {
-                                <MudTd DataLabel="Data">@context.Date.ToString("dd.MM.yyyy")</MudTd>
-                                <MudTd DataLabel="Opis">@context.Description</MudTd>
-                                <MudTd DataLabel="Kwota">
-                                    <span class="@(context.Amount >= 0 ? "text-success" : "text-danger")">
-                                        @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
-                                    </span>
-                                </MudTd>
-                                <MudTd DataLabel="Kategoria">@context.CategoryName</MudTd>
-                                <MudTd DataLabel="Podkategoria">@context.SubcategoryName</MudTd>
-                                <MudTd DataLabel="Bank">@context.BankName</MudTd>
-                                <MudTd DataLabel="Akcje">
-                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="() => StartEdit(context)">
-                                        <MudIcon Icon="@Icons.Material.Filled.Edit" />
-                                    </MudButton>
-                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="() => DeleteTransaction(context.Id)">
-                                        <MudIcon Icon="@Icons.Material.Filled.Delete" />
-                                    </MudButton>
-                                </MudTd>
-                            }
-                        </RowTemplate>
-                    </MudTable>
-                </MudPaper>
-            } else {
-                <MudPaper Class="pa-4 text-center">
-                    <MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" Color="Color.Default" Class="mb-3" />
-                    <h5 class="text-muted">Brak transakcji</h5>
-                    <p class="text-muted">Nie znaleziono transakcji spełniających kryteria wyszukiwania.</p>
-                </MudPaper>
-            }
+            <MudItem xs="12" md="3">
+              <MudSelect T="int?" Label="Miesiąc" @bind-Value="mFilter.Month" Dense="true" FullWidth="true">
+                <MudSelectItem T="int?" Value="@(null)">Wszystkie</MudSelectItem>
+                @foreach (var pMonth in AppConstants.Months.Polish) {
+                  <MudSelectItem T="int?" Value="@pMonth.Key">@pMonth.Value</MudSelectItem>
+                }
+              </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" md="3">
+              <MudSelect T="int?" Label="Kategoria" @bind-Value="mFilter.CategoryId" Dense="true" FullWidth="true">
+                <MudSelectItem T="int?" Value="@(null)">Wszystkie</MudSelectItem>
+                @if (mCategories != null) {
+                  @foreach (var pCategory in mCategories) {
+                    <MudSelectItem T="int?" Value="@pCategory.Id">@pCategory.Name</MudSelectItem>
+                  }
+                }
+              </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" md="3">
+              <MudSelect T="int?" Label="Podkategoria" @bind-Value="mFilter.SubcategoryId" Dense="true" FullWidth="true">
+                <MudSelectItem T="int?" Value="@(null)">Wszystkie</MudSelectItem>
+                @if (mSubcategories != null) {
+                  @foreach (var pSubcategory in mSubcategories) {
+                    <MudSelectItem T="int?" Value="@pSubcategory.Id">@pSubcategory.Name</MudSelectItem>
+                  }
+                }
+              </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+              <MudTextField T="string" Label="Szukaj" @bind-Value="mFilter.SearchTerm" Placeholder="Szukaj w opisie..." FullWidth="true" />
+            </MudItem>
+
+            <MudItem xs="12" md="3">
+              <MudNumericField T="decimal?" Label="Kwota od" @bind-Value="mFilter.MinAmount" FullWidth="true" />
+            </MudItem>
+
+            <MudItem xs="12" md="3">
+              <MudNumericField T="decimal?" Label="Kwota do" @bind-Value="mFilter.MaxAmount" FullWidth="true" />
+            </MudItem>
+          </MudGrid>
+        </MudCardContent>
+      </MudCard>
+    </MudItem>
+ *@
+    <!-- Lista transakcji -->
+    <MudItem xs="12">
+      @if (mIsLoading) {
+        <div class="text-center p-4">
+          <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
         </div>
-    </div>
-</div>
+      } else if (mTransactions?.Items?.Any() == true) {
+        <MudPaper Class="pa-4">
+          <MudTable Items="mTransactions.Items" Hover="true" Dense="true" Bordered="true" Striped="true" @key="mTransactions">
+            <HeaderContent>
+              <MudTh>Data</MudTh>
+              <MudTh>Opis</MudTh>
+              <MudTh>Kwota</MudTh>
+  @*             <MudTh>Kategoria</MudTh>
+              <MudTh>Podkategoria</MudTh>
+              <MudTh>Bank</MudTh>
+              <MudTh>Akcje</MudTh> *@
+            </HeaderContent>
+            <RowTemplate>
+              <MudTr @key="context.Id">
+
+                                <MudTd DataLabel="Data">@context.Date.ToString("dd.MM.yyyy")</MudTd>
+                                <MudTd DataLabel="Opis">@context.Description</MudTd>
+                                <MudTd DataLabel="Kwota">
+                                    <span class="@(context.Amount >= 0 ? "text-success" : "text-danger")">
+                                        @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
+                                    </span>
+                                </MudTd>
+@* 
+
+                @if (context.Id == mEditTransactionId)
+                {
+                  <MudTd DataLabel="Data">@context.Date.ToString("dd.MM.yyyy")</MudTd>
+                  <MudTd DataLabel="Opis">@context.Description</MudTd>
+                  <MudTd DataLabel="Kwota">
+                    <span class="@(context.Amount >= 0 ? "text-success" : "text-danger")">
+                      @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
+                    </span>
+                  </MudTd>
+                  <MudTd DataLabel="Kategoria">
+                    @context.CategoryName
+              @*       <MudSelect T="int?"
+                               Value="mEditTransaction.CategoryId"
+                               ValueChanged="OnEditCategoryChanged"
+                               Dense="true"
+                               FullWidth="true">
+                      <MudSelectItem T="int?" Value="@(null)">Wybierz...</MudSelectItem>
+                      @if (mCategories != null) {
+                        @foreach (var pCategory in mCategories) {
+                          <MudSelectItem T="int?" Value="@pCategory.Id">@pCategory.Name</MudSelectItem>
+                        }
+                      }
+                    </MudSelect> 
+                  </MudTd>
+                  <MudTd DataLabel="Podkategoria">
+                    @context.SubcategoryName
+               @*      <MudSelect T="int?" @bind-Value="mEditTransaction.SubcategoryId" Dense="true" FullWidth="true">
+                      <MudSelectItem T="int?" Value="@(null)">Wybierz...</MudSelectItem>
+                      @foreach (var sub in mEditSubcategories) {
+                        <MudSelectItem T="int?" Value="@sub.Id">@sub.Name</MudSelectItem>
+                      }
+                    </MudSelect> *@
+                  @* </MudTd>
+                  <MudTd DataLabel="Bank">@context.BankName</MudTd>
+                  <MudTd DataLabel="Akcje">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="SaveEdit">
+                      <MudIcon Icon="@Icons.Material.Filled.Save" />
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small" OnClick="CancelEdit">
+                      <MudIcon Icon="@Icons.Material.Filled.Cancel" />
+                    </MudButton>
+                  </MudTd> *@
+               @*  }
+                else
+                {
+                  <MudTd DataLabel="Data">@context.Date.ToString("dd.MM.yyyy")</MudTd>
+                  <MudTd DataLabel="Opis">@context.Description</MudTd>
+                  <MudTd DataLabel="Kwota">
+                    <span class="@(context.Amount >= 0 ? "text-success" : "text-danger")">
+                      @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
+                    </span>
+                  </MudTd>
+                  <MudTd DataLabel="Kategoria">@context.CategoryName</MudTd>
+                  <MudTd DataLabel="Podkategoria">@context.SubcategoryName</MudTd>
+                  <MudTd DataLabel="Bank">@context.BankName</MudTd>
+                  <MudTd DataLabel="Akcje">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="() => StartEdit(context)">
+                      <MudIcon Icon="@Icons.Material.Filled.Edit" />
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="() => DeleteTransaction(context.Id)">
+                      <MudIcon Icon="@Icons.Material.Filled.Delete" />
+                    </MudButton>
+                  </MudTd>
+                } 
+                 *@
+              </MudTr>
+            </RowTemplate>
+          </MudTable>
+        </MudPaper>
+      } else {
+        <MudPaper Class="pa-4 text-center">
+          <MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" Color="Color.Default" Class="mb-3" />
+          <h5 class="text-muted">Brak transakcji</h5>
+          <p class="text-muted">Nie znaleziono transakcji spełniających kryteria wyszukiwania.</p>
+        </MudPaper>
+      }
+    </MudItem>
+  </MudGrid>
+</MudContainer>
 
 @code {
     //przechowuje listę transakcji
@@ -205,7 +223,7 @@
     //metoda wywoływana podczas inicjalizacji komponentu
     protected override async Task OnInitializedAsync() {
         //ładuje kategorie przy starcie komponentu
-        await LoadCategories();
+      //  await LoadCategories();
 
         //ładuje transakcje przy starcie komponentu
         await LoadTransactions();
@@ -228,6 +246,7 @@
     //brak parametrów
     private async Task LoadTransactions() {
         mIsLoading = true;
+        StateHasChanged();
 
         Console.WriteLine("TEST");
 
@@ -244,6 +263,7 @@
             mTransactions = new PagedResult<TransactionDto>();
         } finally {
             mIsLoading = false;
+            StateHasChanged();
         }
 
     }
@@ -294,6 +314,7 @@
             BankName = transaction.BankName
         };
         UpdateEditSubcategories();
+        StateHasChanged();
     }
 
     //anuluje edycję transakcji
@@ -302,6 +323,7 @@
         mEditTransactionId = null;
         mEditTransaction = new();
         mEditSubcategories = new();
+        StateHasChanged();
     }
 
     //zapisuje zmiany edytowanej transakcji
@@ -322,15 +344,15 @@
 
     //metoda wywoływana po zmianie kategorii w edytowanej transakcji
     //e - argument zdarzenia zmiany
-    private void OnEditCategoryChanged(ChangeEventArgs e) {
+    private void OnEditCategoryChanged(int? value) {
         //parsuje wartość wybranej kategorii
-        mEditTransaction.CategoryId = int.TryParse(e.Value?.ToString(), out var val) ? val : null;
+        // mEditTransaction.CategoryId = value;
         
-        //czyści wybór podkategorii
-        mEditTransaction.SubcategoryId = null;
+        // //czyści wybór podkategorii
+        // mEditTransaction.SubcategoryId = null;
         
-        //aktualizuje dostępne podkategorie
-        UpdateEditSubcategories();
+        // //aktualizuje dostępne podkategorie
+        // UpdateEditSubcategories();
         
         //Blazor automatycznie wywoła re-render po zakończeniu handlera
     }
@@ -352,5 +374,14 @@
     //xResp - odpowiedź z serwera
     private static string BuildErrorMessage(ApiResponse xResp)
         => BuildErrorMessage<object>(xResp);
+
+    //uruchamia dodawanie nowej transakcji (placeholder)
+    private void AddTransaction() {
+        // TODO: implement add transaction dialog / navigation
+    }
+
+    public void Dispose() {
+        // no-op
+    }
 
 }
