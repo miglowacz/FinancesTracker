@@ -1,16 +1,12 @@
 ﻿using FinancesTracker.Data;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services
-builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
-builder.Services.AddServerSideBlazor();
-builder.Services.AddMudServices();
 
 builder.Services.AddDbContext<FinancesTrackerDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -42,6 +38,6 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.MapControllers();
-app.MapFallbackToPage("/_Host"); // hosting WASM via _Host
+app.MapFallbackToFile("index.html"); // ZMIENIONE: wskazuje na index.html z Client
 
 app.Run();
