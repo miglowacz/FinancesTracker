@@ -26,6 +26,8 @@ public class TransactionDto
     [MaxLength(50)]
     public string? BankName { get; set; }
     
+    public bool IsInsignificant { get; set; } = false;
+    
     // Właściwości tylko do odczytu
     public string? CategoryName { get; set; }
     public string? SubcategoryName { get; set; }

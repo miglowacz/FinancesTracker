@@ -1,70 +1,82 @@
-@page "/import"
+Ôªø@page "/import"
 @using FinancesTracker.Client.Services
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject TransactionImportService ImportService
 
-@* <InputFile OnChange="OnFileSelected" accept=".csv" style="display:none" @ref="fileInputRef" />
-<button class="btn btn-primary" @onclick="OpenFileDialog">Importuj z CSV</button> *@
-@* <InputFile OnChange="OnFileSelected" accept=".csv" style="display:none" /> *@
+<div class="container mt-4">
+  <h3>Import transakcji</h3>
 
+  <div class="mb-3">
+    <label class="form-label">Wybierz bank:</label>
+    <div class="btn-group" role="group">
+      <input type="radio" class="btn-check" name="bankOption" id="mbankRadio" value="mbank" @onchange="OnBankChanged" checked="@(selectedBank == "mbank")" />
+      <label class="btn btn-outline-primary" for="mbankRadio">mBank</label>
 
-<label class="btn btn-sm btn-outline-secondary mb-0">
-  Importuj z CSV
-  <InputFile OnChange="OnFileSelected" accept=".csv" style="display:none" />
-</label>
-
-@if (isImporting)
-{
-    <div>
-        <p>Importowanie...</p>
+      <input type="radio" class="btn-check" name="bankOption" id="millenniumRadio" value="millennium" @onchange="OnBankChanged" checked="@(selectedBank == "millennium")" />
+      <label class="btn btn-outline-primary" for="millenniumRadio">Millennium</label>
     </div>
-}
-@if (!string.IsNullOrEmpty(message))
-{
-    <div class="alert alert-info">@message</div>
-}
+  </div>
+
+  <label class="btn btn-sm btn-outline-secondary mb-0">
+    Importuj z CSV
+    <InputFile OnChange="OnFileSelected" accept=".csv" style="display:none" />
+  </label>
+
+  @if (isImporting) {
+    <div class="mt-3">
+      <div class="spinner-border spinner-border-sm me-2" role="status">
+        <span class="visually-hidden">≈Åadowanie...</span>
+      </div>
+      <span>Importowanie...</span>
+    </div>
+  }
+  @if (!string.IsNullOrEmpty(message)) {
+    <div class="alert alert-info mt-3">@message</div>
+  }
+</div>
 
 @code {
-    private ElementReference fileInputRef;
-    private bool isImporting = false;
-    private string? message;
+  private bool isImporting = false;
+  private string? message;
+  private string selectedBank = "mbank";
 
-    private async Task OpenFileDialog()
-    {
-        await JS.InvokeVoidAsync("eval", "document.querySelector('[type=file]').click()");
-        // lub lepiej (bezpieczniej):
-        // await JS.InvokeVoidAsync("blazorFileInputClick", fileInputRef);
+  private void OnBankChanged(ChangeEventArgs e) {
+    selectedBank = e.Value?.ToString() ?? "mbank";
+    message = null;
+  }
+
+  private async Task OnFileSelected(InputFileChangeEventArgs e) {
+    isImporting = true;
+    message = null;
+
+    var file = e.File;
+    if (file == null) {
+      isImporting = false;
+      message = "Nie wybrano pliku.";
+      return;
     }
 
-    private async Task OnFileSelected(InputFileChangeEventArgs e)
-    {
-        isImporting = true;
-        message = null;
+    try {
+      using var stream = file.OpenReadStream();
+      List<cTransaction> transactions;
 
-        var file = e.File;
-        if (file == null)
-        {
-            isImporting = false;
-            message = "Nie wybrano pliku.";
-            return;
-        }
+      if (selectedBank == "millennium") {
+        transactions = await ImportService.ImportFromMillenniumCsvAsync(stream);
+      }
+      else {
+        transactions = await ImportService.ImportFromMbankCsvAsync(stream);
+      }
 
-        try
-        {
-            using var stream = file.OpenReadStream();
-            var transactions = await ImportService.ImportFromMbankCsvAsync(stream);
-
-            var result = await ImportService.ImportTransactionsAsync(transactions);
-            message = result
-                ? "Transakcje zosta≥y zaimportowane!"
-                : "B≥πd podczas importu transakcji.";
-        }
-        catch (Exception ex)
-        {
-            message = $"B≥πd importu: {ex.Message}";
-        }
-        isImporting = false;
+      var result = await ImportService.ImportTransactionsAsync(transactions, selectedBank);
+      message = result
+        ? $"Transakcje zosta≈Çy zaimportowane! (Bank: {selectedBank})"
+        : "B≈ÇƒÖd podczas importu transakcji.";
     }
+    catch (Exception ex) {
+      message = $"B≈ÇƒÖd importu: {ex.Message}";
+    }
+    isImporting = false;
+  }
 }

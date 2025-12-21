@@ -5,47 +5,289 @@
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Forms
 @inject cTransactionService TransactionService
+@inject cCategoryService CategoryService
+@inject ISnackbar Snackbar
 
 <PageTitle>Raporty</PageTitle>
 
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-12">
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-0">
+  <MudGrid>
+    <MudItem xs="12">
       <h2 class="mb-3">Raporty finansowe</h2>
+    </MudItem>
 
-      <div class="card mb-4">
-        <div class="card-header">
-          <h5 class="card-title mb-0">Zakres czasu</h5>
-        </div>
-        <div class="card-body">
-          <div class="row g-3 align-items-end">
-            <div class="col-md-3">
-              <label class="form-label">Od</label>
-              <InputDate @bind-Value="mStartDate" class="form-control" />
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Do</label>
-              <InputDate @bind-Value="mEndDate" class="form-control" />
-            </div>
-            <div class="col-md-6 d-flex gap-2">
-              <button class="btn btn-primary" @onclick="ApplyRange">Pokaż</button>
-              <button class="btn btn-outline-secondary" @onclick="SetThisMonth">Bieżący miesiąc</button>
-              <button class="btn btn-outline-secondary" @onclick="SetLastMonth">Poprzedni miesiąc</button>
-              <button class="btn btn-outline-secondary" @onclick="SetLast3Months">Ostatnie 3 mies.</button>
-              <button class="btn btn-outline-secondary" @onclick="SetYtd">YTD</button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- Filtry -->
+    <MudItem xs="12">
+      <MudCard Class="mb-4">
+        <MudCardHeader>
+          <MudText Typo="Typo.h6">Filtry</MudText>
+          <MudSpacer />
+          <MudIconButton Icon="@(mShowAdvancedFilters? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                         OnClick="() => mShowAdvancedFilters = !mShowAdvancedFilters"
+                         Title="@(mShowAdvancedFilters ? "Ukryj filtry zaawansowane" : "Pokaż filtry zaawansowane")" />
+        </MudCardHeader>
+        <MudCardContent>
+          <!-- Podstawowe filtry dat -->
+          <MudGrid>
+            <MudItem xs="12" md="3">
+              <MudDatePicker Label="Data od"
+                             @bind-Date="mStartDate"
+                             Placeholder="Wybierz datę początkową"
+                             Editable="true"
+                             DateFormat="dd.MM.yyyy"
+                             Clearable="true" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+              <MudDatePicker Label="Data do"
+                             @bind-Date="mEndDate"
+                             Placeholder="Wybierz datę końcową"
+                             Editable="true"
+                             DateFormat="dd.MM.yyyy"
+                             Clearable="true" />
+            </MudItem>
+            <MudItem xs="12" md="6" Class="d-flex align-items-center gap-2">
+              <MudButton Variant="Variant.Filled"
+                         Color="Color.Primary"
+                         OnClick="ApplyRange"
+                         StartIcon="@Icons.Material.Filled.Search">
+                Pokaż
+              </MudButton>
+              <MudButton Variant="Variant.Outlined"
+                         Color="Color.Secondary"
+                         OnClick="ClearFilters"
+                         StartIcon="@Icons.Material.Filled.Clear">
+                Wyczyść
+              </MudButton>
+            </MudItem>
+          </MudGrid>
 
-      @if (mIsLoading)
-      {
+          <!-- Szybkie filtry dat -->
+          <MudDivider Class="my-3" />
+          <MudText Typo="Typo.subtitle2" Class="mb-2">Szybkie filtry:</MudText>
+          <MudGrid>
+            <MudItem xs="12" Class="d-flex flex-wrap gap-2">
+              <MudButton Variant="Variant.Text"
+                         Size="Size.Small"
+                         OnClick="SetToday">
+                Dziś
+              </MudButton>
+              <MudButton Variant="Variant.Text"
+                         Size="Size.Small"
+                         OnClick="SetYesterday">
+                Wczoraj
+              </MudButton>
+              <MudButton Variant="Variant.Text"
+                         Size="Size.Small"
+                         OnClick="SetThisWeek">
+                Ten tydzień
+              </MudButton>
+              <MudButton Variant="Variant.Text"
+                         Size="Size.Small"
+                         OnClick="SetLastWeek">
+                Ostatni tydzień
+              </MudButton>
+              <MudButton Variant="Variant.Text"
+                         Size="Size.Small"
+                         OnClick="SetThisMonth">
+                Bieżący miesiąc
+              </MudButton>
+              <MudButton Variant="Variant.Text"
+                         Size="Size.Small"
+                         OnClick="SetLastMonth">
+                Poprzedni miesiąc
+              </MudButton>
+              <MudButton Variant="Variant.Text"
+                         Size="Size.Small"
+                         OnClick="SetLast30Days">
+                Ostatnie 30 dni
+              </MudButton>
+              <MudButton Variant="Variant.Text"
+                         Size="Size.Small"
+                         OnClick="SetLast3Months">
+                Ostatnie 3 mies.
+              </MudButton>
+              <MudButton Variant="Variant.Text"
+                         Size="Size.Small"
+                         OnClick="SetLast90Days">
+                Ostatnie 90 dni
+              </MudButton>
+              <MudButton Variant="Variant.Text"
+                         Size="Size.Small"
+                         OnClick="SetYtd">
+                YTD
+              </MudButton>
+              <MudButton Variant="Variant.Text"
+                         Size="Size.Small"
+                         OnClick="SetThisYear">
+                Ten rok
+              </MudButton>
+              <MudButton Variant="Variant.Text"
+                         Size="Size.Small"
+                         OnClick="SetLastYear">
+                Poprzedni rok
+              </MudButton>
+            </MudItem>
+          </MudGrid>
+
+          <!-- Filtry zaawansowane -->
+          @if (mShowAdvancedFilters) {
+            <MudDivider Class="my-3" />
+            <MudText Typo="Typo.subtitle2" Class="mb-3">Filtry zaawansowane:</MudText>
+            <MudGrid>
+              <!-- Filtr po kategorii -->
+              <MudItem xs="12" md="3">
+                <MudSelect T="int?"
+                           @bind-Value="mFilterCategoryId"
+                           Label="Kategoria"
+                           Clearable="true"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense">
+                  @foreach (var category in mCategories) {
+                    <MudSelectItem T="int?" Value="@category.Id">@category.Name</MudSelectItem>
+                  }
+                </MudSelect>
+              </MudItem>
+
+              <!-- Filtr po podkategorii -->
+              <MudItem xs="12" md="3">
+                <MudSelect T="int?"
+                           @bind-Value="mFilterSubcategoryId"
+                           Label="Podkategoria"
+                           Clearable="true"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Disabled="@(!mFilterCategoryId.HasValue)">
+                  @foreach (var subcategory in GetFilterSubcategories()) {
+                    <MudSelectItem T="int?" Value="@subcategory.Id">@subcategory.Name</MudSelectItem>
+                  }
+                </MudSelect>
+              </MudItem>
+
+              <!-- Filtr po kwocie -->
+              <MudItem xs="12" md="3">
+                <MudNumericField T="decimal?"
+                                 @bind-Value="mFilterMinAmount"
+                                 Label="Kwota minimalna"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Clearable="true"
+                                 Format="N2" />
+              </MudItem>
+
+              <MudItem xs="12" md="3">
+                <MudNumericField T="decimal?"
+                                 @bind-Value="mFilterMaxAmount"
+                                 Label="Kwota maksymalna"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Clearable="true"
+                                 Format="N2" />
+              </MudItem>
+
+              <!-- Filtr tekstowy -->
+              <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              @bind-Value="mFilterSearchTerm"
+                              Label="Szukaj w opisie"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Clearable="true"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@Icons.Material.Filled.Search" />
+              </MudItem>
+
+              <!-- Filtr po banku -->
+              <MudItem xs="12" md="4">
+                <MudTextField T="string"
+                              @bind-Value="mFilterBankName"
+                              Label="Nazwa banku"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Clearable="true" />
+              </MudItem>
+
+              <!-- Filtr nieistotnych transakcji -->
+              <MudItem xs="12" md="4">
+                <MudSelect T="string"
+                           @bind-Value="mFilterInsignificantMode"
+                           Label="Transakcje nieistotne"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense">
+                  <MudSelectItem T="string" Value="@("all")">Wszystkie</MudSelectItem>
+                  <MudSelectItem T="string" Value="@("significant")">Tylko istotne</MudSelectItem>
+                  <MudSelectItem T="string" Value="@("insignificant")">Tylko nieistotne</MudSelectItem>
+                </MudSelect>
+              </MudItem>
+            </MudGrid>
+          }
+        </MudCardContent>
+      </MudCard>
+    </MudItem>
+
+    <!-- Wyświetlanie aktywnych filtrów -->
+    @if (HasActiveFilters()) {
+      <MudItem xs="12">
+        <MudAlert Severity="Severity.Info" Dense="true" ShowCloseIcon="true" CloseIconClicked="ClearFilters">
+          <MudText Typo="Typo.body2">
+            <strong>Aktywne filtry:</strong>
+            @if (mStartDate.HasValue || mEndDate.HasValue) {
+              <MudChip T="string" Size="Size.Small" Class="mx-1">
+                @if (mStartDate.HasValue && mEndDate.HasValue) {
+                  <span>Daty: @mStartDate.Value.ToString("dd.MM.yyyy") - @mEndDate.Value.ToString("dd.MM.yyyy")</span>
+                } else if (mStartDate.HasValue) {
+                  <span>Od: @mStartDate.Value.ToString("dd.MM.yyyy")</span>
+                } else {
+                  <span>Do: @mEndDate.Value.ToString("dd.MM.yyyy")</span>
+                }
+              </MudChip>
+            }
+            @if (mFilterCategoryId.HasValue) {
+              <MudChip T="string" Size="Size.Small" Class="mx-1">
+                Kategoria: @mCategories.FirstOrDefault(c => c.Id == mFilterCategoryId)?.Name
+              </MudChip>
+            }
+            @if (mFilterSubcategoryId.HasValue) {
+              <MudChip T="string" Size="Size.Small" Class="mx-1">
+                Podkategoria: @GetFilterSubcategories().FirstOrDefault(s => s.Id == mFilterSubcategoryId)?.Name
+              </MudChip>
+            }
+            @if (mFilterMinAmount.HasValue) {
+              <MudChip T="string" Size="Size.Small" Class="mx-1">
+                Min: @mFilterMinAmount.Value.ToString("C", CultureInfo.GetCultureInfo("pl-PL"))
+              </MudChip>
+            }
+            @if (mFilterMaxAmount.HasValue) {
+              <MudChip T="string" Size="Size.Small" Class="mx-1">
+                Max: @mFilterMaxAmount.Value.ToString("C", CultureInfo.GetCultureInfo("pl-PL"))
+              </MudChip>
+            }
+            @if (!string.IsNullOrEmpty(mFilterSearchTerm)) {
+              <MudChip T="string" Size="Size.Small" Class="mx-1">
+                Tekst: "@mFilterSearchTerm"
+              </MudChip>
+            }
+            @if (!string.IsNullOrEmpty(mFilterBankName)) {
+              <MudChip T="string" Size="Size.Small" Class="mx-1">
+                Bank: @mFilterBankName
+              </MudChip>
+            }
+            @if (mFilterInsignificantMode != "all") {
+              <MudChip T="string" Size="Size.Small" Class="mx-1">
+                @(mFilterInsignificantMode == "significant" ? "Tylko istotne" : "Tylko nieistotne")
+              </MudChip>
+            }
+          </MudText>
+        </MudAlert>
+      </MudItem>
+    }
+
+    <!-- Raporty -->
+    <MudItem xs="12">
+      @if (mIsLoading) {
         <div class="text-center p-4">
           <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
         </div>
-      }
-      else
-      {
+      } else {
         <div class="row g-3 mb-3">
           <div class="col-md-4">
             <MudPaper Class="pa-4">
@@ -73,26 +315,21 @@
           <div class="col-lg-5">
             <MudPaper Class="pa-4">
               <h6 class="mb-3">Wydatki wg kategorii</h6>
-              @if (mCategoryLabels.Length == 0)
-              {
+              @if (mCategoryLabels.Length == 0) {
                 <div class="text-muted">Brak danych.</div>
-              }
-              else
-              {
+              } else {
                 <MudChart ChartType="ChartType.Pie"
-                          Labels="mCategoryLabels"
-                          Data="new double[][] { mCategoryData }" />
+                          InputLabels="@mCategoryLabels"
+                          InputData="@mCategoryData" />
               }
-              @if (mCategoryLabels.Length > 0)
-              {
+              @if (mCategoryLabels.Length > 0) {
                 <div class="table-responsive mt-3">
                   <table class="table table-sm">
                     <thead>
                       <tr><th>Kategoria</th><th class="text-end">Kwota</th><th class="text-end">Udział</th></tr>
                     </thead>
                     <tbody>
-                      @for (int i = 0; i < mCategoryLabels.Length; i++)
-                      {
+                      @for (int i = 0; i < mCategoryLabels.Length; i++) {
                         var amount = (decimal)mCategoryData[i];
                         var pct = mCategoryData.Sum() > 0 ? (amount / (decimal)mCategoryData.Sum()) * 100m : 0m;
                         <tr>
@@ -111,28 +348,21 @@
           <div class="col-lg-7">
             <MudPaper Class="pa-4">
               <h6 class="mb-3">Cashflow w czasie</h6>
-              @if (mTimelineLabels.Length == 0)
-              {
+              @if (mTimelineLabels.Length == 0) {
                 <div class="text-muted">Brak danych.</div>
-              }
-              else
-              {
+              } else {
                 <MudChart ChartType="ChartType.Line"
-                          Labels="mTimelineLabels"
-                          Data="new double[][] { mTimelineIncome, mTimelineExpenses }"
-                          Datasets="@(new ChartSeries[]
-                          {
-                              new ChartSeries() { Name = "Przychody", Data = mTimelineIncome },
-                              new ChartSeries() { Name = "Wydatki", Data = mTimelineExpenses }
-                          })" />
+                          ChartOptions="@mChartOptions"
+                          XAxisLabels="@mTimelineLabels"
+                          ChartSeries="@mChartSeries" />
               }
             </MudPaper>
           </div>
         </div>
       }
-    </div>
-  </div>
-</div>
+    </MudItem>
+  </MudGrid>
+</MudContainer>
 
 @code {
   private DateTime? mStartDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
@@ -146,12 +376,111 @@
   private double[] mCategoryData = Array.Empty<double>();
 
   private string[] mTimelineLabels = Array.Empty<string>();
-  private double[] mTimelineIncome = Array.Empty<double>();
-  private double[] mTimelineExpenses = Array.Empty<double>();
+  private List<ChartSeries> mChartSeries = new();
+  private ChartOptions mChartOptions = new ChartOptions();
 
-  protected override async Task OnInitializedAsync() => await LoadData();
+  // Filtry zaawansowane
+  private bool mShowAdvancedFilters = false;
+  private int? mFilterCategoryId;
+  private int? mFilterSubcategoryId;
+  private decimal? mFilterMinAmount;
+  private decimal? mFilterMaxAmount;
+  private string? mFilterSearchTerm;
+  private string? mFilterBankName;
+  private string mFilterInsignificantMode = "significant";
+
+  // Kategorie i podkategorie
+  private List<cCategory_DTO> mCategories = new();
+
+  protected override async Task OnInitializedAsync() {
+    await LoadCategories();
+    await LoadData();
+  }
+
+  private async Task LoadCategories() {
+    try {
+      var response = await CategoryService.GetCategoriesAsync();
+      if (response.Success && response.Data != null) {
+        mCategories = response.Data;
+      } else {
+        Console.WriteLine($"Błąd podczas ładowania kategorii: {BuildErrorMessage(response)}");
+        mCategories = new List<cCategory_DTO>();
+      }
+    } catch (Exception ex) {
+      Console.WriteLine($"Błąd podczas ładowania kategorii: {ex.Message}");
+      mCategories = new List<cCategory_DTO>();
+    }
+  }
+
+  private List<cSubcategory_DTO> GetFilterSubcategories() {
+    if (mFilterCategoryId.HasValue) {
+      var category = mCategories.FirstOrDefault(c => c.Id == mFilterCategoryId.Value);
+      return category?.Subcategories ?? new List<cSubcategory_DTO>();
+    }
+    return new List<cSubcategory_DTO>();
+  }
+
+  private bool HasActiveFilters() {
+    var defaultStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+    var defaultEnd = DateTime.Today;
+
+    var hasNonDefaultDates = (mStartDate.HasValue && mStartDate.Value != defaultStart)
+                          || (mEndDate.HasValue && mEndDate.Value != defaultEnd);
+
+    return hasNonDefaultDates
+        || mFilterCategoryId.HasValue
+        || mFilterSubcategoryId.HasValue
+        || mFilterMinAmount.HasValue
+        || mFilterMaxAmount.HasValue
+        || !string.IsNullOrEmpty(mFilterSearchTerm)
+        || !string.IsNullOrEmpty(mFilterBankName)
+        || mFilterInsignificantMode != "significant";
+  }
 
   private async Task ApplyRange() => await LoadData();
+
+  private async Task ClearFilters() {
+    mStartDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+    mEndDate = DateTime.Today;
+    mFilterCategoryId = null;
+    mFilterSubcategoryId = null;
+    mFilterMinAmount = null;
+    mFilterMaxAmount = null;
+    mFilterSearchTerm = null;
+    mFilterBankName = null;
+    mFilterInsignificantMode = "significant";
+    await LoadData();
+  }
+
+  private async Task SetToday() {
+    mStartDate = DateTime.Today;
+    mEndDate = DateTime.Today;
+    await LoadData();
+  }
+
+  private async Task SetYesterday() {
+    mStartDate = DateTime.Today.AddDays(-1);
+    mEndDate = DateTime.Today.AddDays(-1);
+    await LoadData();
+  }
+
+  private async Task SetThisWeek() {
+    var today = DateTime.Today;
+    var dayOfWeek = (int)today.DayOfWeek;
+    var startOfWeek = today.AddDays(-(dayOfWeek == 0 ? 6 : dayOfWeek - 1));
+    mStartDate = startOfWeek;
+    mEndDate = DateTime.Today;
+    await LoadData();
+  }
+
+  private async Task SetLastWeek() {
+    var today = DateTime.Today;
+    var dayOfWeek = (int)today.DayOfWeek;
+    var startOfLastWeek = today.AddDays(-(dayOfWeek == 0 ? 6 : dayOfWeek - 1) - 7);
+    mStartDate = startOfLastWeek;
+    mEndDate = startOfLastWeek.AddDays(6);
+    await LoadData();
+  }
 
   private async Task SetThisMonth() {
     var now = DateTime.Today;
@@ -169,11 +498,23 @@
     await LoadData();
   }
 
+  private async Task SetLast30Days() {
+    mStartDate = DateTime.Today.AddDays(-30);
+    mEndDate = DateTime.Today;
+    await LoadData();
+  }
+
   private async Task SetLast3Months() {
     var now = DateTime.Today;
     mEndDate = now;
-    var threeMonthsAgoStart = new DateTime(now.AddMonths(-2).Year, now.AddMonths(-2).Month, 1); // inclusive 3 months window start
+    var threeMonthsAgoStart = new DateTime(now.AddMonths(-2).Year, now.AddMonths(-2).Month, 1);
     mStartDate = threeMonthsAgoStart;
+    await LoadData();
+  }
+
+  private async Task SetLast90Days() {
+    mStartDate = DateTime.Today.AddDays(-90);
+    mEndDate = DateTime.Today;
     await LoadData();
   }
 
@@ -184,33 +525,73 @@
     await LoadData();
   }
 
+  private async Task SetThisYear() {
+    var today = DateTime.Today;
+    mStartDate = new DateTime(today.Year, 1, 1);
+    mEndDate = DateTime.Today;
+    await LoadData();
+  }
+
+  private async Task SetLastYear() {
+    var today = DateTime.Today;
+    mStartDate = new DateTime(today.Year - 1, 1, 1);
+    mEndDate = new DateTime(today.Year - 1, 12, 31);
+    await LoadData();
+  }
+
   private async Task LoadData() {
     if (!mStartDate.HasValue || !mEndDate.HasValue) return;
 
     mIsLoading = true;
     mAll.Clear();
+    StateHasChanged();
 
-    var pFilter = new TransactionFilterDto {
-      StartDate = mStartDate.Value.Date,
-      EndDate = mEndDate.Value.Date.AddDays(1).AddTicks(-1),
-      PageNumber = 1,
-      PageSize = 1000,
-      SortBy = "Date",
-      SortDescending = false
-    };
+    try {
+      var pFilter = new TransactionFilterDto {
+        StartDate = mStartDate.Value.Date,
+        EndDate = mEndDate.Value.Date.AddDays(1).AddTicks(-1),
+        CategoryId = mFilterCategoryId,
+        SubcategoryId = mFilterSubcategoryId,
+        MinAmount = mFilterMinAmount,
+        MaxAmount = mFilterMaxAmount,
+        SearchTerm = mFilterSearchTerm,
+        BankName = mFilterBankName,
+        PageNumber = 1,
+        PageSize = 1000,
+        SortBy = "Date",
+        SortDescending = false
+      };
 
-    while (true) {
-      var pResp = await TransactionService.GetTransactionsAsync(pFilter);
-      if (!pResp.Success || pResp.Data is null) break;
+      // Ustaw filtr nieistotnych
+      if (mFilterInsignificantMode == "significant") {
+        pFilter.IsInsignificant = false;
+        pFilter.IncludeInsignificant = false;
+      } else if (mFilterInsignificantMode == "insignificant") {
+        pFilter.IsInsignificant = true;
+        pFilter.IncludeInsignificant = true;
+      } else {
+        pFilter.IsInsignificant = null;
+        pFilter.IncludeInsignificant = true;
+      }
 
-      mAll.AddRange(pResp.Data.Items);
+      while (true) {
+        var pResp = await TransactionService.GetTransactionsAsync(pFilter);
+        if (!pResp.Success || pResp.Data is null) break;
 
-      if (pFilter.PageNumber >= pResp.Data.TotalPages) break;
-      pFilter.PageNumber++;
+        mAll.AddRange(pResp.Data.Items);
+
+        if (pFilter.PageNumber >= pResp.Data.TotalPages) break;
+        pFilter.PageNumber++;
+      }
+
+      BuildAggregates();
+    } catch (Exception ex) {
+      Console.WriteLine($"Błąd podczas ładowania danych: {ex.Message}");
+      Snackbar.Add($"Błąd podczas ładowania danych: {ex.Message}", Severity.Error);
+    } finally {
+      mIsLoading = false;
+      StateHasChanged();
     }
-
-    BuildAggregates();
-    mIsLoading = false;
   }
 
   private void BuildAggregates() {
@@ -239,7 +620,19 @@
                  }).ToList();
 
     mTimelineLabels = tl.Select(x => x.Label).ToArray();
-    mTimelineIncome = tl.Select(x => (double)x.Income).ToArray();
-    mTimelineExpenses = tl.Select(x => (double)x.Expenses).ToArray();
+
+    mChartSeries = new List<ChartSeries> {
+      new ChartSeries() {
+        Name = "Przychody",
+        Data = tl.Select(x => (double)x.Income).ToArray()
+      },
+      new ChartSeries() {
+        Name = "Wydatki",
+        Data = tl.Select(x => (double)x.Expenses).ToArray()
+      }
+    };
   }
+
+  private static string BuildErrorMessage<T>(ApiResponse<T> xResp)
+    => xResp.Message ?? ((xResp.Errors != null && xResp.Errors.Count > 0) ? string.Join(", ", xResp.Errors) : "Wystąpił błąd.");
 }

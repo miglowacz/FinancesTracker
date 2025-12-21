@@ -72,6 +72,12 @@ public class TransactionsController : ControllerBase {
     if (!string.IsNullOrEmpty(xFilter.BankName))
       pQuery = pQuery.Where(t => t.BankName == xFilter.BankName);
 
+    //filtrowanie po statusie nieistotności
+    if (xFilter.IsInsignificant.HasValue)
+      pQuery = pQuery.Where(t => t.IsInsignificant == xFilter.IsInsignificant.Value);
+    else if (!xFilter.IncludeInsignificant)
+      pQuery = pQuery.Where(t => !t.IsInsignificant);
+
     //sortowanie według wybranego pola
     pQuery = xFilter.SortBy?.ToLower() switch {
       "description" => xFilter.SortDescending
@@ -197,6 +203,7 @@ public class TransactionsController : ControllerBase {
     pExistingTransaction.CategoryId = xTransactionDto.CategoryId;
     pExistingTransaction.SubcategoryId = xTransactionDto.SubcategoryId;
     pExistingTransaction.BankName = xTransactionDto.BankName;
+    pExistingTransaction.IsInsignificant = xTransactionDto.IsInsignificant;
     pExistingTransaction.MonthNumber = xTransactionDto.Date.Month;
     pExistingTransaction.Year = xTransactionDto.Date.Year;
     pExistingTransaction.UpdatedAt = DateTime.UtcNow;
@@ -229,11 +236,36 @@ public class TransactionsController : ControllerBase {
 
   }
 
+  [HttpPatch("{id}/toggle-insignificant")]
+  public async Task<ActionResult<ApiResponse<TransactionDto>>> ToggleInsignificant(int id) {
+    //funkcja przełącza status nieistotności transakcji
+    //id - identyfikator transakcji
+
+    var pTransaction = await mContext.Transactions
+        .Include(t => t.Category)
+        .Include(t => t.Subcategory)
+        .FirstOrDefaultAsync(t => t.Id == id);
+
+    if (pTransaction == null)
+      return NotFound(ApiResponse<TransactionDto>.Error("Transakcja nie została znaleziona"));
+
+    pTransaction.IsInsignificant = !pTransaction.IsInsignificant;
+    pTransaction.UpdatedAt = DateTime.UtcNow;
+
+    await mContext.SaveChangesAsync();
+
+    return Ok(ApiResponse<TransactionDto>.SuccessResult(
+        MappingService.ToDto(pTransaction),
+        $"Transakcja została oznaczona jako {(pTransaction.IsInsignificant ? "nieistotna" : "istotna")}"));
+
+  }
+
   [HttpGet("summary")]
-  public async Task<ActionResult<ApiResponse<object>>> GetSummary(int xYear, int? xMonth = null) {
+  public async Task<ActionResult<ApiResponse<object>>> GetSummary(int xYear, int? xMonth = null, bool xIncludeInsignificant = false) {
     //funkcja pobiera podsumowanie transakcji dla danego roku i opcjonalnie miesiąca
     //xYear - rok podsumowania
     //xMonth - opcjonalny miesiąc podsumowania
+    //xIncludeInsignificant - czy uwzględnić transakcje nieistotne
 
     var pQuery = mContext.Transactions
         .Include(t => t.Category)
@@ -241,6 +273,10 @@ public class TransactionsController : ControllerBase {
 
     if (xMonth.HasValue)
       pQuery = pQuery.Where(t => t.MonthNumber == xMonth.Value);
+
+    //filtruj nieistotne transakcje jeśli nie powinny być uwzględnione
+    if (!xIncludeInsignificant)
+      pQuery = pQuery.Where(t => !t.IsInsignificant);
 
     var pSummary = await pQuery
         .GroupBy(t => new { t.CategoryId, t.Category.Name })
@@ -263,7 +299,8 @@ public class TransactionsController : ControllerBase {
       TotalIncome = pTotalIncome,
       TotalExpenses = pTotalExpenses,
       Balance = pBalance,
-      Categories = pSummary
+      Categories = pSummary,
+      IncludesInsignificant = xIncludeInsignificant
     };
 
     return Ok(ApiResponse<object>.SuccessResult(pResult));

@@ -3,59 +3,52 @@ using FinancesTracker.Shared.DTOs;
 
 namespace FinancesTracker.Client.Services;
 
-public class cTransactionService
-{
+public class cTransactionService {
   private readonly ApiService _apiService;
 
-  public cTransactionService(ApiService apiService)
-  {
+  public cTransactionService(ApiService apiService) {
     _apiService = apiService;
   }
 
-  public async Task<ApiResponse<PagedResult<TransactionDto>>> GetTransactionsAsync(TransactionFilterDto filter)
-  {
+  public async Task<ApiResponse<PagedResult<TransactionDto>>> GetTransactionsAsync(TransactionFilterDto filter) {
     var queryParams = BuildQueryString(filter);
     return await _apiService.GetAsync<PagedResult<TransactionDto>>($"{AppConstants.ApiEndpoints.Transactions}?{queryParams}");
   }
 
-  public async Task<ApiResponse<TransactionDto>> GetTransactionAsync(int id)
-  {
+  public async Task<ApiResponse<TransactionDto>> GetTransactionAsync(int id) {
     return await _apiService.GetAsync<TransactionDto>($"{AppConstants.ApiEndpoints.Transactions}/{id}");
   }
 
-  public async Task<ApiResponse<TransactionDto>> CreateTransactionAsync(TransactionDto transaction)
-  {
+  public async Task<ApiResponse<TransactionDto>> CreateTransactionAsync(TransactionDto transaction) {
     return await _apiService.PostAsync<TransactionDto>(AppConstants.ApiEndpoints.Transactions, transaction);
   }
 
   public async Task<ApiResponse<TransactionDto>> UpdateTransactionAsync(int id, TransactionDto transaction) {
-
     return await _apiService.PutAsync<TransactionDto>($"{AppConstants.ApiEndpoints.Transactions}/{id}", transaction);
-  
   }
 
-  public async Task<ApiResponse> DeleteTransactionAsync(int id)
-  {
+  public async Task<ApiResponse> DeleteTransactionAsync(int id) {
     return await _apiService.DeleteAsync($"{AppConstants.ApiEndpoints.Transactions}/{id}");
   }
 
-  public async Task<ApiResponse<object>> GetSummaryAsync(int year, int? month = null)
-  {
-    var endpoint = $"{AppConstants.ApiEndpoints.Transactions}/summary?year={year}";
+  public async Task<ApiResponse<TransactionDto>> ToggleInsignificantAsync(int id) {
+    return await _apiService.PatchAsync<TransactionDto>($"{AppConstants.ApiEndpoints.Transactions}/{id}/toggle-insignificant", null);
+  }
+
+  public async Task<ApiResponse<object>> GetSummaryAsync(int year, int? month = null, bool includeInsignificant = false) {
+    var endpoint = $"{AppConstants.ApiEndpoints.Transactions}/summary?year={year}&includeInsignificant={includeInsignificant}";
     if (month.HasValue)
       endpoint += $"&month={month.Value}";
 
     return await _apiService.GetAsync<object>(endpoint);
   }
 
-  public async Task<ApiResponse<SummaryDTO>> GetSummaryAsync(int year, int month)
-  {
+  public async Task<ApiResponse<SummaryDTO>> GetSummaryAsync(int year, int month) {
     var endpoint = $"{AppConstants.ApiEndpoints.Transactions}/summary?year={year}&month={month}";
     return await _apiService.GetAsync<SummaryDTO>(endpoint);
   }
 
-  private static string BuildQueryString(TransactionFilterDto filter)
-  {
+  private static string BuildQueryString(TransactionFilterDto filter) {
     var queryParams = new List<string>();
 
     if (filter.Year.HasValue)
@@ -88,6 +81,10 @@ public class cTransactionService
     if (!string.IsNullOrEmpty(filter.BankName))
       queryParams.Add($"bankName={Uri.EscapeDataString(filter.BankName)}");
 
+    if (filter.IsInsignificant.HasValue)
+      queryParams.Add($"isInsignificant={filter.IsInsignificant.Value}");
+
+    queryParams.Add($"includeInsignificant={filter.IncludeInsignificant}");
     queryParams.Add($"pageNumber={filter.PageNumber}");
     queryParams.Add($"pageSize={filter.PageSize}");
     queryParams.Add($"sortBy={filter.SortBy}");

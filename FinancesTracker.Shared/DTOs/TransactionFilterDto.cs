@@ -1,4 +1,4 @@
-namespace FinancesTracker.Shared.DTOs;
+﻿namespace FinancesTracker.Shared.DTOs;
 
 public class TransactionFilterDto
 {
@@ -12,12 +12,14 @@ public class TransactionFilterDto
     public DateTime? EndDate { get; set; }
     public string? SearchTerm { get; set; }
     public string? BankName { get; set; }
+    public bool? IsInsignificant { get; set; }
+    public bool IncludeInsignificant { get; set; } = true;
     
     // Paginacja
     public int PageNumber { get; set; } = 1;
-    public int PageSize { get; set; } = 50;
+    public int PageSize { get; set; } = 10;
     
     // Sortowanie
-    public string SortBy { get; set; } = "Date";
+    public string SortBy { get; set; } = "date";
     public bool SortDescending { get; set; } = true;
 }
