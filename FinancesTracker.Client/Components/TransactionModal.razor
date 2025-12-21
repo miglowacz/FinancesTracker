@@ -4,7 +4,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">@(Transaction.Id == 0 ? "Dodaj transakcjê" : "Edytuj transakcjê")</h5>
+                    <h5 class="modal-title">@(Transaction.Id == 0 ? "Dodaj transakcjÄ™" : "Edytuj transakcjÄ™")</h5>
                     <button type="button" class="btn-close" @onclick="OnClose"></button>
                 </div>
                 <EditForm Model="Transaction" OnValidSubmit="HandleSubmit">
@@ -29,7 +29,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Kategoria</label>
                                 <InputSelect class="form-select" @bind-Value="Transaction.CategoryId" @onchange="OnCategoryChanged">
-                                    <option value="0">Wybierz kategoriê</option>
+                                    <option value="0">Wybierz kategoriÄ™</option>
                                     @if (Categories != null)
                                     {
                                         @foreach (var category in Categories)
@@ -43,7 +43,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Podkategoria</label>
                                 <InputSelect class="form-select" @bind-Value="Transaction.SubcategoryId">
-                                    <option value="0">Wybierz podkategoriê</option>
+                                    <option value="0">Wybierz podkategoriÄ™</option>
                                     @if (subcategories != null)
                                     {
                                         @foreach (var subcategory in subcategories)
@@ -77,11 +77,11 @@
 }
 
 @code {
-    [Parameter] public TransactionDto Transaction { get; set; } = new();
+    [Parameter] public cTransaction_DTO Transaction { get; set; } = new();
     [Parameter] public List<cCategory_DTO>? Categories { get; set; }
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
-    [Parameter] public EventCallback<TransactionDto> OnSave { get; set; }
+    [Parameter] public EventCallback<cTransaction_DTO> OnSave { get; set; }
 
     private List<cSubcategory_DTO>? subcategories;
 

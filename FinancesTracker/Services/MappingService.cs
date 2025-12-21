@@ -1,11 +1,11 @@
-﻿using FinancesTracker.Shared.DTOs;
+using FinancesTracker.Shared.DTOs;
 using FinancesTracker.Shared.Models;
 
 namespace FinancesTracker.Services;
 
 public class MappingService {
-  public static TransactionDto ToDto(cTransaction transaction) {
-    return new TransactionDto {
+  public static cTransaction_DTO ToDto(cTransaction transaction) {
+    return new cTransaction_DTO {
       Id = transaction.Id,
       Date = transaction.Date,
       Description = transaction.Description,
@@ -23,7 +23,7 @@ public class MappingService {
     };
   }
 
-  public static cTransaction ToEntity(TransactionDto dto) {
+  public static cTransaction ToEntity(cTransaction_DTO dto) {
     return new cTransaction {
       Id = dto.Id,
       Date = dto.Date,

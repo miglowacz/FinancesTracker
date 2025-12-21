@@ -9,22 +9,6 @@
 
 ---
 
-## 🧾 Nazewnictwo zmiennych
-
-### 🧩 Zmienne lokalne
-- Zaczynają się od `p` i dalej wielką literą.
-- Przykład: `int pSum`, `string pName`
-
-### 📦 Zmienne na poziomie klasy (modułu)
-- Zaczynają się od `m` i dalej wielką literą.
-- Przykład: `private int mSum`, `protected string mLabel`
-
-### 🎯 Parametry funkcji
-- Zaczynają się od `x` i dalej wielką literą.
-- Przykład: `int xSum`, `string xDescription`
-
----
-
 ## 🧱 Nawiasy klamrowe (style bracketingu)
 
 - Nawias otwierający bloku (`{`) **musi znajdować się w tej samej linii**, co definicja funkcji.

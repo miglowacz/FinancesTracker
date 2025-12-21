@@ -1,4 +1,4 @@
-﻿@page "/transactions"
+@page "/transactions"
 @using FinancesTracker.Client.Services
 @using FinancesTracker.Shared.DTOs
 @using FinancesTracker.Shared.Constants
@@ -430,13 +430,13 @@
 </MudContainer>
 
 @code {
-  PagedResult<TransactionDto> Transactions = new();
+  PagedResult<cTransaction_DTO> Transactions = new();
 
   // Podstawowe filtry
   private DateTime? mStartDate;
   private DateTime? mEndDate;
   private bool mIsLoading = false;
-  private TransactionFilterDto mFilter = new();
+  private cTransactionFilter_DTO mFilter = new();
 
   // Filtry zaawansowane
   private bool mShowAdvancedFilters = false;
@@ -513,21 +513,21 @@
       if (!pResp.Success) {
         Console.WriteLine($"Błąd podczas ładowania transakcji: {BuildErrorMessage(pResp)}");
         Snackbar.Add($"Błąd podczas ładowania transakcji: {BuildErrorMessage(pResp)}", Severity.Error);
-        Transactions = new PagedResult<TransactionDto>();
+        Transactions = new PagedResult<cTransaction_DTO>();
       } else {
-        Transactions = pResp.Data ?? new PagedResult<TransactionDto>();
+        Transactions = pResp.Data ?? new PagedResult<cTransaction_DTO>();
       }
     } catch (Exception pEx) {
       Console.WriteLine($"Błąd podczas ładowania transakcji: {pEx.Message}");
       Snackbar.Add($"Błąd podczas ładowania transakcji: {pEx.Message}", Severity.Error);
-      Transactions = new PagedResult<TransactionDto>();
+      Transactions = new PagedResult<cTransaction_DTO>();
     } finally {
       mIsLoading = false;
       StateHasChanged();
     }
   }
 
-  private async Task ToggleInsignificant(TransactionDto transaction) {
+  private async Task ToggleInsignificant(cTransaction_DTO transaction) {
     try {
       var response = await TransactionService.ToggleInsignificantAsync(transaction.Id);
       if (response.Success) {
@@ -547,7 +547,7 @@
     }
   }
 
-  private void StartEdit(TransactionDto transaction) {
+  private void StartEdit(cTransaction_DTO transaction) {
     mEditingTransactionId = transaction.Id;
     mEditedCategoryId = transaction.CategoryId;
     mEditedSubcategoryId = transaction.SubcategoryId;
@@ -584,7 +584,7 @@
     return new List<cSubcategory_DTO>();
   }
 
-  private async Task SaveTransaction(TransactionDto transaction) {
+  private async Task SaveTransaction(cTransaction_DTO transaction) {
     try {
       // Zaktualizuj transakcję
       transaction.CategoryId = mEditedCategoryId;
@@ -632,7 +632,7 @@
     mFilterSearchTerm = null;
     mFilterBankName = null;
     mFilterInsignificantMode = "all";
-    mFilter = new TransactionFilterDto();
+    mFilter = new cTransactionFilter_DTO();
     await LoadTransactions();
   }
 

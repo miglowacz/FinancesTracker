@@ -1,4 +1,4 @@
-﻿@page "/reports"
+@page "/reports"
 @using System.Globalization
 @using FinancesTracker.Client.Services
 @using FinancesTracker.Shared.DTOs
@@ -368,7 +368,7 @@
   private DateTime? mStartDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
   private DateTime? mEndDate = DateTime.Today;
   private bool mIsLoading = false;
-  private List<TransactionDto> mAll = new();
+  private List<cTransaction_DTO> mAll = new();
 
   private decimal mTotalIncome, mTotalExpenses, mBalance;
 
@@ -547,7 +547,7 @@
     StateHasChanged();
 
     try {
-      var pFilter = new TransactionFilterDto {
+      var pFilter = new cTransactionFilter_DTO {
         StartDate = mStartDate.Value.Date,
         EndDate = mEndDate.Value.Date.AddDays(1).AddTicks(-1),
         CategoryId = mFilterCategoryId,

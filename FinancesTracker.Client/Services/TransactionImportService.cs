@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 using FinancesTracker.Shared.Models;
 using FinancesTracker.Shared.DTOs;
@@ -196,10 +196,10 @@ public class TransactionImportService {
     //xTransactions - lista transakcji do zaimportowania
     //xBankName - nazwa banku
 
-    List<TransactionDto> pDtos = new();
+    List<cTransaction_DTO> pDtos = new();
 
     foreach (cTransaction pT in xTransactions) {
-      pDtos.Add(new TransactionDto {
+      pDtos.Add(new cTransaction_DTO {
         Date = pT.Date,
         Description = pT.Description,
         Amount = pT.Amount,
@@ -223,9 +223,9 @@ public class TransactionImportService {
     //xSubcategoryKeyToId - słownik mapujący (ID kategorii, nazwa podkategorii) na ID podkategorii
     //xBankName - nazwa banku
 
-    List<TransactionDto> pDtos = new();
+    List<cTransaction_DTO> pDtos = new();
     foreach (cTransaction pT in xTransactions) {
-      pDtos.Add(new TransactionDto {
+      pDtos.Add(new cTransaction_DTO {
         Date = pT.Date,
         Description = pT.Description,
         Amount = pT.Amount,

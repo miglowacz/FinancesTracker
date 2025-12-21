@@ -13,11 +13,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\ApiResponse.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\cCategory_DTO.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\CategoryRuleDto.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DTOs\CsvImportDto.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\cCSV_Import_DTO.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\PagedResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DTOs\SummaryDTO.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DTOs\TransactionDto.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DTOs\TransactionFilterDto.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\cTransaction_DTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DTOs\cTransactionFilter_DTO.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\cCategory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\cCategoryRule.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\cSubcategory.cs" />
