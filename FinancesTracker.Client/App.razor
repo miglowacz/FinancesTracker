@@ -1,10 +1,11 @@
-﻿<Router AppAssembly="@typeof(Program).Assembly">
+<Router AppAssembly="@typeof(Program).Assembly">
   <Found Context="routeData">
     <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
   </Found>
   <NotFound>
     <LayoutView Layout="@typeof(MainLayout)">
-      <p>Sorry, there's nothing at this address.</p>
+      <PageTitle>404</PageTitle>
+      <p role="alert">Przykro nam, nic tutaj nie ma.</p>
     </LayoutView>
   </NotFound>
 </Router>

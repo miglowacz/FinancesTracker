@@ -1,16 +1,17 @@
-﻿using FinancesTracker.Data;
+using FinancesTracker.Data;
 using Microsoft.EntityFrameworkCore;
-using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services
+//rejestracja kontrolerów API
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 
+//konfiguracja bazy danych
 builder.Services.AddDbContext<FinancesTrackerDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+  options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+//CORS dla developmentu
 if (builder.Environment.IsDevelopment()) {
   builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {
@@ -21,6 +22,7 @@ if (builder.Environment.IsDevelopment()) {
 
 var app = builder.Build();
 
+//konfiguracja middleware
 if (app.Environment.IsDevelopment()) {
   app.UseWebAssemblyDebugging();
   app.UseCors();
@@ -31,13 +33,16 @@ if (app.Environment.IsDevelopment()) {
 
 app.UseHttpsRedirection();
 
-// Serve Blazor client files and static assets
+//serwowanie plików Blazor WASM
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 
 app.UseRouting();
 
+//mapowanie kontrolerów API
 app.MapControllers();
-app.MapFallbackToFile("index.html"); // ZMIENIONE: wskazuje na index.html z Client
+
+//fallback do index.html dla routingu po stronie klienta
+app.MapFallbackToFile("index.html");
 
 app.Run();
