@@ -633,6 +633,6 @@
     };
   }
 
-  private static string BuildErrorMessage<T>(ApiResponse<T> xResp)
+  private static string BuildErrorMessage<T>(cApiResponse<T> xResp)
     => xResp.Message ?? ((xResp.Errors != null && xResp.Errors.Count > 0) ? string.Join(", ", xResp.Errors) : "Wystąpił błąd.");
 }

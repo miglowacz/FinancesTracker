@@ -1,9 +1,9 @@
-﻿@page "/import"
+@page "/import"
 @using FinancesTracker.Client.Services
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
-@inject TransactionImportService ImportService
+@inject cTransactionImportService ImportService
 
 <div class="container mt-4">
   <h3>Import transakcji</h3>

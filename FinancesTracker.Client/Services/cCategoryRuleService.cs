@@ -1,4 +1,4 @@
-﻿using FinancesTracker.Shared.DTOs;
+using FinancesTracker.Shared.DTOs;
 using FinancesTracker.Shared.Models;
 using System.Net.Http.Json;
 
@@ -10,8 +10,8 @@ public class cCategoryRuleService {
   }
 
   public async Task<List<cCategoryRule>> GetAllAsync() {
-    var response = await _http.GetFromJsonAsync<ApiResponse<List<CategoryRuleDto>>>("api/categoryrules");
-    var dtos = response?.Data ?? new List<CategoryRuleDto>();
+    var response = await _http.GetFromJsonAsync<cApiResponse<List<cCategoryRule_DTO>>>("api/categoryrules");
+    var dtos = response?.Data ?? new List<cCategoryRule_DTO>();
     return dtos.Select(dto => new cCategoryRule {
       Id = dto.Id,
       Keyword = dto.Keyword,
@@ -22,7 +22,7 @@ public class cCategoryRuleService {
   }
 
   public async Task<cCategoryRule?> GetByIdAsync(int id) {
-    var response = await _http.GetFromJsonAsync<ApiResponse<CategoryRuleDto>>($"api/categoryrules/{id}");
+    var response = await _http.GetFromJsonAsync<cApiResponse<cCategoryRule_DTO>>($"api/categoryrules/{id}");
     var dto = response?.Data;
     if (dto == null) return null;
     return new cCategoryRule {
@@ -34,8 +34,8 @@ public class cCategoryRuleService {
     };
   }
 
-  public async Task<ApiResponse<CategoryRuleDto>> AddAsync(cCategoryRule rule) {
-    var dto = new CategoryRuleDto {
+  public async Task<cApiResponse<cCategoryRule_DTO>> AddAsync(cCategoryRule rule) {
+    var dto = new cCategoryRule_DTO {
       Id = rule.Id,
       Keyword = rule.Keyword,
       CategoryId = rule.CategoryId,
@@ -43,12 +43,12 @@ public class cCategoryRuleService {
       IsActive = rule.IsActive
     };
     var response = await _http.PostAsJsonAsync("api/categoryrules", dto);
-    return await response.Content.ReadFromJsonAsync<ApiResponse<CategoryRuleDto>>()
-           ?? ApiResponse<CategoryRuleDto>.Error("Brak odpowiedzi z serwera");
+    return await response.Content.ReadFromJsonAsync<cApiResponse<cCategoryRule_DTO>>()
+           ?? cApiResponse<cCategoryRule_DTO>.Error("Brak odpowiedzi z serwera");
   }
 
-  public async Task<ApiResponse<CategoryRuleDto>> UpdateAsync(cCategoryRule rule) {
-    var dto = new CategoryRuleDto {
+  public async Task<cApiResponse<cCategoryRule_DTO>> UpdateAsync(cCategoryRule rule) {
+    var dto = new cCategoryRule_DTO {
       Id = rule.Id,
       Keyword = rule.Keyword,
       CategoryId = rule.CategoryId,
@@ -56,13 +56,13 @@ public class cCategoryRuleService {
       IsActive = rule.IsActive
     };
     var response = await _http.PutAsJsonAsync($"api/categoryrules/{rule.Id}", dto);
-    return await response.Content.ReadFromJsonAsync<ApiResponse<CategoryRuleDto>>()
-           ?? ApiResponse<CategoryRuleDto>.Error("Brak odpowiedzi z serwera");
+    return await response.Content.ReadFromJsonAsync<cApiResponse<cCategoryRule_DTO>>()
+           ?? cApiResponse<cCategoryRule_DTO>.Error("Brak odpowiedzi z serwera");
   }
 
-  public async Task<ApiResponse> DeleteAsync(int id) {
+  public async Task<cApiResponse> DeleteAsync(int id) {
     var response = await _http.DeleteAsync($"api/categoryrules/{id}");
-    return await response.Content.ReadFromJsonAsync<ApiResponse>()
-           ?? ApiResponse.Error("Brak odpowiedzi z serwera");
+    return await response.Content.ReadFromJsonAsync<cApiResponse>()
+           ?? cApiResponse.Error("Brak odpowiedzi z serwera");
   }
 }

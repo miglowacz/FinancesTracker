@@ -52,8 +52,8 @@ public class MappingService {
     };
   }
 
-  public static CategoryRuleDto ToDto(cCategoryRule rule) {
-    return new CategoryRuleDto {
+  public static cCategoryRule_DTO ToDto(cCategoryRule rule) {
+    return new cCategoryRule_DTO {
       Id = rule.Id,
       Keyword = rule.Keyword,
       CategoryId = rule.CategoryId,
@@ -65,7 +65,8 @@ public class MappingService {
     };
   }
 
-  public static cCategoryRule ToEntity(CategoryRuleDto dto) {
+  public static cCategoryRule ToEntity(cCategoryRule_DTO dto) {
+
     return new cCategoryRule {
       Id = dto.Id,
       Keyword = dto.Keyword.ToLowerInvariant(),
@@ -74,5 +75,6 @@ public class MappingService {
       IsActive = dto.IsActive,
       CreatedAt = dto.Id == 0 ? DateTime.UtcNow : dto.CreatedAt
     };
+    
   }
 }

@@ -1,4 +1,4 @@
-public class SummaryDTO
+public class cSummary_DTO
 {
     public decimal TotalIncome { get; set; }
     public decimal TotalExpenses { get; set; }

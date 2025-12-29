@@ -1,4 +1,4 @@
-﻿using FinancesTracker.Shared.Constants;
+using FinancesTracker.Shared.Constants;
 using FinancesTracker.Shared.DTOs;
 using System.Net.Http.Json;
 using FinancesTracker.Shared.Models;
@@ -6,28 +6,28 @@ using FinancesTracker.Shared.Models;
 namespace FinancesTracker.Client.Services;
 
 public class cCategoryService {
-  private readonly ApiService mApiService; // serwis do komunikacji z API
+  private readonly cApiService mApiService; // serwis do komunikacji z API
   private readonly HttpClient _http;
 
-  public cCategoryService(ApiService xApiService, HttpClient http) {
+  public cCategoryService(cApiService xApiService, HttpClient http) {
     mApiService = xApiService;
     _http = http;
   }
 
-  public async Task<ApiResponse<List<cCategory_DTO>>> GetCategoriesAsync() {
-    return await mApiService.GetAsync<List<cCategory_DTO>>(AppConstants.ApiEndpoints.Categories);
+  public async Task<cApiResponse<List<cCategory_DTO>>> GetCategoriesAsync() {
+    return await mApiService.GetAsync<List<cCategory_DTO>>(cAppConstants.ApiEndpoints.Categories);
   }
 
-  public async Task<ApiResponse<cCategory_DTO>> GetCategoryAsync(int xId) {
-    return await mApiService.GetAsync<cCategory_DTO>($"{AppConstants.ApiEndpoints.Categories}/{xId}");
+  public async Task<cApiResponse<cCategory_DTO>> GetCategoryAsync(int xId) {
+    return await mApiService.GetAsync<cCategory_DTO>($"{cAppConstants.ApiEndpoints.Categories}/{xId}");
   }
 
-  public async Task<ApiResponse<List<cSubcategory_DTO>>> GetSubcategoriesAsync(int xCategoryId) {
-    return await mApiService.GetAsync<List<cSubcategory_DTO>>($"{AppConstants.ApiEndpoints.Categories}/{xCategoryId}/subcategories");
+  public async Task<cApiResponse<List<cSubcategory_DTO>>> GetSubcategoriesAsync(int xCategoryId) {
+    return await mApiService.GetAsync<List<cSubcategory_DTO>>($"{cAppConstants.ApiEndpoints.Categories}/{xCategoryId}/subcategories");
   }
 
   public async Task<List<cCategory>> GetAllAsync() {
-    var pResponse = await _http.GetFromJsonAsync<ApiResponse<List<cCategory_DTO>>>("api/categories");
+    var pResponse = await _http.GetFromJsonAsync<cApiResponse<List<cCategory_DTO>>>("api/categories");
     var pCln_DTOs = pResponse?.Data ?? new List<cCategory_DTO>();
 
     // Konwersja DTO -> Model
@@ -46,7 +46,7 @@ public class cCategoryService {
 
   public async Task<cCategory?> GetByIdAsync(int id) {
   
-    var response = await _http.GetFromJsonAsync<ApiResponse<cCategory_DTO>>($"api/categories/{id}");
+    var response = await _http.GetFromJsonAsync<cApiResponse<cCategory_DTO>>($"api/categories/{id}");
     var dto = response?.Data;
     if (dto == null) return null;
 
@@ -63,7 +63,7 @@ public class cCategoryService {
   }
 
 
-  public async Task<ApiResponse<cCategory_DTO>> CreateCategoryAsync(cCategory category) {
+  public async Task<cApiResponse<cCategory_DTO>> CreateCategoryAsync(cCategory category) {
     var dto = new cCategory_DTO {
       Id = category.Id,
       Name = category.Name,
@@ -75,11 +75,11 @@ public class cCategoryService {
     };
 
     var response = await _http.PostAsJsonAsync("api/categories", dto);
-    return await response.Content.ReadFromJsonAsync<ApiResponse<cCategory_DTO>>()
-           ?? ApiResponse<cCategory_DTO>.Error("Brak odpowiedzi z serwera");
+    return await response.Content.ReadFromJsonAsync<cApiResponse<cCategory_DTO>>()
+           ?? cApiResponse<cCategory_DTO>.Error("Brak odpowiedzi z serwera");
   }
 
-  public async Task<ApiResponse<cCategory_DTO>> UpdateCategoryAsync(int id, cCategory category) {
+  public async Task<cApiResponse<cCategory_DTO>> UpdateCategoryAsync(int id, cCategory category) {
     var dto = new cCategory_DTO {
       Id = category.Id,
       Name = category.Name,
@@ -91,14 +91,14 @@ public class cCategoryService {
     };
 
     var response = await _http.PutAsJsonAsync($"api/categories/{id}", dto);
-    return await response.Content.ReadFromJsonAsync<ApiResponse<cCategory_DTO>>()
-           ?? ApiResponse<cCategory_DTO>.Error("Brak odpowiedzi z serwera");
+    return await response.Content.ReadFromJsonAsync<cApiResponse<cCategory_DTO>>()
+           ?? cApiResponse<cCategory_DTO>.Error("Brak odpowiedzi z serwera");
   }
 
-  public async Task<ApiResponse> DeleteCategoryAsync(int id) {
+  public async Task<cApiResponse> DeleteCategoryAsync(int id) {
     var response = await _http.DeleteAsync($"api/categories/{id}");
-    return await response.Content.ReadFromJsonAsync<ApiResponse>()
-           ?? ApiResponse.Error("Brak odpowiedzi z serwera");
+    return await response.Content.ReadFromJsonAsync<cApiResponse>()
+           ?? cApiResponse.Error("Brak odpowiedzi z serwera");
   }
 
   public async Task ImportFromCsvAsync(

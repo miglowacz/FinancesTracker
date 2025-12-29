@@ -16,7 +16,7 @@ public class CategoryRulesController : ControllerBase {
   }
 
   [HttpGet]
-  public async Task<ActionResult<ApiResponse<List<CategoryRuleDto>>>> GetCategoryRules() {
+  public async Task<ActionResult<cApiResponse<List<cCategoryRule_DTO>>>> GetCategoryRules() {
 
     try {
       var rules = await _context.CategoryRules
@@ -26,15 +26,15 @@ public class CategoryRulesController : ControllerBase {
           .ToListAsync();
 
       var result = rules.Select(MappingService.ToDto).ToList();
-      return Ok(ApiResponse<List<CategoryRuleDto>>.SuccessResult(result));
+      return Ok(cApiResponse<List<cCategoryRule_DTO>>.SuccessResult(result));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse<List<CategoryRuleDto>>.Error("Błąd podczas pobierania reguł", new List<string> { ex.Message }));
+      return StatusCode(500, cApiResponse<List<cCategoryRule_DTO>>.Error("Błąd podczas pobierania reguł", new List<string> { ex.Message }));
     }
 
   }
 
   [HttpGet("{id}")]
-  public async Task<ActionResult<ApiResponse<CategoryRuleDto>>> GetCategoryRule(int id) {
+  public async Task<ActionResult<cApiResponse<cCategoryRule_DTO>>> GetCategoryRule(int id) {
 
     try {
       var rule = await _context.CategoryRules
@@ -43,33 +43,33 @@ public class CategoryRulesController : ControllerBase {
           .FirstOrDefaultAsync(r => r.Id == id);
 
       if (rule == null)
-        return NotFound(ApiResponse<CategoryRuleDto>.Error("Reguła nie została znaleziona"));
+        return NotFound(cApiResponse<cCategoryRule_DTO>.Error("Reguła nie została znaleziona"));
 
-      return Ok(ApiResponse<CategoryRuleDto>.SuccessResult(MappingService.ToDto(rule)));
+      return Ok(cApiResponse<cCategoryRule_DTO>.SuccessResult(MappingService.ToDto(rule)));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse<CategoryRuleDto>.Error("Błąd podczas pobierania reguły", new List<string> { ex.Message }));
+      return StatusCode(500, cApiResponse<cCategoryRule_DTO>.Error("Błąd podczas pobierania reguły", new List<string> { ex.Message }));
     }
 
   }
 
   [HttpPost]
-  public async Task<ActionResult<ApiResponse<CategoryRuleDto>>> CreateCategoryRule([FromBody] CategoryRuleDto ruleDto) {
+  public async Task<ActionResult<cApiResponse<cCategoryRule_DTO>>> CreateCategoryRule([FromBody] cCategoryRule_DTO ruleDto) {
 
     try {
       var category = await _context.Categories.Include(c => c.Subcategories)
           .FirstOrDefaultAsync(c => c.Id == ruleDto.CategoryId);
 
       if (category == null)
-        return BadRequest(ApiResponse<CategoryRuleDto>.Error("Wybrana kategoria nie istnieje"));
+        return BadRequest(cApiResponse<cCategoryRule_DTO>.Error("Wybrana kategoria nie istnieje"));
 
       if (!category.Subcategories.Any(s => s.Id == ruleDto.SubcategoryId))
-        return BadRequest(ApiResponse<CategoryRuleDto>.Error("Wybrana podkategoria nie należy do wybranej kategorii"));
+        return BadRequest(cApiResponse<cCategoryRule_DTO>.Error("Wybrana podkategoria nie należy do wybranej kategorii"));
 
       var existingRule = await _context.CategoryRules
           .FirstOrDefaultAsync(r => r.Keyword.ToLower() == ruleDto.Keyword.ToLower());
 
       if (existingRule != null)
-        return BadRequest(ApiResponse<CategoryRuleDto>.Error("Reguła dla tego słowa kluczowego już istnieje"));
+        return BadRequest(cApiResponse<cCategoryRule_DTO>.Error("Reguła dla tego słowa kluczowego już istnieje"));
 
       var rule = MappingService.ToEntity(ruleDto);
       _context.CategoryRules.Add(rule);
@@ -80,38 +80,38 @@ public class CategoryRulesController : ControllerBase {
           .Include(r => r.Subcategory)
           .FirstAsync(r => r.Id == rule.Id);
 
-      return Ok(ApiResponse<CategoryRuleDto>.SuccessResult(MappingService.ToDto(createdRule), "Reguła została utworzona"));
+      return Ok(cApiResponse<cCategoryRule_DTO>.SuccessResult(MappingService.ToDto(createdRule), "Reguła została utworzona"));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse<CategoryRuleDto>.Error("Błąd podczas tworzenia reguły", new List<string> { ex.Message }));
+      return StatusCode(500, cApiResponse<cCategoryRule_DTO>.Error("Błąd podczas tworzenia reguły", new List<string> { ex.Message }));
     }
 
   }
 
   [HttpPut("{id}")]
-  public async Task<ActionResult<ApiResponse<CategoryRuleDto>>> UpdateCategoryRule(int id, [FromBody] CategoryRuleDto ruleDto) {
+  public async Task<ActionResult<cApiResponse<cCategoryRule_DTO>>> UpdateCategoryRule(int id, [FromBody] cCategoryRule_DTO ruleDto) {
 
     try {
       if (id != ruleDto.Id)
-        return BadRequest(ApiResponse<CategoryRuleDto>.Error("ID reguły nie pasuje"));
+        return BadRequest(cApiResponse<cCategoryRule_DTO>.Error("ID reguły nie pasuje"));
 
       var existingRule = await _context.CategoryRules.FindAsync(id);
       if (existingRule == null)
-        return NotFound(ApiResponse<CategoryRuleDto>.Error("Reguła nie została znaleziona"));
+        return NotFound(cApiResponse<cCategoryRule_DTO>.Error("Reguła nie została znaleziona"));
 
       var category = await _context.Categories.Include(c => c.Subcategories)
           .FirstOrDefaultAsync(c => c.Id == ruleDto.CategoryId);
 
       if (category == null)
-        return BadRequest(ApiResponse<CategoryRuleDto>.Error("Wybrana kategoria nie istnieje"));
+        return BadRequest(cApiResponse<cCategoryRule_DTO>.Error("Wybrana kategoria nie istnieje"));
 
       if (!category.Subcategories.Any(s => s.Id == ruleDto.SubcategoryId))
-        return BadRequest(ApiResponse<CategoryRuleDto>.Error("Wybrana podkategoria nie należy do wybranej kategorii"));
+        return BadRequest(cApiResponse<cCategoryRule_DTO>.Error("Wybrana podkategoria nie należy do wybranej kategorii"));
 
       var duplicateRule = await _context.CategoryRules
           .FirstOrDefaultAsync(r => r.Keyword.ToLower() == ruleDto.Keyword.ToLower() && r.Id != id);
 
       if (duplicateRule != null)
-        return BadRequest(ApiResponse<CategoryRuleDto>.Error("Reguła dla tego słowa kluczowego już istnieje"));
+        return BadRequest(cApiResponse<cCategoryRule_DTO>.Error("Reguła dla tego słowa kluczowego już istnieje"));
 
       existingRule.Keyword = ruleDto.Keyword.ToLowerInvariant();
       existingRule.CategoryId = ruleDto.CategoryId;
@@ -125,27 +125,27 @@ public class CategoryRulesController : ControllerBase {
           .Include(r => r.Subcategory)
           .FirstAsync(r => r.Id == id);
 
-      return Ok(ApiResponse<CategoryRuleDto>.SuccessResult(MappingService.ToDto(updatedRule), "Reguła została zaktualizowana"));
+      return Ok(cApiResponse<cCategoryRule_DTO>.SuccessResult(MappingService.ToDto(updatedRule), "Reguła została zaktualizowana"));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse<CategoryRuleDto>.Error("Błąd podczas aktualizacji reguły", new List<string> { ex.Message }));
+      return StatusCode(500, cApiResponse<cCategoryRule_DTO>.Error("Błąd podczas aktualizacji reguły", new List<string> { ex.Message }));
     }
 
   }
 
   [HttpDelete("{id}")]
-  public async Task<ActionResult<ApiResponse>> DeleteCategoryRule(int id) {
+  public async Task<ActionResult<cApiResponse>> DeleteCategoryRule(int id) {
 
     try {
       var rule = await _context.CategoryRules.FindAsync(id);
       if (rule == null)
-        return NotFound(ApiResponse.Error("Reguła nie została znaleziona"));
+        return NotFound(cApiResponse.Error("Reguła nie została znaleziona"));
 
       _context.CategoryRules.Remove(rule);
       await _context.SaveChangesAsync();
 
-      return Ok(ApiResponse.SuccessResult("Reguła została usunięta"));
+      return Ok(cApiResponse.SuccessResult("Reguła została usunięta"));
     } catch (Exception ex) {
-      return StatusCode(500, ApiResponse.Error("Błąd podczas usuwania reguły", new List<string> { ex.Message }));
+      return StatusCode(500, cApiResponse.Error("Błąd podczas usuwania reguły", new List<string> { ex.Message }));
     }
 
   }

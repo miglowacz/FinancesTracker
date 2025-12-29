@@ -10,6 +10,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Pages\**" />
+    <Content Remove="Pages\**" />
+    <EmbeddedResource Remove="Pages\**" />
+    <None Remove="Pages\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
@@ -27,14 +34,11 @@
   <ItemGroup>
     <Folder Include="Components\" />
     <Folder Include="Migrations\" />
-    <Folder Include="Pages\" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\FinancesTracker.Client\FinancesTracker.Client.csproj" />
     <ProjectReference Include="..\FinancesTracker.Shared\FinancesTracker.Shared.csproj" />
   </ItemGroup>
-
-  <Import Project="..\FinancesTracker.Shared\FinancesTracker.Shared.projitems" Label="Shared" />
 
 </Project>

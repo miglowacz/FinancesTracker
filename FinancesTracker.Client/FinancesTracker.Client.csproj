@@ -33,6 +33,4 @@
     </Content>
   </ItemGroup>
   
-  <Import Project="..\FinancesTracker.Shared\FinancesTracker.Shared.projitems" Label="Shared" />
-
 </Project>

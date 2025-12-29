@@ -58,7 +58,7 @@
                                 <label class="form-label">Bank</label>
                                 <InputSelect class="form-select" @bind-Value="Transaction.BankName">
                                     <option value="">Wybierz bank</option>
-                                    @foreach (var bank in AppConstants.SupportedBanks.All)
+                                    @foreach (var bank in cAppConstants.SupportedBanks.All)
                                     {
                                         <option value="@bank">@bank</option>
                                     }

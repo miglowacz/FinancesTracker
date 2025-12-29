@@ -1,6 +1,6 @@
 namespace FinancesTracker.Shared.DTOs;
 
-public class PagedResult<T>
+public class cPagedResult<T>
 {
     public List<T> Items { get; set; } = new();
     public int TotalCount { get; set; }

@@ -278,12 +278,12 @@
     <!-- Lista transakcji -->
     <MudItem xs="12">
       @if (mIsLoading) {
-        <div class="text-center p-4">
+        <div class="text-center p-2">
           <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
           <MudText Typo="Typo.body1" Class="mt-3">Ładowanie transakcji...</MudText>
         </div>
       } else if (Transactions.Items?.Any() == true) {
-        <MudPaper Class="pa-4">
+        <MudPaper Class="pa-2">
           <MudText Typo="Typo.subtitle2" Class="mb-3">
             Znaleziono @Transactions.TotalCount transakcji
           </MudText>
@@ -417,7 +417,7 @@
           }
         </MudPaper>
       } else {
-        <MudPaper Class="pa-4 text-center">
+        <MudPaper Class="pa-2 text-center">
           <MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" Color="Color.Default" Class="mb-3" />
           <MudText Typo="Typo.h6" Class="text-muted">Brak transakcji</MudText>
           <MudText Typo="Typo.body2" Class="text-muted">
@@ -430,7 +430,7 @@
 </MudContainer>
 
 @code {
-  PagedResult<cTransaction_DTO> Transactions = new();
+  cPagedResult<cTransaction_DTO> Transactions = new();
 
   // Podstawowe filtry
   private DateTime? mStartDate;
@@ -513,14 +513,14 @@
       if (!pResp.Success) {
         Console.WriteLine($"Błąd podczas ładowania transakcji: {BuildErrorMessage(pResp)}");
         Snackbar.Add($"Błąd podczas ładowania transakcji: {BuildErrorMessage(pResp)}", Severity.Error);
-        Transactions = new PagedResult<cTransaction_DTO>();
+        Transactions = new cPagedResult<cTransaction_DTO>();
       } else {
-        Transactions = pResp.Data ?? new PagedResult<cTransaction_DTO>();
+        Transactions = pResp.Data ?? new cPagedResult<cTransaction_DTO>();
       }
     } catch (Exception pEx) {
       Console.WriteLine($"Błąd podczas ładowania transakcji: {pEx.Message}");
       Snackbar.Add($"Błąd podczas ładowania transakcji: {pEx.Message}", Severity.Error);
-      Transactions = new PagedResult<cTransaction_DTO>();
+      Transactions = new cPagedResult<cTransaction_DTO>();
     } finally {
       mIsLoading = false;
       StateHasChanged();
@@ -727,6 +727,6 @@
     await JSRuntime.InvokeVoidAsync("alert", "Dodaj transakcję - funkcja w budowie!");
   }
 
-  private static string BuildErrorMessage<T>(ApiResponse<T> xResp)
+  private static string BuildErrorMessage<T>(cApiResponse<T> xResp)
     => xResp.Message ?? ((xResp.Errors != null && xResp.Errors.Count > 0) ? string.Join(", ", xResp.Errors) : "Wystąpił błąd.");
 }

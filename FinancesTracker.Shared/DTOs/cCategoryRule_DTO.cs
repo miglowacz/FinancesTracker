@@ -2,12 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinancesTracker.Shared.DTOs;
 
-public class CategoryRuleDto
+public class cCategoryRule_DTO
 {
     public int Id { get; set; }
     
-    [Required(ErrorMessage = "S≥owo kluczowe jest wymagane")]
-    [MaxLength(200, ErrorMessage = "S≥owo kluczowe nie moøe byÊ d≥uøsze niø 200 znakÛw")]
+    [Required(ErrorMessage = "S≈Çowo kluczowe jest wymagane")]
+    [MaxLength(200, ErrorMessage = "S≈Çowo kluczowe nie mo≈ºe byƒá d≈Çu≈ºsze ni≈º 200 znak√≥w")]
     public string Keyword { get; set; } = string.Empty;
     
     [Required(ErrorMessage = "Kategoria jest wymagana")]
@@ -18,7 +18,7 @@ public class CategoryRuleDto
     
     public bool IsActive { get; set; } = true;
     
-    // W≥aúciwoúci tylko do odczytu
+    // W≈Ça≈õciwo≈õci tylko do odczytu
     public string? CategoryName { get; set; }
     public string? SubcategoryName { get; set; }
     public DateTime CreatedAt { get; set; }

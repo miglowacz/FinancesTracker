@@ -15,16 +15,16 @@
                 <div class="col-md-3">
                     <div class="card bg-success text-white">
                         <div class="card-body">
-                            <h5 class="card-title">Dochody w tym miesiπcu</h5>
-              <h3 class="card-text">@(summary?.TotalIncome.ToString("C", polishCulture) ?? "0,00 z≥")</h3>
+                            <h5 class="card-title">Dochody w tym miesiƒÖcu</h5>
+              <h3 class="card-text">@(summary?.TotalIncome.ToString("C", polishCulture) ?? "0,00 z≈Ç")</h3>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card bg-danger text-white">
                         <div class="card-body">
-                            <h5 class="card-title">Wydatki w tym miesiπcu</h5>
-                            <h3 class="card-text">@(summary?.TotalExpenses.ToString("C", polishCulture) ?? "0,00 z≥")</h3>
+                            <h5 class="card-title">Wydatki w tym miesiƒÖcu</h5>
+                            <h3 class="card-text">@(summary?.TotalExpenses.ToString("C", polishCulture) ?? "0,00 z≈Ç")</h3>
                         </div>
                     </div>
                 </div>
@@ -32,7 +32,7 @@
                     <div class="card bg-info text-white">
                         <div class="card-body">
                             <h5 class="card-title">Bilans</h5>
-                            <h3 class="card-text">@(summary?.Balance.ToString("C", polishCulture) ?? "0,00 z≥")</h3>
+                            <h3 class="card-text">@(summary?.Balance.ToString("C", polishCulture) ?? "0,00 z≈Ç")</h3>
                         </div>
                     </div>
                 </div>
@@ -56,7 +56,7 @@
                         <div class="card-body">
                             <div class="d-grid gap-2">
                                 <a href="/transactions" class="btn btn-primary">
-                                    <i class="fas fa-plus"></i> Dodaj transakcjÍ
+                                    <i class="fas fa-plus"></i> Dodaj transakcjƒô
                                 </a>
                                 <a href="/import" class="btn btn-success">
                                     <i class="fas fa-upload"></i> Importuj z CSV
@@ -71,14 +71,14 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header">
-                            <h5 class="card-title mb-0">Wydatki wed≥ug kategorii (bieøπcy miesiπc)</h5>
+                            <h5 class="card-title mb-0">Wydatki wed≈Çug kategorii (bie≈ºƒÖcy miesiƒÖc)</h5>
                         </div>
                         <div class="card-body">
                             @if (isLoadingSummary)
                             {
                                 <div class="text-center">
                                     <div class="spinner-border spinner-border-sm" role="status">
-                                        <span class="visually-hidden">£adowanie...</span>
+                                        <span class="visually-hidden">≈Åadowanie...</span>
                                     </div>
                                 </div>
                             }
@@ -100,7 +100,7 @@
                             }
                             else
                             {
-                                <p class="text-muted">Brak danych do wyúwietlenia</p>
+                                <p class="text-muted">Brak danych do wy≈õwietlenia</p>
                             }
                         </div>
                     </div>
@@ -111,7 +111,7 @@
 </div>
 
 @code {
-    private SummaryDTO? summary;
+    private cSummary_DTO? summary;
     private bool isLoadingSummary = true;
     private readonly System.Globalization.CultureInfo polishCulture = new("pl-PL");
 

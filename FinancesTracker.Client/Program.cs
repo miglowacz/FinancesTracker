@@ -14,7 +14,7 @@ builder.Services.AddScoped(sp => new HttpClient {
 });
 
 //rejestracja serwisów (usuń duplikaty AddHttpClient)
-builder.Services.AddHttpClient<ApiService>(client => {
+builder.Services.AddHttpClient<cApiService>(client => {
   client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 });
 
@@ -27,7 +27,7 @@ builder.Services.AddHttpClient<cSubcategoryService>(client => {
 builder.Services.AddHttpClient<cCategoryRuleService>(client => {
   client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 });
-builder.Services.AddHttpClient<TransactionImportService>(client => {
+builder.Services.AddHttpClient<cTransactionImportService>(client => {
   client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 });
 

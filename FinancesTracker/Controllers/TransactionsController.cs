@@ -11,22 +11,22 @@ namespace FinancesTracker.Controllers;
 [Route("api/[controller]")]
 public class TransactionsController : ControllerBase {
 
-  private readonly FinancesTrackerDbContext mContext;
+  private readonly FinancesTrackerDbContext _DB_Context;
 
   public TransactionsController(FinancesTrackerDbContext xContext) {
     //konstruktor kontrolera transakcji
     //xContext - kontekst bazy danych
 
-    mContext = xContext;
+    _DB_Context = xContext;
 
   }
 
   [HttpGet]
-  public async Task<ActionResult<ApiResponse<PagedResult<cTransaction_DTO>>>> GetTransactions([FromQuery] cTransactionFilter_DTO xFilter) {
+  public async Task<ActionResult<cApiResponse<cPagedResult<cTransaction_DTO>>>> GetTransactions([FromQuery] cTransactionFilter_DTO xFilter) {
     //funkcja pobiera listę transakcji z filtrowaniem, sortowaniem i paginacją
     //xFilter - obiekt filtrujący transakcje
 
-    var pQuery = mContext.Transactions
+    var pQuery = _DB_Context.Transactions
         .Include(t => t.Category)
         .Include(t => t.Subcategory)
         .AsQueryable();
@@ -105,97 +105,97 @@ public class TransactionsController : ControllerBase {
         .ToListAsync();
 
     //tworzy wynik z transakcjami i informacjami o paginacji
-    var pResult = new PagedResult<cTransaction_DTO> {
+    var pResult = new cPagedResult<cTransaction_DTO> {
       Items = pTransactions.Select(MappingService.ToDto).ToList(),
       TotalCount = pTotalCount,
       PageNumber = xFilter.PageNumber,
       PageSize = xFilter.PageSize
     };
 
-    return Ok(ApiResponse<PagedResult<cTransaction_DTO>>.SuccessResult(pResult));
+    return Ok(cApiResponse<cPagedResult<cTransaction_DTO>>.SuccessResult(pResult));
 
   }
 
   [HttpGet("{id}")]
-  public async Task<ActionResult<ApiResponse<cTransaction_DTO>>> GetTransaction(int xId) {
+  public async Task<ActionResult<cApiResponse<cTransaction_DTO>>> GetTransaction(int xId) {
     //funkcja pobiera pojedynczą transakcję po id
     //xId - identyfikator transakcji
 
-    var pTransaction = await mContext.Transactions
+    var pTransaction = await _DB_Context.Transactions
         .Include(t => t.Category)
         .Include(t => t.Subcategory)
         .FirstOrDefaultAsync(t => t.Id == xId);
 
     if (pTransaction == null)
-      return NotFound(ApiResponse<cTransaction_DTO>.Error("Transakcja nie została znaleziona"));
+      return NotFound(cApiResponse<cTransaction_DTO>.Error("Transakcja nie została znaleziona"));
 
-    return Ok(ApiResponse<cTransaction_DTO>.SuccessResult(MappingService.ToDto(pTransaction)));
+    return Ok(cApiResponse<cTransaction_DTO>.SuccessResult(MappingService.ToDto(pTransaction)));
 
   }
 
   [HttpPost]
-  public async Task<ActionResult<ApiResponse<cTransaction_DTO>>> CreateTransaction(cTransaction_DTO xTransactionDto) {
+  public async Task<ActionResult<cApiResponse<cTransaction_DTO>>> CreateTransaction(cTransaction_DTO xTransactionDto) {
     //funkcja tworzy nową transakcję
     //xTransactionDto - dane nowej transakcji
 
     if (!ModelState.IsValid) {
       var pErrors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-      return BadRequest(ApiResponse<cTransaction_DTO>.Error("Dane transakcji są nieprawidłowe", pErrors));
+      return BadRequest(cApiResponse<cTransaction_DTO>.Error("Dane transakcji są nieprawidłowe", pErrors));
     }
 
     //sprawdza czy kategoria i podkategoria istnieją
-    var pCategory = await mContext.Categories.Include(c => c.Subcategories)
+    var pCategory = await _DB_Context.Categories.Include(c => c.Subcategories)
         .FirstOrDefaultAsync(c => c.Id == xTransactionDto.CategoryId);
 
     if (pCategory == null)
-      return BadRequest(ApiResponse<cTransaction_DTO>.Error("Wybrana kategoria nie istnieje"));
+      return BadRequest(cApiResponse<cTransaction_DTO>.Error("Wybrana kategoria nie istnieje"));
 
     if (!pCategory.Subcategories.Any(s => s.Id == xTransactionDto.SubcategoryId))
-      return BadRequest(ApiResponse<cTransaction_DTO>.Error("Wybrana podkategoria nie należy do wybranej kategorii"));
+      return BadRequest(cApiResponse<cTransaction_DTO>.Error("Wybrana podkategoria nie należy do wybranej kategorii"));
 
     var pTransaction = MappingService.ToEntity(xTransactionDto);
-    mContext.Transactions.Add(pTransaction);
-    await mContext.SaveChangesAsync();
+    _DB_Context.Transactions.Add(pTransaction);
+    await _DB_Context.SaveChangesAsync();
 
     //pobiera utworzoną transakcję z relacjami
-    var pCreatedTransaction = await mContext.Transactions
+    var pCreatedTransaction = await _DB_Context.Transactions
         .Include(t => t.Category)
         .Include(t => t.Subcategory)
         .FirstAsync(t => t.Id == pTransaction.Id);
 
     return CreatedAtAction(nameof(GetTransaction),
         new { id = pTransaction.Id },
-        ApiResponse<cTransaction_DTO>.SuccessResult(MappingService.ToDto(pCreatedTransaction), "Transakcja została utworzona"));
+        cApiResponse<cTransaction_DTO>.SuccessResult(MappingService.ToDto(pCreatedTransaction), "Transakcja została utworzona"));
 
   }
 
   [HttpPut("{id}")]
-  public async Task<ActionResult<ApiResponse<cTransaction_DTO>>> UpdateTransaction(int id, cTransaction_DTO xTransactionDto) {
+  public async Task<ActionResult<cApiResponse<cTransaction_DTO>>> UpdateTransaction(int id, cTransaction_DTO xTransactionDto) {
     //funkcja aktualizuje istniejącą transakcję
     //xId - identyfikator transakcji
     //xTransactionDto - dane do aktualizacji transakcji
 
     if (id != xTransactionDto.Id)
-      return BadRequest(ApiResponse<cTransaction_DTO>.Error("ID transakcji nie pasuje"));
+      return BadRequest(cApiResponse<cTransaction_DTO>.Error("ID transakcji nie pasuje"));
 
     if (!ModelState.IsValid) {
       var pErrors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-      return BadRequest(ApiResponse<cTransaction_DTO>.Error("Dane transakcji są nieprawidłowe", pErrors));
+      return BadRequest(cApiResponse<cTransaction_DTO>.Error("Dane transakcji są nieprawidłowe", pErrors));
     }
 
-    var pExistingTransaction = await mContext.Transactions.FindAsync(id);
+    var pExistingTransaction = await _DB_Context.Transactions.FindAsync(id);
     if (pExistingTransaction == null)
-      return NotFound(ApiResponse<cTransaction_DTO>.Error("Transakcja nie została znaleziona"));
+      return NotFound(cApiResponse<cTransaction_DTO>.Error("Transakcja nie została znaleziona"));
 
     //sprawdza czy kategoria i podkategoria istnieją
-    var pCategory = await mContext.Categories.Include(c => c.Subcategories)
+    var pCategory = await _DB_Context.Categories.Include(c => c.Subcategories)
         .FirstOrDefaultAsync(c => c.Id == xTransactionDto.CategoryId);
 
     if (pCategory == null)
-      return BadRequest(ApiResponse<cTransaction_DTO>.Error("Wybrana kategoria nie istnieje"));
+      return BadRequest(cApiResponse<cTransaction_DTO>.Error("Wybrana kategoria nie istnieje"));
 
     if (!pCategory.Subcategories.Any(s => s.Id == xTransactionDto.SubcategoryId))
-      return BadRequest(ApiResponse<cTransaction_DTO>.Error("Wybrana podkategoria nie należy do wybranej kategorii"));
+      return BadRequest(cApiResponse<cTransaction_DTO>.Error("Wybrana podkategoria nie należy do wybranej kategorii"));
 
     //aktualizuje właściwości transakcji
     pExistingTransaction.Date = xTransactionDto.Date;
@@ -209,66 +209,66 @@ public class TransactionsController : ControllerBase {
     pExistingTransaction.Year = xTransactionDto.Date.Year;
     pExistingTransaction.UpdatedAt = DateTime.UtcNow;
 
-    await mContext.SaveChangesAsync();
+    await _DB_Context.SaveChangesAsync();
 
     //pobiera zaktualizowaną transakcję z relacjami
-    var pUpdatedTransaction = await mContext.Transactions
+    var pUpdatedTransaction = await _DB_Context.Transactions
         .Include(t => t.Category)
         .Include(t => t.Subcategory)
         .FirstAsync(t => t.Id == id);
 
-    return Ok(ApiResponse<cTransaction_DTO>.SuccessResult(MappingService.ToDto(pUpdatedTransaction), "Transakcja została zaktualizowana"));
+    return Ok(cApiResponse<cTransaction_DTO>.SuccessResult(MappingService.ToDto(pUpdatedTransaction), "Transakcja została zaktualizowana"));
 
   }
 
   [HttpDelete("{id}")]
-  public async Task<ActionResult<ApiResponse>> DeleteTransaction(int xId) {
+  public async Task<ActionResult<cApiResponse>> DeleteTransaction(int xId) {
     //funkcja usuwa transakcję po id
     //xId - identyfikator transakcji do usunięcia
 
-    var pTransaction = await mContext.Transactions.FindAsync(xId);
+    var pTransaction = await _DB_Context.Transactions.FindAsync(xId);
     if (pTransaction == null)
-      return NotFound(ApiResponse.Error("Transakcja nie została znaleziona"));
+      return NotFound(cApiResponse.Error("Transakcja nie została znaleziona"));
 
-    mContext.Transactions.Remove(pTransaction);
-    await mContext.SaveChangesAsync();
+    _DB_Context.Transactions.Remove(pTransaction);
+    await _DB_Context.SaveChangesAsync();
 
-    return Ok(ApiResponse.SuccessResult("Transakcja została usunięta"));
+    return Ok(cApiResponse.SuccessResult("Transakcja została usunięta"));
 
   }
 
   [HttpPatch("{id}/toggle-insignificant")]
-  public async Task<ActionResult<ApiResponse<cTransaction_DTO>>> ToggleInsignificant(int id) {
+  public async Task<ActionResult<cApiResponse<cTransaction_DTO>>> ToggleInsignificant(int id) {
     //funkcja przełącza status nieistotności transakcji
     //id - identyfikator transakcji
 
-    var pTransaction = await mContext.Transactions
+    var pTransaction = await _DB_Context.Transactions
         .Include(t => t.Category)
         .Include(t => t.Subcategory)
         .FirstOrDefaultAsync(t => t.Id == id);
 
     if (pTransaction == null)
-      return NotFound(ApiResponse<cTransaction_DTO>.Error("Transakcja nie została znaleziona"));
+      return NotFound(cApiResponse<cTransaction_DTO>.Error("Transakcja nie została znaleziona"));
 
     pTransaction.IsInsignificant = !pTransaction.IsInsignificant;
     pTransaction.UpdatedAt = DateTime.UtcNow;
 
-    await mContext.SaveChangesAsync();
+    await _DB_Context.SaveChangesAsync();
 
-    return Ok(ApiResponse<cTransaction_DTO>.SuccessResult(
+    return Ok(cApiResponse<cTransaction_DTO>.SuccessResult(
         MappingService.ToDto(pTransaction),
         $"Transakcja została oznaczona jako {(pTransaction.IsInsignificant ? "nieistotna" : "istotna")}"));
 
   }
 
   [HttpGet("summary")]
-  public async Task<ActionResult<ApiResponse<object>>> GetSummary(int xYear, int? xMonth = null, bool xIncludeInsignificant = false) {
+  public async Task<ActionResult<cApiResponse<object>>> GetSummary(int xYear, int? xMonth = null, bool xIncludeInsignificant = false) {
     //funkcja pobiera podsumowanie transakcji dla danego roku i opcjonalnie miesiąca
     //xYear - rok podsumowania
     //xMonth - opcjonalny miesiąc podsumowania
     //xIncludeInsignificant - czy uwzględnić transakcje nieistotne
 
-    var pQuery = mContext.Transactions
+    var pQuery = _DB_Context.Transactions
         .Include(t => t.Category)
         .Where(t => t.Year == xYear);
 
@@ -304,67 +304,67 @@ public class TransactionsController : ControllerBase {
       IncludesInsignificant = xIncludeInsignificant
     };
 
-    return Ok(ApiResponse<object>.SuccessResult(pResult));
+    return Ok(cApiResponse<object>.SuccessResult(pResult));
 
   }
 
   [HttpPost("import")]
-  public async Task<ActionResult<ApiResponse>> ImportTransactions([FromBody] List<cTransaction_DTO> xTransactions) {
+  public async Task<ActionResult<cApiResponse>> ImportTransactions([FromBody] List<cTransaction_DTO> transactionsCln) {
     //funkcja importuje listę transakcji
     //xTransactions - lista transakcji do zaimportowania
 
-    if (xTransactions == null || !xTransactions.Any())
-      return BadRequest(ApiResponse.Error("Brak transakcji do zaimportowania"));
+    if (transactionsCln == null || !transactionsCln.Any())
+      return BadRequest(cApiResponse.Error("Brak transakcji do zaimportowania"));
 
-    var ruleService = new Services.cCategoryRuleService(mContext);
+    var ruleService = new Services.cCategoryRuleService(_DB_Context);
     var insignificantDetector = new cInsignificantTransactionDetector();
 
-    var pErrors = new List<string>();
+    var errorsCln = new List<string>();
     int importedCount = 0;
     int insignificantCount = 0;
 
-    foreach (var pDto in xTransactions) {
-      pDto.Date = pDto.Date.ToUniversalTime(); //konwertuje datę na UTC
+    foreach (var transaction_DTO in transactionsCln) {
+      transaction_DTO.Date = transaction_DTO.Date.ToUniversalTime(); //konwertuje datę na UTC
 
       // Sprawdź, czy istnieje już transakcja z tą samą nazwą, datą i kwotą
-      bool exists = await mContext.Transactions.AnyAsync(t =>
-        t.Description == pDto.Description &&
-        t.Date == pDto.Date &&
-        t.Amount == pDto.Amount
+      bool exists = await _DB_Context.Transactions.AnyAsync(t =>
+        t.Description == transaction_DTO.Description &&
+        t.Date == transaction_DTO.Date &&
+        t.Amount == transaction_DTO.Amount
       );
 
       if (exists) {
-        pErrors.Add($"Transakcja \"{pDto.Description}\" z dnia {pDto.Date:d} o kwocie {pDto.Amount} już istnieje.");
+        errorsCln.Add($"Transakcja \"{transaction_DTO.Description}\" z dnia {transaction_DTO.Date:d} o kwocie {transaction_DTO.Amount} już istnieje.");
         continue;
       }
 
       //sprawdź czy transakcja powinna być oznaczona jako nieistotna
-      if (insignificantDetector.IsInsignificant(pDto)) {
-        pDto.IsInsignificant = true;
+      if (insignificantDetector.IsInsignificant(transaction_DTO)) {
+        transaction_DTO.IsInsignificant = true;
         insignificantCount++;
       }
 
       //mapuje dto na encję i dodaje do kontekstu
-      cTransaction pTransaction = MappingService.ToEntity(pDto);
+      cTransaction transaction = MappingService.ToEntity(transaction_DTO);
 
-      var (categoryId, subcategoryId) = await ruleService.MatchCategoryAsync(pTransaction.Description);
-      pTransaction.CategoryId = categoryId;
-      pTransaction.SubcategoryId = subcategoryId;
+      var (categoryId, subcategoryId) = await ruleService.MatchCategoryAsync(transaction.Description);
+      transaction.CategoryId = categoryId;
+      transaction.SubcategoryId = subcategoryId;
 
-      mContext.Transactions.Add(pTransaction);
+      _DB_Context.Transactions.Add(transaction);
       importedCount++;
     }
 
-    await mContext.SaveChangesAsync();
+    await _DB_Context.SaveChangesAsync();
 
-    string pSuccessMessage = $"Zaimportowano {importedCount} transakcji";
+    string successMessage = $"Zaimportowano {importedCount} transakcji";
     if (insignificantCount > 0)
-      pSuccessMessage += $" ({insignificantCount} oznaczono jako nieistotne)";
+      successMessage += $" ({insignificantCount} oznaczono jako nieistotne)";
 
-    if (pErrors.Any())
-      return Ok(ApiResponse.Error($"{pSuccessMessage}. Część transakcji nie została zaimportowana", pErrors));
+    if (errorsCln.Any())
+      return Ok(cApiResponse.Error($"{successMessage}. Część transakcji nie została zaimportowana", errorsCln));
 
-    return Ok(ApiResponse.SuccessResult(pSuccessMessage));
+    return Ok(cApiResponse.SuccessResult(successMessage));
 
   }
 
@@ -372,7 +372,7 @@ public class TransactionsController : ControllerBase {
     //funkcja sprawdza czy transakcja o podanym id istnieje
     //xId - identyfikator transakcji
 
-    return await mContext.Transactions.AnyAsync(e => e.Id == xId);
+    return await _DB_Context.Transactions.AnyAsync(e => e.Id == xId);
 
   }
 }

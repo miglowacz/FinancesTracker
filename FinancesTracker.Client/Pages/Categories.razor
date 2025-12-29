@@ -8,7 +8,7 @@
 <PageTitle>Kategorie i Podkategorie</PageTitle>
 
 <div class="container py-4">
-  <h3 class="mb-4">Zarz¹dzanie kategoriami i podkategoriami</h3>
+  <h3 class="mb-4">ZarzÄ…dzanie kategoriami i podkategoriami</h3>
   <!-- Tabs navigation -->
   <ul class="nav nav-tabs mb-3" id="categoryTabs" role="tablist">
     <li class="nav-item" role="presentation">
@@ -32,14 +32,14 @@
       <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
           <span>Kategorie</span>
-          <button class="btn btn-sm btn-success" @onclick="ShowAddCategoryForm" disabled="@showCategoryForm">Dodaj now¹ kategoriê</button>
+          <button class="btn btn-sm btn-success" @onclick="ShowAddCategoryForm" disabled="@showCategoryForm">Dodaj nowÄ… kategoriÄ™</button>
         </div>
         <div class="card-body">
           @if (showCategoryForm)
           {
             <div class="card mb-3 border-primary">
               <div class="card-header bg-primary text-white">
-                @(mNewCategory.Id == 0 ? "Dodaj now¹ kategoriê" : "Edytuj kategoriê")
+                @(mNewCategory.Id == 0 ? "Dodaj nowÄ… kategoriÄ™" : "Edytuj kategoriÄ™")
               </div>
               <div class="card-body">
                 <EditForm Model="@mNewCategory" OnValidSubmit="OnValidSubmitCategory">
@@ -61,7 +61,7 @@
                 @pCategory.Name
                 <span>
                   <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => EditCategory(pCategory)">Edytuj</button>
-                  <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteCategory(pCategory.Id)">Usuñ</button>
+                  <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteCategory(pCategory.Id)">UsuÅ„</button>
                 </span>
               </li>
             }
@@ -74,12 +74,12 @@
       <div class="card shadow-sm mb-4">
         <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
           <span>Podkategorie</span>
-          <button class="btn btn-sm btn-success" @onclick="ShowAddSubcategoryForm" disabled="@showSubcategoryForm">Dodaj now¹ podkategoriê</button>
+          <button class="btn btn-sm btn-success" @onclick="ShowAddSubcategoryForm" disabled="@showSubcategoryForm">Dodaj nowÄ… podkategoriÄ™</button>
         </div>
         <div class="card-body">
           <!-- Filtr kategorii -->
           <div class="mb-3 row">
-            <label class="col-sm-3 col-form-label">Filtruj wed³ug kategorii:</label>
+            <label class="col-sm-3 col-form-label">Filtruj wedÅ‚ug kategorii:</label>
             <div class="col-sm-6">
               <InputSelect @bind-Value="subcategoryFilterCategoryId" class="form-select">
                 <option value="0">Wszystkie</option>
@@ -93,7 +93,7 @@
           @if (showSubcategoryForm) {
             <div class="card mb-3 border-primary">
               <div class="card-header bg-primary text-white">
-                @(mNewSubcategory.Id == 0 ? "Dodaj now¹ podkategoriê" : "Edytuj podkategoriê")
+                @(mNewSubcategory.Id == 0 ? "Dodaj nowÄ… podkategoriÄ™" : "Edytuj podkategoriÄ™")
               </div>
               <div class="card-body">
                 <EditForm Model="@mNewSubcategory" OnValidSubmit="OnValidSubmitSubcategory">
@@ -103,7 +103,7 @@
                     </div>
                     <div class="col">
                       <InputSelect @bind-Value="mNewSubcategory.CategoryId" class="form-select">
-                        <option value="0">Wybierz kategoriê</option>
+                        <option value="0">Wybierz kategoriÄ™</option>
                         @foreach (var pCategory in mCategories) {
                           <option value="@pCategory.Id">@pCategory.Name</option>
                         }
@@ -124,7 +124,7 @@
             <span>Strona: @subcatPage + 1 / @subcatTotalPages</span>
             <div>
               <button class="btn btn-sm btn-outline-secondary me-1" @onclick="PrevSubcatPage" disabled="@(subcatPage == 0)">Poprzednia</button>
-              <button class="btn btn-sm btn-outline-secondary" @onclick="NextSubcatPage" disabled="@(subcatPage >= subcatTotalPages - 1)">Nastêpna</button>
+              <button class="btn btn-sm btn-outline-secondary" @onclick="NextSubcatPage" disabled="@(subcatPage >= subcatTotalPages - 1)">NastÄ™pna</button>
             </div>
           </div>
           <ul class="list-group">
@@ -136,7 +136,7 @@
                 </span>
                 <span>
                   <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => EditSubcategory(pSubcategory)">Edytuj</button>
-                  <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteSubcategory(pSubcategory.Id)">Usuñ</button>
+                  <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteSubcategory(pSubcategory.Id)">UsuÅ„</button>
                 </span>
               </li>
             }
@@ -146,12 +146,12 @@
     </div>
   </div>
 
-  <!-- Regu³y kategorii -->
+  <!-- ReguÅ‚y kategorii -->
   <div class="row g-4 mt-4">
     <div class="col-12">
       <div class="card shadow-sm">
         <div class="card-header bg-info text-white">
-          Regu³y kategorii
+          ReguÅ‚y kategorii
         </div>
         <div class="card-body">
           @if (!string.IsNullOrEmpty(ruleMessage))
@@ -162,17 +162,17 @@
 {
   <div class="card mb-3 border-info">
     <div class="card-header bg-info text-white">
-      @(mNewRule.Id == 0 ? "Dodaj now¹ regu³ê" : "Edytuj regu³ê")
+      @(mNewRule.Id == 0 ? "Dodaj nowÄ… reguÅ‚Ä™" : "Edytuj reguÅ‚Ä™")
     </div>
     <div class="card-body">
       <EditForm Model="@mNewRule" OnValidSubmit="OnValidSubmitRule">
         <div class="row g-2 mb-3">
           <div class="col-md-3">
-            <InputText @bind-Value="mNewRule.Keyword" class="form-control" placeholder="S³owo kluczowe" />
+            <InputText @bind-Value="mNewRule.Keyword" class="form-control" placeholder="SÅ‚owo kluczowe" />
           </div>
           <div class="col-md-3">
             <InputSelect @bind-Value="mNewRule.CategoryId" class="form-select">
-              <option value="0">Wybierz kategoriê</option>
+              <option value="0">Wybierz kategoriÄ™</option>
               @foreach (var pCategory in mCategories) {
                 <option value="@pCategory.Id">@pCategory.Name</option>
               }
@@ -180,7 +180,7 @@
           </div>
           <div class="col-md-3">
             <InputSelect @bind-Value="mNewRule.SubcategoryId" class="form-select">
-              <option value="0">Wybierz podkategoriê</option>
+              <option value="0">Wybierz podkategoriÄ™</option>
               @foreach (var pSub in mSubcategories.Where(pSub => pSub.CategoryId == mNewRule.CategoryId)) {
                 <option value="@pSub.Id">@pSub.Name</option>
               }
@@ -203,13 +203,13 @@
 }
 else
 {
-  <button class="btn btn-sm btn-success mb-3" @onclick="ShowAddRuleForm">Dodaj now¹ regu³ê</button>
+  <button class="btn btn-sm btn-success mb-3" @onclick="ShowAddRuleForm">Dodaj nowÄ… reguÅ‚Ä™</button>
 }
           <div class="table-responsive">
             <table class="table table-striped table-hover align-middle">
               <thead class="table-light">
                 <tr>
-                  <th>S³owo kluczowe</th>
+                  <th>SÅ‚owo kluczowe</th>
                   <th>Kategoria</th>
                   <th>Podkategoria</th>
                   <th>Aktywna</th>
@@ -227,7 +227,7 @@ else
                     </td>
                     <td>
                       <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => EditRule(pRule)">Edytuj</button>
-                      <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteRule(pRule.Id)">Usuñ</button>
+                      <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteRule(pRule.Id)">UsuÅ„</button>
                     </td>
                   </tr>
                 }
@@ -250,14 +250,14 @@ else
   private List<cCategory> mCategories = new();
   //lista podkategorii
   private List<cSubcategory> mSubcategories = new();
-  //lista regu³ kategorii
+  //lista reguÅ‚ kategorii
   private List<cCategoryRule> mRules = new();
 
   //nowa kategoria do dodania/edycji
   private cCategory mNewCategory = new();
   //nowa podkategoria do dodania/edycji
   private cSubcategory mNewSubcategory = new();
-  //nowa regu³a do dodania/edycji
+  //nowa reguÅ‚a do dodania/edycji
   private cCategoryRule mNewRule = new();
 
   // Tabs state
@@ -329,7 +329,7 @@ private void CancelRuleForm()
     showCategoryForm = false;
   }
 
-  private async Task AddOrUpdateCategory() // nie u¿ywane ju¿ w EditForm
+  private async Task AddOrUpdateCategory() // nie uÅ¼ywane juÅ¼ w EditForm
   {
     await OnValidSubmitCategory();
   }
@@ -366,7 +366,7 @@ private void CancelRuleForm()
   private async Task DeleteSubcategory(int xId) {
     await SubcategoryService.DeleteAsync(xId);
     mSubcategories = await SubcategoryService.GetAllAsync();
-    // Przesuñ stronê wstecz, jeœli usuniêcie spowodowa³o pust¹ stronê
+    // PrzesuÅ„ stronÄ™ wstecz, jeÅ›li usuniÄ™cie spowodowaÅ‚o pustÄ… stronÄ™
     if (subcatPage >= subcatTotalPages)
       subcatPage = Math.Max(0, subcatTotalPages - 1);
   }
@@ -381,7 +381,7 @@ private void CancelRuleForm()
 
   private async Task AddOrUpdateRule() {
     try {
-      ApiResponse? response = null;
+      cApiResponse? response = null;
       if (mNewRule.Id == 0)
         await CategoryRuleService.AddAsync(mNewRule);
       else
@@ -391,23 +391,23 @@ private void CancelRuleForm()
       mNewRule = new();
 
     } catch (Exception ex) {
-      ruleMessage = $"B³¹d: {ex.Message}";
+      ruleMessage = $"BÅ‚Ä…d: {ex.Message}";
       ruleMessageClass = "alert-danger";
     }
   
   }
 
   //     if (response != null && response.Success) {
-  //       ruleMessage = response.Message ?? "Operacja zakoñczona sukcesem";
+  //       ruleMessage = response.Message ?? "Operacja zakoÅ„czona sukcesem";
   //       ruleMessageClass = "alert-success";
   //       mRules = await CategoryRuleService.GetAllAsync();
   //       mNewRule = new();
   //     } else {
-  //       ruleMessage = response?.Message ?? "B³¹d operacji";
+  //       ruleMessage = response?.Message ?? "BÅ‚Ä…d operacji";
   //       ruleMessageClass = "alert-danger";
   //     }
   //   } catch (Exception ex) {
-  //     ruleMessage = $"B³¹d: {ex.Message}";
+  //     ruleMessage = $"BÅ‚Ä…d: {ex.Message}";
   //     ruleMessageClass = "alert-danger";
   //   }
   // }
@@ -421,13 +421,13 @@ private void CancelRuleForm()
     var response = await CategoryRuleService.DeleteAsync(xId);
     // if (response.)
     // {
-      ruleMessage = response.Message ?? "Regu³a usuniêta";
+      ruleMessage = response.Message ?? "ReguÅ‚a usuniÄ™ta";
       ruleMessageClass = "alert-success";
       mRules = await CategoryRuleService.GetAllAsync();
     // }
     // else
     // {
-    //   ruleMessage = response.Message ?? "B³¹d usuwania regu³y";
+    //   ruleMessage = response.Message ?? "BÅ‚Ä…d usuwania reguÅ‚y";
     //   ruleMessageClass = "alert-danger";
     // }
   }
@@ -443,13 +443,13 @@ private void CancelRuleForm()
     var response = await CategoryRuleService.UpdateAsync(rule);
     if (response.Success)
     {
-      ruleMessage = "Status regu³y zaktualizowany";
+      ruleMessage = "Status reguÅ‚y zaktualizowany";
       ruleMessageClass = "alert-success";
       mRules = await CategoryRuleService.GetAllAsync();
     }
     else
     {
-      ruleMessage = response.Message ?? "B³¹d zmiany statusu";
+      ruleMessage = response.Message ?? "BÅ‚Ä…d zmiany statusu";
       ruleMessageClass = "alert-danger";
     }
   }
@@ -477,7 +477,7 @@ private void CancelRuleForm()
         using var stream = file.OpenReadStream();
         await CategoryService.ImportFromCsvAsync(stream, SubcategoryService, CategoryRuleService);
 
-        // Odœwie¿ dane po imporcie
+        // OdÅ›wieÅ¼ dane po imporcie
         mCategories = await CategoryService.GetAllAsync();
         mSubcategories = await SubcategoryService.GetAllAsync();
         mRules = await CategoryRuleService.GetAllAsync();
