@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -32,6 +32,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FinancesTracker.Client\FinancesTracker.Client.csproj" />
+    <ProjectReference Include="..\FinancesTracker.Shared\FinancesTracker.Shared.csproj" />
   </ItemGroup>
 
   <Import Project="..\FinancesTracker.Shared\FinancesTracker.Shared.projitems" Label="Shared" />

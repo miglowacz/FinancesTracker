@@ -7,14 +7,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancesTracker", "Finances
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancesTracker.Client", "FinancesTracker.Client\FinancesTracker.Client.csproj", "{2218E62D-0BC2-4467-A28A-3D4C03244A0E}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "FinancesTracker.Shared_", "FinancesTracker.Shared\FinancesTracker.Shared_.shproj", "{C78E7588-DB39-4A60-B965-EF183A917170}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
 	ProjectSection(SolutionItems) = preProject
 		style-guide.md = style-guide.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancesTracked.Shared", "FinancesTracked.Shared\FinancesTracked.Shared.csproj", "{EBF4A3FE-3B30-494D-AC32-785EFE72A7DE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinancesTracker.Shared", "FinancesTracker.Shared\FinancesTracker.Shared.csproj", "{EBF4A3FE-3B30-494D-AC32-785EFE72A7DE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,10 +38,5 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D71D55EE-A250-4B5D-AB7D-65FE61C6C5B7}
-	EndGlobalSection
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		FinancesTracker.Shared\FinancesTracker.Shared.projitems*{2218e62d-0bc2-4467-a28a-3d4c03244a0e}*SharedItemsImports = 5
-		FinancesTracker.Shared\FinancesTracker.Shared.projitems*{c78e7588-db39-4a60-b965-ef183a917170}*SharedItemsImports = 13
-		FinancesTracker.Shared\FinancesTracker.Shared.projitems*{f386fe5e-60c7-4c57-b00a-e304225d1e80}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal
