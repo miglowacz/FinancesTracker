@@ -16,14 +16,14 @@ public class cTransaction_DTO {
   [Range(-999999.99, 999999.99, ErrorMessage = "Kwota musi być między -999999.99 a 999999.99")]
   public decimal Amount { get; set; }
 
-  //[Required(ErrorMessage = "Kategoria jest wymagana")]
   public int? CategoryId { get; set; }
-
-  //[Required(ErrorMessage = "Podkategoria jest wymagana")]
   public int? SubcategoryId { get; set; }
 
   [MaxLength(50)]
   public string? BankName { get; set; }
+
+  [MaxLength(300)]
+  public string? AccountName { get; set; }
 
   public bool IsInsignificant { get; set; } = false;
 

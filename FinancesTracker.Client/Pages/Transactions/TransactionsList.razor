@@ -127,6 +127,12 @@
                          OnClick="SetLastYear">
                 Poprzedni rok
               </MudButton>
+              <MudButton Variant="Variant.Text"
+                         Size="Size.Small"
+                         OnClick="ToggleShowNoCategory"
+                         Title="@(mFilterNoCategoryMode ? "Ukryj transakcje bez kategorii" : "Pokaż transakcje bez kategorii")">
+                @(mFilterNoCategoryMode ? "Bez kategorii (włączone)" : "Bez kategorii")
+              </MudButton>
             </MudItem>
           </MudGrid>
 
@@ -277,6 +283,11 @@
                 @(mFilterInsignificantMode == "significant" ? "Tylko istotne" : "Tylko nieistotne")
               </MudChip>
             }
+            @if (mFilterNoCategoryMode) {
+              <MudChip T="string" Size="Size.Small" Class="mx-1">
+                Bez kategorii
+              </MudChip>
+            }
           </MudText>
         </MudAlert>
       </MudItem>
@@ -303,6 +314,7 @@
               <MudTh>Kategoria</MudTh>
               <MudTh>Podkategoria</MudTh>
               <MudTh>Bank</MudTh>
+              <MudTh>Konto</MudTh>
               <MudTh>Akcje</MudTh>
             </HeaderContent>
             <RowTemplate>
@@ -389,6 +401,9 @@
                 <MudTd DataLabel="Bank" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
                   @context.BankName
                 </MudTd>
+                <MudTd DataLabel="Konto" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
+                  @context.AccountName
+                </MudTd>
                 <MudTd DataLabel="Akcje">
                   <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                  Color="Color.Primary"
@@ -454,6 +469,7 @@
   private string? mFilterSearchTerm;
   private string? mFilterBankName;
   private string mFilterInsignificantMode = "all"; // "all", "significant", "insignificant"
+  private bool mFilterNoCategoryMode = false;
 
   // Kategorie i podkategorie
   private List<cCategory_DTO> mCategories = new();
@@ -515,6 +531,9 @@
         mFilter.IsInsignificant = null;
         mFilter.IncludeInsignificant = true;
       }
+
+      // Ustaw filtr transakcji bez kategorii
+      mFilter.HasNoCategory = mFilterNoCategoryMode;
 
       var pResp = await TransactionService.GetTransactionsAsync(mFilter);
       if (!pResp.Success) {
@@ -621,7 +640,8 @@
         || mFilterMaxAmount.HasValue
         || !string.IsNullOrEmpty(mFilterSearchTerm)
         || !string.IsNullOrEmpty(mFilterBankName)
-        || mFilterInsignificantMode != "all";
+        || mFilterInsignificantMode != "all"
+        || mFilterNoCategoryMode;
   }
 
   private async Task ApplyFilters() {
@@ -639,6 +659,7 @@
     mFilterSearchTerm = null;
     mFilterBankName = null;
     mFilterInsignificantMode = "all";
+    mFilterNoCategoryMode = false;
     mFilter = new cTransactionFilter_DTO();
     await LoadTransactions();
   }
@@ -653,6 +674,13 @@
       // otherwise hide insignificant (show only significant)
       mFilterInsignificantMode = "significant";
     }
+    await LoadTransactions();
+  }
+
+  // Toggle button for showing/hiding transactions without category
+  private async Task ToggleShowNoCategory() {
+    mFilter.PageNumber = 1;
+    mFilterNoCategoryMode = !mFilterNoCategoryMode;
     await LoadTransactions();
   }
 

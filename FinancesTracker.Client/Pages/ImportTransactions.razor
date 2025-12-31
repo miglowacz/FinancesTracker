@@ -69,7 +69,7 @@
         transactions = await ImportService.ImportFromMbankCsvAsync(stream);
       }
 
-      var result = await ImportService.ImportTransactionsAsync(transactions, selectedBank);
+      var result = await ImportService.ImportTransactionsAsync(transactions);
       message = result
         ? $"Transakcje zostały zaimportowane! (Bank: {selectedBank})"
         : "Błąd podczas importu transakcji.";

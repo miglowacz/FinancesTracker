@@ -13,6 +13,7 @@ public class cTransactionFilter_DTO {
   public string? BankName { get; set; }
   public bool? IsInsignificant { get; set; }
   public bool IncludeInsignificant { get; set; } = true;
+  public bool HasNoCategory { get; set; } = false;
 
   // Paginacja
   public int PageNumber { get; set; } = 1;

@@ -13,6 +13,7 @@ public class MappingService {
       CategoryId = transaction?.CategoryId,
       SubcategoryId = transaction?.SubcategoryId,
       BankName = transaction.BankName,
+      AccountName = transaction.AccountName,
       IsInsignificant = transaction.IsInsignificant,
       CategoryName = transaction.Category?.Name,
       SubcategoryName = transaction.Subcategory?.Name,
@@ -32,6 +33,7 @@ public class MappingService {
       CategoryId = dto?.CategoryId,
       SubcategoryId = dto?.SubcategoryId,
       BankName = dto.BankName,
+      AccountName = dto.AccountName,
       IsInsignificant = dto.IsInsignificant,
       MonthNumber = dto.Date.Month,
       Year = dto.Date.Year,
@@ -66,7 +68,6 @@ public class MappingService {
   }
 
   public static cCategoryRule ToEntity(cCategoryRule_DTO dto) {
-
     return new cCategoryRule {
       Id = dto.Id,
       Keyword = dto.Keyword.ToLowerInvariant(),
@@ -75,6 +76,5 @@ public class MappingService {
       IsActive = dto.IsActive,
       CreatedAt = dto.Id == 0 ? DateTime.UtcNow : dto.CreatedAt
     };
-    
   }
 }

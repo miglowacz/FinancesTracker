@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinancesTracker.Shared.Models;
@@ -28,6 +28,9 @@ public class cTransaction {
   
   [MaxLength(50)]
   public string? BankName { get; set; }
+  
+  [MaxLength(300)]
+  public string? AccountName { get; set; }
   
   public bool IsInsignificant { get; set; } = false;
   

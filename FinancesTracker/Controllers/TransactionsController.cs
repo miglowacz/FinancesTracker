@@ -39,6 +39,10 @@ public class TransactionsController : ControllerBase {
     if (xFilter.Month.HasValue)
       pQuery = pQuery.Where(t => t.MonthNumber == xFilter.Month.Value);
 
+    //filtrowanie po transakcjach bez kategorii
+    if (xFilter.HasNoCategory)
+      pQuery = pQuery.Where(t => t.CategoryId == null);
+
     //filtrowanie po kategorii
     if (xFilter.CategoryId.HasValue)
       pQuery = pQuery.Where(t => t.CategoryId == xFilter.CategoryId.Value);
@@ -350,6 +354,7 @@ public class TransactionsController : ControllerBase {
       var (categoryId, subcategoryId) = await ruleService.MatchCategoryAsync(transaction.Description);
       transaction.CategoryId = categoryId;
       transaction.SubcategoryId = subcategoryId;
+      transaction.AccountName = cAccountNameDetector.GetAccountType(transaction_DTO.AccountName);
 
       _DB_Context.Transactions.Add(transaction);
       importedCount++;
