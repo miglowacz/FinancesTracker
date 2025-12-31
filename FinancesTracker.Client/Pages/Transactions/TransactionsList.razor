@@ -22,15 +22,15 @@
 
     <!-- Rozszerzone filtry -->
     <MudItem xs="12">
-      <MudCard Class="mb-4">
-        <MudCardHeader>
+      <MudCard Class="mb-4 pa-2">
+        <MudCardHeader Class="py-1 px-2">
           <MudText Typo="Typo.h6">Filtry</MudText>
           <MudSpacer />
           <MudIconButton Icon="@(mShowAdvancedFilters ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
                          OnClick="() => mShowAdvancedFilters = !mShowAdvancedFilters"
                          Title="@(mShowAdvancedFilters ? "Ukryj filtry zaawansowane" : "Pokaż filtry zaawansowane")" />
         </MudCardHeader>
-        <MudCardContent>
+        <MudCardContent Class="pa-2">
           <!-- Podstawowe filtry dat -->
           <MudGrid>
             <MudItem xs="12" md="3">
@@ -62,11 +62,18 @@
                          StartIcon="@Icons.Material.Filled.Clear">
                 Wyczyść
               </MudButton>
+              <MudButton Variant="Variant.Outlined"
+                         Color="Color.Default"
+                         OnClick="ToggleShowInsignificant"
+                         StartIcon="@(mFilterInsignificantMode == "significant" ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                         Title="@(mFilterInsignificantMode == "significant" ? "Pokaż nieistotne transakcje" : "Ukryj nieistotne transakcje")">
+                @(mFilterInsignificantMode == "significant" ? "Pokaż nieistotne" : "Ukryj nieistotne")
+              </MudButton>
             </MudItem>
           </MudGrid>
 
           <!-- Szybkie filtry dat -->
-          <MudDivider Class="my-3" />
+          <MudDivider Class="my-2" />
           <MudText Typo="Typo.subtitle2" Class="mb-2">Szybkie filtry:</MudText>
           <MudGrid>
             <MudItem xs="12" Class="d-flex flex-wrap gap-2">
@@ -125,8 +132,8 @@
 
           <!-- Filtry zaawansowane -->
           @if (mShowAdvancedFilters) {
-            <MudDivider Class="my-3" />
-            <MudText Typo="Typo.subtitle2" Class="mb-3">Filtry zaawansowane:</MudText>
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.subtitle2" Class="mb-2">Filtry zaawansowane:</MudText>
             <MudGrid>
               <!-- Filtr po kategorii -->
               <MudItem xs="12" md="3">
@@ -633,6 +640,19 @@
     mFilterBankName = null;
     mFilterInsignificantMode = "all";
     mFilter = new cTransactionFilter_DTO();
+    await LoadTransactions();
+  }
+
+  // Toggle button for showing/hiding insignificant transactions
+  private async Task ToggleShowInsignificant() {
+    mFilter.PageNumber = 1;
+    if (mFilterInsignificantMode == "significant") {
+      // currently hiding insignificant -> show them (all)
+      mFilterInsignificantMode = "all";
+    } else {
+      // otherwise hide insignificant (show only significant)
+      mFilterInsignificantMode = "significant";
+    }
     await LoadTransactions();
   }
 
