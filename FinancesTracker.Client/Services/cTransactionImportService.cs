@@ -41,8 +41,8 @@ public class cTransactionImportService {
         Date = date,
         Description = description,
         Amount = amount,
-        BankName = "MBank",
-        AccountName = accountName
+        //BankName = "MBank",
+        //AccountName = accountName
       });
     }
 
@@ -88,8 +88,8 @@ public class cTransactionImportService {
         Date = date,
         Description = description,
         Amount = amount,
-        BankName = "Millenium",
-        AccountName="Bieżące"
+        //BankName = "Millenium",
+        //AccountName="Bieżące"
       });
     }
 
@@ -178,8 +178,8 @@ public class cTransactionImportService {
         Date = transaction.Date,
         Description = transaction.Description,
         Amount = transaction.Amount,
-        BankName = transaction.BankName,
-        AccountName = transaction.AccountName
+        //BankName = transaction.BankName,
+        //AccountName = transaction.AccountName
       });
     }
 
@@ -202,8 +202,8 @@ public class cTransactionImportService {
         Date = pT.Date,
         Description = pT.Description,
         Amount = pT.Amount,
-        BankName = pT.BankName ?? xBankName,
-        AccountName = pT.AccountName
+        //BankName = pT.BankName ?? xBankName,
+        //AccountName = pT.AccountName
       });
     }
 

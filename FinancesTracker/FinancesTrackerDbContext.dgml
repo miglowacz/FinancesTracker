@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DirectedGraph GraphDirection="LeftToRight" xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+  <Nodes>
+<Node Id="IModel" Label="FinancesTrackerDbContext" ChangeTrackingStrategy="ChangeTrackingStrategy.Snapshot" PropertyAccessMode="PropertyAccessMode.Default" ProductVersion="9.0.9" Annotations="BaseTypeDiscoveryConvention:DerivedTypes: System.Collections.Generic.Dictionary`2[System.Type,System.Collections.Generic.List`1[Microsoft.EntityFrameworkCore.Metadata.IConventionEntityType]]
+InversePropertyAttributeConvention:InverseNavigations: System.Collections.Generic.Dictionary`2[System.Type,System.Collections.Generic.SortedSet`1[System.Type]]
+NonNullableConventionState: System.Reflection.NullabilityInfoContext
+Npgsql:ValueGenerationStrategy: IdentityByDefaultColumn
+Relational:MaxIdentifierLength: 63" Category="Model" Group="Expanded" />
+<Node Id = "cCategory" Label="cCategory" Name="cCategory" BaseClass="" IsAbstract="False" ChangeTrackingStrategy="ChangeTrackingStrategy.Snapshot"  Annotations="Relational:TableName: Categories
+RelationshipDiscoveryConvention:NavigationCandidates: Microsoft.EntityFrameworkCore.Utilities.OrderedDictionary`2[System.Reflection.PropertyInfo,System.ValueTuple`2[System.Type,System.Nullable`1[System.Boolean]]]" Category="EntityType" Group="Expanded" />
+<Node Id = "cCategoryRule" Label="cCategoryRule" Name="cCategoryRule" BaseClass="" IsAbstract="False" ChangeTrackingStrategy="ChangeTrackingStrategy.Snapshot"  Annotations="Relational:TableName: CategoryRules
+RelationshipDiscoveryConvention:NavigationCandidates: Microsoft.EntityFrameworkCore.Utilities.OrderedDictionary`2[System.Reflection.PropertyInfo,System.ValueTuple`2[System.Type,System.Nullable`1[System.Boolean]]]" Category="EntityType" Group="Expanded" />
+<Node Id = "cCategory.Id" Label="Id (int)" Name="Id" Category="Property Primary" Type="int" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="Npgsql:ValueGenerationStrategy: IdentityByDefaultColumn" IsPrimaryKey="True" IsForeignKey="False" IsRequired="True" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="ValueGenerated.OnAdd" />
+<Node Id = "cCategory.CategoryRules" Label="CategoryRules (*)" Name="CategoryRules" Category="Navigation Collection" Type="ICollection&lt;cCategoryRule&gt;"  Field="" Dependent="cCategoryRule" Principal="" Inverse="Category" PropertyAccessMode="PropertyAccessMode.Default" />
+<Node Id = "cCategory.Subcategories" Label="Subcategories (*)" Name="Subcategories" Category="Navigation Collection" Type="ICollection&lt;cSubcategory&gt;"  Field="" Dependent="cSubcategory" Principal="" Inverse="Category" PropertyAccessMode="PropertyAccessMode.Default" />
+<Node Id = "cCategory.Transactions" Label="Transactions (*)" Name="Transactions" Category="Navigation Collection" Type="ICollection&lt;cTransaction&gt;"  Field="" Dependent="cTransaction" Principal="" Inverse="Category" PropertyAccessMode="PropertyAccessMode.Default" />
+<Node Id = "cCategory.Name" Label="Name (string)" Name="Name" Category="Property Required" Type="string" MaxLength="(100)" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="MaxLength: 100" IsPrimaryKey="False" IsForeignKey="False" IsRequired="True" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cSubcategory" Label="cSubcategory" Name="cSubcategory" BaseClass="" IsAbstract="False" ChangeTrackingStrategy="ChangeTrackingStrategy.Snapshot"  Annotations="Relational:TableName: Subcategories
+RelationshipDiscoveryConvention:NavigationCandidates: Microsoft.EntityFrameworkCore.Utilities.OrderedDictionary`2[System.Reflection.PropertyInfo,System.ValueTuple`2[System.Type,System.Nullable`1[System.Boolean]]]" Category="EntityType" Group="Expanded" />
+<Node Id = "cCategoryRule.Id" Label="Id (int)" Name="Id" Category="Property Primary" Type="int" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="Npgsql:ValueGenerationStrategy: IdentityByDefaultColumn" IsPrimaryKey="True" IsForeignKey="False" IsRequired="True" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="ValueGenerated.OnAdd" />
+<Node Id = "cCategoryRule.Category" Label="Category (1)" Name="Category" Category="Navigation Property" Type="cCategory"  Field="" Dependent="" Principal="cCategory" Inverse="CategoryRules" PropertyAccessMode="PropertyAccessMode.Default" />
+<Node Id = "cCategoryRule.Subcategory" Label="Subcategory (1)" Name="Subcategory" Category="Navigation Property" Type="cSubcategory"  Field="" Dependent="" Principal="cSubcategory" Inverse="CategoryRules" PropertyAccessMode="PropertyAccessMode.Default" />
+<Node Id = "cCategoryRule.CategoryId" Label="CategoryId (int)" Name="CategoryId" Category="Property Foreign" Type="int" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="" IsPrimaryKey="False" IsForeignKey="True" IsRequired="True" IsIndexed="True" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cCategoryRule.CreatedAt" Label="CreatedAt (DateTime)" Name="CreatedAt" Category="Property Required" Type="DateTime" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="" IsPrimaryKey="False" IsForeignKey="False" IsRequired="True" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cCategoryRule.IsActive" Label="IsActive (bool)" Name="IsActive" Category="Property Required" Type="bool" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="" IsPrimaryKey="False" IsForeignKey="False" IsRequired="True" IsIndexed="True" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cCategoryRule.Keyword" Label="Keyword (string)" Name="Keyword" Category="Property Required" Type="string" MaxLength="(200)" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="MaxLength: 200" IsPrimaryKey="False" IsForeignKey="False" IsRequired="True" IsIndexed="True" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cCategoryRule.SubcategoryId" Label="SubcategoryId (int)" Name="SubcategoryId" Category="Property Foreign" Type="int" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="" IsPrimaryKey="False" IsForeignKey="True" IsRequired="True" IsIndexed="True" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cTransaction" Label="cTransaction" Name="cTransaction" BaseClass="" IsAbstract="False" ChangeTrackingStrategy="ChangeTrackingStrategy.Snapshot"  Annotations="Relational:TableName: Transactions
+RelationshipDiscoveryConvention:NavigationCandidates: Microsoft.EntityFrameworkCore.Utilities.OrderedDictionary`2[System.Reflection.PropertyInfo,System.ValueTuple`2[System.Type,System.Nullable`1[System.Boolean]]]" Category="EntityType" Group="Expanded" />
+<Node Id = "cSubcategory.Id" Label="Id (int)" Name="Id" Category="Property Primary" Type="int" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="Npgsql:ValueGenerationStrategy: IdentityByDefaultColumn" IsPrimaryKey="True" IsForeignKey="False" IsRequired="True" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="ValueGenerated.OnAdd" />
+<Node Id = "cSubcategory.Category" Label="Category (1)" Name="Category" Category="Navigation Property" Type="cCategory"  Field="" Dependent="" Principal="cCategory" Inverse="Subcategories" PropertyAccessMode="PropertyAccessMode.Default" />
+<Node Id = "cSubcategory.CategoryRules" Label="CategoryRules (*)" Name="CategoryRules" Category="Navigation Collection" Type="ICollection&lt;cCategoryRule&gt;"  Field="" Dependent="cCategoryRule" Principal="" Inverse="Subcategory" PropertyAccessMode="PropertyAccessMode.Default" />
+<Node Id = "cSubcategory.Transactions" Label="Transactions (*)" Name="Transactions" Category="Navigation Collection" Type="ICollection&lt;cTransaction&gt;"  Field="" Dependent="cTransaction" Principal="" Inverse="Subcategory" PropertyAccessMode="PropertyAccessMode.Default" />
+<Node Id = "cSubcategory.CategoryId" Label="CategoryId (int)" Name="CategoryId" Category="Property Foreign" Type="int" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="" IsPrimaryKey="False" IsForeignKey="True" IsRequired="True" IsIndexed="True" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cSubcategory.Name" Label="Name (string)" Name="Name" Category="Property Required" Type="string" MaxLength="(100)" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="MaxLength: 100" IsPrimaryKey="False" IsForeignKey="False" IsRequired="True" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cTransaction" Label="cTransaction" Name="cTransaction" BaseClass="" IsAbstract="False" ChangeTrackingStrategy="ChangeTrackingStrategy.Snapshot"  Annotations="" Category="EntityType" Group="Expanded" />
+<Node Id = "cTransaction.Id" Label="Id (int)" Name="Id" Category="Property Primary" Type="int" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="Npgsql:ValueGenerationStrategy: IdentityByDefaultColumn" IsPrimaryKey="True" IsForeignKey="False" IsRequired="True" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="ValueGenerated.OnAdd" />
+<Node Id = "cTransaction.Category" Label="Category (1)" Name="Category" Category="Navigation Property" Type="cCategory"  Field="" Dependent="" Principal="cCategory" Inverse="Transactions" PropertyAccessMode="PropertyAccessMode.Default" />
+<Node Id = "cTransaction.Subcategory" Label="Subcategory (1)" Name="Subcategory" Category="Navigation Property" Type="cSubcategory"  Field="" Dependent="" Principal="cSubcategory" Inverse="Transactions" PropertyAccessMode="PropertyAccessMode.Default" />
+<Node Id = "cTransaction.AccountName" Label="AccountName (string)" Name="AccountName" Category="Property Optional" Type="string" MaxLength="(300)" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="MaxLength: 300" IsPrimaryKey="False" IsForeignKey="False" IsRequired="False" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cTransaction.Amount" Label="Amount (decimal)" Name="Amount" Category="Property Required" Type="decimal" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="Precision: 18
+Relational:ColumnType: decimal(18,2)
+Scale: 2" IsPrimaryKey="False" IsForeignKey="False" IsRequired="True" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cTransaction.BankName" Label="BankName (string)" Name="BankName" Category="Property Optional" Type="string" MaxLength="(50)" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="MaxLength: 50" IsPrimaryKey="False" IsForeignKey="False" IsRequired="False" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cTransaction.CategoryId" Label="CategoryId (int?)" Name="CategoryId" Category="Property Foreign" Type="int?" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="" IsPrimaryKey="False" IsForeignKey="True" IsRequired="False" IsIndexed="True" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cTransaction.CreatedAt" Label="CreatedAt (DateTime)" Name="CreatedAt" Category="Property Required" Type="DateTime" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="" IsPrimaryKey="False" IsForeignKey="False" IsRequired="True" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cTransaction.Date" Label="Date (DateTime)" Name="Date" Category="Property Required" Type="DateTime" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="" IsPrimaryKey="False" IsForeignKey="False" IsRequired="True" IsIndexed="True" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cTransaction.Description" Label="Description (string)" Name="Description" Category="Property Required" Type="string" MaxLength="(500)" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="MaxLength: 500" IsPrimaryKey="False" IsForeignKey="False" IsRequired="True" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cTransaction.IsInsignificant" Label="IsInsignificant (bool)" Name="IsInsignificant" Category="Property Required" Type="bool" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="" IsPrimaryKey="False" IsForeignKey="False" IsRequired="True" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cTransaction.MonthNumber" Label="MonthNumber (int)" Name="MonthNumber" Category="Property Required" Type="int" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="" IsPrimaryKey="False" IsForeignKey="False" IsRequired="True" IsIndexed="True" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cTransaction.SubcategoryId" Label="SubcategoryId (int?)" Name="SubcategoryId" Category="Property Foreign" Type="int?" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="" IsPrimaryKey="False" IsForeignKey="True" IsRequired="False" IsIndexed="True" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cTransaction.UpdatedAt" Label="UpdatedAt (DateTime?)" Name="UpdatedAt" Category="Property Optional" Type="DateTime?" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="" IsPrimaryKey="False" IsForeignKey="False" IsRequired="False" IsIndexed="False" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+<Node Id = "cTransaction.Year" Label="Year (int)" Name="Year" Category="Property Required" Type="int" MaxLength="None" Field="" PropertyAccessMode="PropertyAccessMode.Default" BeforeSaveBehavior="PropertySaveBehavior.Save" AfterSaveBehavior="PropertySaveBehavior.Save" Annotations="" IsPrimaryKey="False" IsForeignKey="False" IsRequired="True" IsIndexed="True" IsShadow="False" IsAlternateKey="False" IsConcurrencyToken="False" IsUnicode="True" ValueGenerated="None" />
+  </Nodes>
+  <Links>
+<Link Source = "IModel" Target="cCategory" Category="Contains" />
+<Link Source = "IModel" Target="cCategoryRule" Category="Contains" />
+<Link Source = "cCategory" Target="cCategory.CategoryRules" Category="Contains" />
+<Link Source = "cCategory" Target="cCategory.Subcategories" Category="Contains" />
+<Link Source = "cCategory" Target="cCategory.Transactions" Category="Contains" />
+<Link Source = "cCategory" Target="cCategory.Id" Category="Contains" />
+<Link Source = "cCategory" Target="cCategory.Name" Category="Contains" />
+<Link Source = "IModel" Target="cSubcategory" Category="Contains" />
+<Link Source = "cCategoryRule" Target="cCategoryRule.Category" Category="Contains" />
+<Link Source = "cCategoryRule" Target="cCategoryRule.Subcategory" Category="Contains" />
+<Link Source = "cCategoryRule" Target="cCategoryRule.Id" Category="Contains" />
+<Link Source="cCategoryRule" Target="cCategory" From="cCategoryRule.CategoryId" To="cCategory.Id" Name="cCategoryRule -> cCategory" Annotations="" IsUnique="False" Label="1:*" Category="Foreign Key" />
+<Link Source="cCategoryRule" Target="cSubcategory" From="cCategoryRule.SubcategoryId" To="cSubcategory.Id" Name="cCategoryRule -> cSubcategory" Annotations="" IsUnique="False" Label="1:*" Category="Foreign Key" />
+<Link Source = "cCategoryRule" Target="cCategoryRule.CategoryId" Category="Contains" />
+<Link Source = "cCategoryRule" Target="cCategoryRule.CreatedAt" Category="Contains" />
+<Link Source = "cCategoryRule" Target="cCategoryRule.IsActive" Category="Contains" />
+<Link Source = "cCategoryRule" Target="cCategoryRule.Keyword" Category="Contains" />
+<Link Source = "cCategoryRule" Target="cCategoryRule.SubcategoryId" Category="Contains" />
+<Link Source = "IModel" Target="cTransaction" Category="Contains" />
+<Link Source = "cSubcategory" Target="cSubcategory.Category" Category="Contains" />
+<Link Source = "cSubcategory" Target="cSubcategory.CategoryRules" Category="Contains" />
+<Link Source = "cSubcategory" Target="cSubcategory.Transactions" Category="Contains" />
+<Link Source = "cSubcategory" Target="cSubcategory.Id" Category="Contains" />
+<Link Source="cSubcategory" Target="cCategory" From="cSubcategory.CategoryId" To="cCategory.Id" Name="cSubcategory -> cCategory" Annotations="" IsUnique="False" Label="1:*" Category="Foreign Key" />
+<Link Source = "cSubcategory" Target="cSubcategory.CategoryId" Category="Contains" />
+<Link Source = "cSubcategory" Target="cSubcategory.Name" Category="Contains" />
+<Link Source = "IModel" Target="cTransaction" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.Category" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.Subcategory" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.Id" Category="Contains" />
+<Link Source="cTransaction" Target="cCategory" From="cTransaction.CategoryId" To="cCategory.Id" Name="cTransaction -> cCategory" Annotations="" IsUnique="False" Label="1:*" Category="Foreign Key" />
+<Link Source="cTransaction" Target="cSubcategory" From="cTransaction.SubcategoryId" To="cSubcategory.Id" Name="cTransaction -> cSubcategory" Annotations="" IsUnique="False" Label="1:*" Category="Foreign Key" />
+<Link Source = "cTransaction" Target="cTransaction.AccountName" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.Amount" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.BankName" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.CategoryId" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.CreatedAt" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.Date" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.Description" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.IsInsignificant" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.MonthNumber" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.SubcategoryId" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.UpdatedAt" Category="Contains" />
+<Link Source = "cTransaction" Target="cTransaction.Year" Category="Contains" />
+  </Links>
+  <Styles>
+    <Style TargetType="Node" GroupLabel="EntityType" ValueLabel="True">
+      <Condition Expression="HasCategory('EntityType')" />
+      <Setter Property="Background" Value="#FFC0C0C0" />
+    </Style>
+    <Style TargetType="Node" GroupLabel="Property Primary" ValueLabel="True">
+      <Condition Expression="HasCategory('Property Primary')" />
+      <Setter Property="Background" Value="#FF008000" />
+    </Style>
+    <Style TargetType="Node" GroupLabel="Property Optional" ValueLabel="True">
+      <Condition Expression="HasCategory('Property Optional')" />
+      <Setter Property="Background" Value="#FF808040" />
+    </Style>
+    <Style TargetType="Node" GroupLabel="Property Foreign" ValueLabel="True">
+      <Condition Expression="HasCategory('Property Foreign')" />
+      <Setter Property="Background" Value="#FF8080FF" />
+    </Style>
+    <Style TargetType="Node" GroupLabel="Property Required" ValueLabel="True">
+      <Condition Expression="HasCategory('Property Required')" />
+      <Setter Property="Background" Value="#FFC0A000" />
+    </Style>
+    <Style TargetType="Node" GroupLabel="Navigation Property" ValueLabel="True">
+      <Condition Expression="HasCategory('Navigation Property')" />
+      <Setter Property="Background" Value="#FF990000" />
+    </Style>
+    <Style TargetType="Node" GroupLabel="Navigation Collection" ValueLabel="True">
+      <Condition Expression="HasCategory('Navigation Collection')" />
+      <Setter Property="Background" Value="#FFFF3232" />
+    </Style>
+    <Style TargetType="Node" GroupLabel="Model" ValueLabel="True">
+      <Condition Expression="HasCategory('Model')" />
+      <Setter Property="Background" Value="#FFFFFFFF" />
+    </Style>
+  </Styles>
+  <Properties>
+    <Property Id="Name" Group="Model Properties" DataType="System.String" />
+    <Property Id="Field"  Description="Backing field" Group="Model Properties" DataType="System.String" />
+    <Property Id="Type"  Description="CLR data type" Group="Model Properties" DataType="System.String" />
+    <Property Id="To" Description="Source property" Group="Model Properties" DataType="System.String" />
+    <Property Id="From" Description="Target property" Group="Model Properties" DataType="System.String" />
+    <Property Id="Dependent" Description="Dependent entity" Group="Model Properties" DataType="System.String" />
+    <Property Id="Inverse" Description="Inverse entity" Group="Model Properties" DataType="System.String" />
+    <Property Id="Principal" Description="Principal entity" Group="Model Properties" DataType="System.String" />    
+    <Property Id="Annotations" Description="Annotations" Group="Model Properties" DataType="System.String" />
+    <Property Id="BaseClass"  Description="Base class" Group="Model Properties" DataType="System.String" />
+    <Property Id="ChangeTrackingStrategy" Description="Change tracking strategy" Group="Model Properties" DataType="System.String" />
+    <Property Id="IsUnique" Group="Model Properties" DataType="System.Boolean" />
+    <Property Id="IsAbstract" Group="Model Properties" DataType="System.Boolean" />
+    <Property Id="ProductVersion" Label="Product Version" Description="EF Core product version" Group="Model Properties" DataType="System.String" />
+    <Property Id="IsIndexed" Group="Property Flags" DataType="System.Boolean" />
+    <Property Id="IsRequired" Group="Property Flags" DataType="System.Boolean" />
+    <Property Id="IsPrimaryKey" Group="Property Flags" DataType="System.Boolean" />
+    <Property Id="IsForeignKey" Group="Property Flags" DataType="System.Boolean" />
+    <Property Id="IsShadow" Group="Property Flags" DataType="System.Boolean" />
+    <Property Id="IsAlternateKey" Group="Property Flags" DataType="System.Boolean" />
+    <Property Id="IsConcurrencyToken" Group="Property Flags" DataType="System.Boolean" />
+    <Property Id="IsIndexed" Group="Property Flags" DataType="System.Boolean" />
+    <Property Id="IsUnicode" Group="Property Flags" DataType="System.Boolean" />
+    <Property Id="ValueGenerated" Group="Property Flags" DataType="System.String" />
+    <Property Id="BeforeSaveBehavior" Group="Property Flags" DataType="System.String" />
+    <Property Id="AfterSaveBehavior" Group="Property Flags" DataType="System.String" />
+    <Property Id="PropertyAccessMode" Group="Property Flags" DataType="System.String" />
+  </Properties>
+</DirectedGraph>

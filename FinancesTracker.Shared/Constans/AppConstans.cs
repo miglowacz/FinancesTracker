@@ -8,6 +8,7 @@ public static class cAppConstants {
     public const string CategoryRules = "api/categoryrules";
     public const string Reports = "api/reports";
     public const string CsvImport = "api/csvimport";
+    public const string Accounts = "api/accounts";
   }
 
   public static class SupportedBanks {

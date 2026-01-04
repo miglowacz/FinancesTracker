@@ -1,0 +1,142 @@
+@page "/accounts"
+@using FinancesTracker.Client.Services
+@using FinancesTracker.Client.Extensions
+@using FinancesTracker.Client.Components.Dialogs
+@using FinancesTracker.Shared.DTOs
+@using FinancesTracker.Shared.Models
+@inject cAccountService AccountService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Zarządzanie kontami</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+  <MudText Typo="Typo.h4" Class="mb-4">Moje konta</MudText>
+
+  <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddAccountDialog" Class="mb-4">
+    Dodaj konto
+  </MudButton>
+
+  @if (_isLoading) {
+    <MudProgressCircular Indeterminate="true" />
+  } else if (_accounts == null || !_accounts.Any()) {
+    <MudAlert Severity="Severity.Info">Brak kont. Dodaj pierwsze konto, aby rozpocząć.</MudAlert>
+  } else {
+    <MudGrid>
+      @foreach (var account in _accounts) {
+        <MudItem xs="12" sm="6" md="4">
+          <MudCard>
+            <MudCardHeader>
+              <CardHeaderContent>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                  <MudIcon Icon="@(((AccountTypeEnum)account.CntAccountType).GetIcon())" Size="Size.Large" Color="Color.Primary" />
+                  <div>
+                    <MudText Typo="Typo.h6">@account.Name</MudText>
+                    @if (!string.IsNullOrWhiteSpace(account.BankName)) {
+                      <MudText Typo="Typo.caption" Color="Color.Secondary">@account.BankName</MudText>
+                    }
+                    <MudText Typo="Typo.caption">@GetAccountTypeDisplay(account.CntAccountType)</MudText>
+                  </div>
+                </MudStack>
+              </CardHeaderContent>
+              <CardHeaderActions>
+                @if (!account.IsActive) {
+                  <MudChip T="string" Size="Size.Small" Color="Color.Error">Zdezaktywowane</MudChip>
+                }
+              </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+              <MudText Typo="Typo.body2" Class="mb-2">Saldo bieżące:</MudText>
+              <MudText Typo="Typo.h5" Color="@(account.CurrentBalance >= 0 ? Color.Success : Color.Error)">
+                @account.CurrentBalance.ToString("N2") @account.Currency
+              </MudText>
+              <MudText Typo="Typo.caption" Class="mt-2">
+                Saldo początkowe: @account.InitialBalance.ToString("N2") @account.Currency
+              </MudText>
+            </MudCardContent>
+            <MudCardActions>
+              <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => OpenEditAccountDialog(account))" />
+              @if (account.IsActive) {
+                <MudIconButton Icon="@Icons.Material.Filled.Block" Color="Color.Warning" OnClick="@(() => DeactivateAccount(account.Id))" />
+              }
+            </MudCardActions>
+          </MudCard>
+        </MudItem>
+      }
+    </MudGrid>
+  }
+</MudContainer>
+
+@code {
+  private List<cAccount_DTO>? _accounts;
+  private bool _isLoading = true;
+
+  protected override async Task OnInitializedAsync() {
+    await LoadAccounts();
+  }
+
+  private async Task LoadAccounts() {
+    _isLoading = true;
+    var response = await AccountService.GetAccountsAsync();
+    if (response.Success && response.Data != null) {
+      _accounts = response.Data;
+    } else {
+      Snackbar.Add(response.Message ?? "Błąd podczas ładowania kont", Severity.Error);
+      _accounts = new List<cAccount_DTO>();
+    }
+    _isLoading = false;
+  }
+
+  private async Task OpenAddAccountDialog() {
+    var dialog = await DialogService.ShowAsync<AccountDialog>("Dodaj nowe konto");
+    var result = await dialog.Result;
+
+    if (!result.Canceled && result.Data is cAccount_DTO newAccount) {
+      var response = await AccountService.CreateAccountAsync(newAccount);
+      if (response.Success) {
+        Snackbar.Add("Konto zostało utworzone", Severity.Success);
+        await LoadAccounts();
+      } else {
+        Snackbar.Add(response.Message ?? "Błąd podczas tworzenia konta", Severity.Error);
+      }
+    }
+  }
+
+  private async Task OpenEditAccountDialog(cAccount_DTO account) {
+    var parameters = new DialogParameters<AccountDialog> {
+      { x => x.Account, account }
+    };
+
+    var dialog = await DialogService.ShowAsync<AccountDialog>("Edytuj konto", parameters);
+    var result = await dialog.Result;
+
+    if (!result.Canceled && result.Data is cAccount_DTO updatedAccount) {
+      var response = await AccountService.UpdateAccountAsync(account.Id, updatedAccount);
+      if (response.Success) {
+        Snackbar.Add("Konto zostało zaktualizowane", Severity.Success);
+        await LoadAccounts();
+      } else {
+        Snackbar.Add(response.Message ?? "Błąd podczas aktualizacji konta", Severity.Error);
+      }
+    }
+  }
+
+  private async Task DeactivateAccount(int accountId) {
+    var response = await AccountService.DeactivateAccountAsync(accountId);
+    if (response.Success) {
+      Snackbar.Add("Konto zostało dezaktywowane", Severity.Success);
+      await LoadAccounts();
+    } else {
+      Snackbar.Add(response.Message ?? "Błąd podczas dezaktywacji konta", Severity.Error);
+    }
+  }
+
+  private string GetAccountTypeDisplay(AccountTypeEnum type) => type switch {
+    AccountTypeEnum.Personal => "Konto osobiste",
+    AccountTypeEnum.Savings => "Konto oszczędnościowe",
+    AccountTypeEnum.Cash => "Gotówka / Portfel",
+    AccountTypeEnum.CreditCard => "Karta kredytowa",
+    AccountTypeEnum.Investment => "Inwestycje",
+    _ => "Nieznany typ"
+  };
+}

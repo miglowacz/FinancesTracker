@@ -5,16 +5,16 @@
 namespace FinancesTracker.Migrations
 {
     /// <inheritdoc />
-    public partial class TransactionsAccountName : Migration
+    public partial class AddBankNameAndSnakeCase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "AccountName",
-                table: "Transactions",
-                type: "character varying(300)",
-                maxLength: 300,
+                name: "bank_name",
+                table: "accounts",
+                type: "character varying(100)",
+                maxLength: 100,
                 nullable: true);
         }
 
@@ -22,8 +22,8 @@ namespace FinancesTracker.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "AccountName",
-                table: "Transactions");
+                name: "bank_name",
+                table: "accounts");
         }
     }
 }

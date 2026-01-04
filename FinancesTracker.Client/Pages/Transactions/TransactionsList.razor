@@ -313,8 +313,8 @@
               <MudTh>Opis</MudTh>
               <MudTh>Kategoria</MudTh>
               <MudTh>Podkategoria</MudTh>
-              <MudTh>Bank</MudTh>
-              <MudTh>Konto</MudTh>
+              @* <MudTh>Bank</MudTh>
+              <MudTh>Konto</MudTh> *@
               <MudTh>Akcje</MudTh>
             </HeaderContent>
             <RowTemplate>
@@ -359,7 +359,7 @@
                     }
                   </MudSelect>
                 </MudTd>
-                <MudTd DataLabel="Bank">@context.BankName</MudTd>
+                <MudTd DataLabel="Bank"></MudTd>
                 <MudTd DataLabel="Akcje">
                   <div class="d-flex gap-1">
                     <MudIconButton Icon="@Icons.Material.Filled.Save"
@@ -398,12 +398,12 @@
                 <MudTd DataLabel="Podkategoria" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
                   @context.SubcategoryName
                 </MudTd>
-                <MudTd DataLabel="Bank" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
+             @*    <MudTd DataLabel="Bank" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
                   @context.BankName
                 </MudTd>
                 <MudTd DataLabel="Konto" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
                   @context.AccountName
-                </MudTd>
+               </MudTd> *@ 
                 <MudTd DataLabel="Akcje">
                   <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                  Color="Color.Primary"

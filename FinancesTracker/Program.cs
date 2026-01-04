@@ -7,9 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 
-//konfiguracja bazy danych
+//konfiguracja bazy danych z snake_case naming convention
 builder.Services.AddDbContext<FinancesTrackerDbContext>(options =>
-  options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+  options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+    .UseSnakeCaseNamingConvention());
 
 //CORS dla developmentu
 if (builder.Environment.IsDevelopment()) {

@@ -20,6 +20,7 @@ builder.Services.AddHttpClient<cApiService>(client => {
 
 builder.Services.AddScoped<cTransactionService>();
 builder.Services.AddScoped<cCategoryService>();
+builder.Services.AddScoped<cAccountService>();
 
 builder.Services.AddHttpClient<cSubcategoryService>(client => {
   client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);

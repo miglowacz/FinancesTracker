@@ -1,0 +1,70 @@
+@using FinancesTracker.Shared.DTOs
+@using FinancesTracker.Shared.Models
+@using FinancesTracker.Shared.Constans
+@using MudBlazor
+
+<MudDialog>
+  <DialogContent>
+    <MudTextField @bind-Value="_account.Name" Label="Nazwa konta" Required="true" MaxLength="100" />
+    <MudSelect @bind-Value="_account.BankName" Label="Bank" Clearable="true">
+      @foreach (var bank in cBanksList.PolishBanks) {
+        <MudSelectItem Value="@bank">@bank</MudSelectItem>
+      }
+    </MudSelect>
+    <MudSelect @bind-Value="_account.CntAccountType" Label="Typ konta" Required="true">
+      <MudSelectItem Value="@AccountTypeEnum.Personal">Konto osobiste</MudSelectItem>
+      <MudSelectItem Value="@AccountTypeEnum.Savings">Konto oszczędnościowe</MudSelectItem>
+      <MudSelectItem Value="@AccountTypeEnum.Cash">Gotówka / Portfel</MudSelectItem>
+      <MudSelectItem Value="@AccountTypeEnum.CreditCard">Karta kredytowa</MudSelectItem>
+      <MudSelectItem Value="@AccountTypeEnum.Investment">Inwestycje</MudSelectItem>
+    </MudSelect>
+    <MudNumericField @bind-Value="_account.InitialBalance" Label="Saldo początkowe" Required="true" Format="F2" />
+    <MudTextField @bind-Value="_account.Currency" Label="Waluta" Required="true" MaxLength="3" />
+    <MudCheckBox @bind-Value="_account.IsActive" Label="Aktywne" />
+  </DialogContent>
+  <DialogActions>
+    <MudButton OnClick="Cancel">Anuluj</MudButton>
+    <MudButton Color="Color.Primary" OnClick="Submit">@(_isEditMode ? "Zapisz" : "Dodaj")</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter]
+  IMudDialogInstance MudDialog { get; set; } = null!;
+
+  [Parameter]
+  public cAccount_DTO? Account { get; set; }
+
+  private cAccount_DTO _account = new();
+  private bool _isEditMode = false;
+
+  protected override void OnInitialized() {
+    if (Account != null) {
+      _account = new cAccount_DTO {
+        Id = Account.Id,
+        Name = Account.Name,
+        BankName = Account.BankName,
+        InitialBalance = Account.InitialBalance,
+        Currency = Account.Currency,
+        CntAccountType = Account.CntAccountType,
+        IsActive = Account.IsActive
+      };
+      _isEditMode = true;
+    } else {
+      _account = new cAccount_DTO {
+        Currency = "PLN",
+        IsActive = true,
+        CntAccountType = AccountTypeEnum.Personal
+      };
+    }
+  }
+
+  private void Cancel() => MudDialog.Cancel();
+
+  private void Submit() {
+    if (string.IsNullOrWhiteSpace(_account.Name)) {
+      return;
+    }
+    MudDialog.Close(DialogResult.Ok(_account));
+  }
+}
