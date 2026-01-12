@@ -272,6 +272,7 @@ public class TransactionsController : ControllerBase {
       return BadRequest(cApiResponse.Error("Brak transakcji do zaimportowania"));
 
     var ruleService = new Services.cCategoryRuleService(_DB_Context);
+    var accountRuleService = new Services.cAccountRuleService(_DB_Context);
     var insignificantDetector = new cInsignificantTransactionDetector();
 
     var errorsCln = new List<string>();
@@ -281,15 +282,22 @@ public class TransactionsController : ControllerBase {
     foreach (var transaction_DTO in transactionsCln) {
       transaction_DTO.Date = transaction_DTO.Date.ToUniversalTime();
 
+      // Dopasowanie konta na podstawie reguł (jeśli AccountId nie został ustawiony)
       if (transaction_DTO.AccountId <= 0) {
-        errorsCln.Add($"Transakcja \"{transaction_DTO.Description}\" nie ma przypisanego konta.");
-        continue;
+        var matchedAccountId = await accountRuleService.MatchAccountAsync(transaction_DTO.Description);
+        if (matchedAccountId.HasValue) {
+          transaction_DTO.AccountId = matchedAccountId.Value;
+        }
+        //} else {
+        //  errorsCln.Add($"Transakcja \"{transaction_DTO.Description}\" nie ma przypisanego konta i nie znaleziono pasującej reguły.");
+        //  continue;
+        //}
       }
 
       var accountExists = await _DB_Context.Accounts.AnyAsync(a => a.Id == transaction_DTO.AccountId);
       if (!accountExists) {
         errorsCln.Add($"Konto o ID {transaction_DTO.AccountId} nie istnieje.");
-        continue;
+       // continue;
       }
 
       bool exists = await _DB_Context.Transactions.AnyAsync(t =>
@@ -311,6 +319,7 @@ public class TransactionsController : ControllerBase {
 
       cTransaction transaction = MappingService.ToEntity(transaction_DTO);
 
+      // Dopasowanie kategorii na podstawie reguł
       var (categoryId, subcategoryId) = await ruleService.MatchCategoryAsync(transaction.Description);
       transaction.CategoryId = categoryId;
       transaction.SubcategoryId = subcategoryId;

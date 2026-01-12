@@ -1,0 +1,126 @@
+@page "/account-rules"
+@using FinancesTracker.Client.Components
+@using FinancesTracker.Shared.DTOs
+@using FinancesTracker.Client.Services
+@inject cAccountRuleService AccountRuleService
+@inject cAccountService AccountService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Reguły rozpoznawania kont</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+  <MudText Typo="Typo.h4" Class="mb-4">Reguły rozpoznawania kont</MudText>
+
+  <MudPaper Class="pa-4 mb-4">
+    <MudText Typo="Typo.body1" Class="mb-2">
+      Skonfiguruj automatyczne rozpoznawanie kont na podstawie słów kluczowych w opisie transakcji.
+    </MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenAddDialog" StartIcon="@Icons.Material.Filled.Add">
+      Dodaj regułę
+    </MudButton>
+  </MudPaper>
+
+  @if (_isLoading) {
+    <MudProgressCircular Indeterminate="true" />
+  } else {
+    <MudTable Items="_rules" Hover="true" Dense="true">
+      <HeaderContent>
+        <MudTh>Słowo kluczowe</MudTh>
+        <MudTh>Konto</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh Style="text-align: right">Akcje</MudTh>
+      </HeaderContent>
+      <RowTemplate>
+        <MudTd DataLabel="Słowo kluczowe">
+          <MudChip T="string" Size="Size.Small" Color="Color.Info">@context.Keyword</MudChip>
+        </MudTd>
+        <MudTd DataLabel="Konto">@context.AccountName</MudTd>
+        <MudTd DataLabel="Status">
+          @if (context.IsActive) {
+            <MudChip T="string" Size="Size.Small" Color="Color.Success">Aktywna</MudChip>
+          } else {
+            <MudChip T="string" Size="Size.Small" Color="Color.Default">Nieaktywna</MudChip>
+          }
+        </MudTd>
+        <MudTd DataLabel="Akcje" Style="text-align: right">
+          <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenEditDialog(context))" />
+          <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteRule(context.Id))" />
+        </MudTd>
+      </RowTemplate>
+      <NoRecordsContent>
+        <MudText Typo="Typo.body2" Align="Align.Center" Class="pa-4">Brak reguł. Dodaj pierwszą regułę.</MudText>
+      </NoRecordsContent>
+    </MudTable>
+  }
+</MudContainer>
+
+@code {
+  private List<cAccountRule_DTO> _rules = new();
+  private List<cAccount_DTO> _accounts = new();
+  private bool _isLoading = true;
+
+  protected override async Task OnInitializedAsync() {
+    await LoadRules();
+    await LoadAccounts();
+  }
+
+  private async Task LoadRules() {
+    _isLoading = true;
+    _rules = await AccountRuleService.GetAllAsync();
+    _isLoading = false;
+  }
+
+  private async Task LoadAccounts() {
+    _accounts = await AccountService.GetAllAsync();
+  }
+
+  private async Task OpenAddDialog() {
+    var parameters = new DialogParameters {
+      ["Accounts"] = _accounts
+    };
+    var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+    var dialog = DialogService.Show<AccountRuleDialog>("Dodaj regułę", parameters, options);
+    var result = await dialog.Result;
+
+    if (!result.Canceled && result.Data is cAccountRule_DTO newRule) {
+      var response = await AccountRuleService.AddAsync(newRule);
+      if (response.Success) {
+        Snackbar.Add("Reguła została dodana", Severity.Success);
+        await LoadRules();
+      } else {
+        Snackbar.Add($"Błąd: {response.Message}", Severity.Error);
+      }
+    }
+  }
+
+  private async Task OpenEditDialog(cAccountRule_DTO rule) {
+    var parameters = new DialogParameters {
+      ["Rule"] = rule,
+      ["Accounts"] = _accounts
+    };
+    var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+    var dialog = DialogService.Show<AccountRuleDialog>("Edytuj regułę", parameters, options);
+    var result = await dialog.Result;
+
+    if (!result.Canceled && result.Data is cAccountRule_DTO updatedRule) {
+      var response = await AccountRuleService.UpdateAsync(updatedRule);
+      if (response.Success) {
+        Snackbar.Add("Reguła została zaktualizowana", Severity.Success);
+        await LoadRules();
+      } else {
+        Snackbar.Add($"Błąd: {response.Message}", Severity.Error);
+      }
+    }
+  }
+
+  private async Task DeleteRule(int id) {
+    var response = await AccountRuleService.DeleteAsync(id);
+    if (response.Success) {
+      Snackbar.Add("Reguła została usunięta", Severity.Success);
+      await LoadRules();
+    } else {
+      Snackbar.Add($"Błąd: {response.Message}", Severity.Error);
+    }
+  }
+}

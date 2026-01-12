@@ -34,6 +34,9 @@ public class cAccount {
 
   // Relacja jeden-do-wielu
   public virtual ICollection<cTransaction> Transactions { get; set; } = new List<cTransaction>();
+  
+  // Relacja jeden-do-wielu z AccountRules
+  public virtual ICollection<cAccountRule> AccountRules { get; set; } = new List<cAccountRule>();
 
   // Właściwość obliczeniowa - saldo na dzień dzisiejszy
   [NotMapped]
@@ -50,6 +53,4 @@ public class cAccount {
 
   [NotMapped]
   public string FormattedCurrentBalance => CurrentBalance.ToString("C", new System.Globalization.CultureInfo("pl-PL"));
-
-
 }

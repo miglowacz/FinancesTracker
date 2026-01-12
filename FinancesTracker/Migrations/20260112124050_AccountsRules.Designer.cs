@@ -3,6 +3,7 @@ using System;
 using FinancesTracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinancesTracker.Migrations
 {
     [DbContext(typeof(FinancesTrackerDbContext))]
-    partial class FinancesTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260112124050_AccountsRules")]
+    partial class AccountsRules
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -594,7 +597,7 @@ namespace FinancesTracker.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseSerialColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AccountId")
+                    b.Property<int>("AccountId")
                         .HasColumnType("integer")
                         .HasColumnName("accountid");
 
@@ -713,6 +716,7 @@ namespace FinancesTracker.Migrations
                         .WithMany("Transactions")
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
                         .HasConstraintName("fk_transactions_accounts_account_id");
 
                     b.HasOne("FinancesTracker.Shared.Models.cCategory", "Category")

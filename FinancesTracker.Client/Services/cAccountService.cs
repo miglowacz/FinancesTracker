@@ -18,6 +18,11 @@ public class cAccountService {
     return await _apiService.GetAsync<List<cAccount_DTO>>(cAppConstants.ApiEndpoints.Accounts);
   }
 
+  public async Task<List<cAccount_DTO>> GetAllAsync() {
+    var response = await _http.GetFromJsonAsync<cApiResponse<List<cAccount_DTO>>>("api/accounts");
+    return response?.Data ?? new List<cAccount_DTO>();
+  }
+
   public async Task<cApiResponse<cAccount_DTO>> GetAccountAsync(int id) {
     return await _apiService.GetAsync<cAccount_DTO>($"{cAppConstants.ApiEndpoints.Accounts}/{id}");
   }

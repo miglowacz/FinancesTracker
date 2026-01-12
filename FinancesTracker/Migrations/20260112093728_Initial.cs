@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinancesTracker.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialialMigration : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,14 +19,15 @@ namespace FinancesTracker.Migrations
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    initial_balance = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    bankname = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    initialbalance = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false, defaultValue: "PLN"),
-                    cnt_account_type = table.Column<int>(type: "integer", nullable: false),
-                    is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    cntaccounttype = table.Column<int>(type: "integer", nullable: false),
+                    isactive = table.Column<bool>(type: "boolean", nullable: false),
+                    createdat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updatedat = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -38,7 +39,7 @@ namespace FinancesTracker.Migrations
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
@@ -51,16 +52,16 @@ namespace FinancesTracker.Migrations
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    category_id = table.Column<int>(type: "integer", nullable: false)
+                    categoryid = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_subcategories", x => x.id);
                     table.ForeignKey(
                         name: "fk_subcategories_categories_category_id",
-                        column: x => x.category_id,
+                        column: x => x.categoryid,
                         principalTable: "categories",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
@@ -71,25 +72,25 @@ namespace FinancesTracker.Migrations
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     keyword = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    category_id = table.Column<int>(type: "integer", nullable: false),
-                    subcategory_id = table.Column<int>(type: "integer", nullable: false),
-                    is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    categoryid = table.Column<int>(type: "integer", nullable: false),
+                    subcategoryid = table.Column<int>(type: "integer", nullable: false),
+                    isactive = table.Column<bool>(type: "boolean", nullable: false),
+                    createdat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_category_rules", x => x.id);
                     table.ForeignKey(
                         name: "fk_category_rules_categories_category_id",
-                        column: x => x.category_id,
+                        column: x => x.categoryid,
                         principalTable: "categories",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_category_rules_subcategories_subcategory_id",
-                        column: x => x.subcategory_id,
+                        column: x => x.subcategoryid,
                         principalTable: "subcategories",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
@@ -100,37 +101,37 @@ namespace FinancesTracker.Migrations
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    account_id = table.Column<int>(type: "integer", nullable: false),
-                    category_id = table.Column<int>(type: "integer", nullable: true),
-                    subcategory_id = table.Column<int>(type: "integer", nullable: true),
-                    month_number = table.Column<int>(type: "integer", nullable: false),
+                    accountid = table.Column<int>(type: "integer", nullable: false),
+                    categoryid = table.Column<int>(type: "integer", nullable: true),
+                    subcategoryid = table.Column<int>(type: "integer", nullable: true),
+                    monthnumber = table.Column<int>(type: "integer", nullable: false),
                     year = table.Column<int>(type: "integer", nullable: false),
-                    is_insignificant = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    isinsignificant = table.Column<bool>(type: "boolean", nullable: false),
+                    createdat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updatedat = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_transactions", x => x.id);
                     table.ForeignKey(
                         name: "fk_transactions_accounts_account_id",
-                        column: x => x.account_id,
+                        column: x => x.accountid,
                         principalTable: "accounts",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "fk_transactions_categories_category_id",
-                        column: x => x.category_id,
+                        column: x => x.categoryid,
                         principalTable: "categories",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "fk_transactions_subcategories_subcategory_id",
-                        column: x => x.subcategory_id,
+                        column: x => x.subcategoryid,
                         principalTable: "subcategories",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
@@ -155,7 +156,7 @@ namespace FinancesTracker.Migrations
 
             migrationBuilder.InsertData(
                 table: "subcategories",
-                columns: new[] { "id", "category_id", "name" },
+                columns: new[] { "id", "categoryid", "name" },
                 values: new object[,]
                 {
                     { 1, 1, "Wynagrodzenie" },
@@ -195,7 +196,7 @@ namespace FinancesTracker.Migrations
 
             migrationBuilder.InsertData(
                 table: "category_rules",
-                columns: new[] { "id", "category_id", "created_at", "is_active", "keyword", "subcategory_id" },
+                columns: new[] { "id", "categoryid", "createdat", "isactive", "keyword", "subcategoryid" },
                 values: new object[,]
                 {
                     { 1, 1, new DateTime(2025, 10, 18, 5, 22, 37, 396, DateTimeKind.Utc), true, "wynagrodzenie", 1 },
@@ -215,7 +216,7 @@ namespace FinancesTracker.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Account_IsActive",
                 table: "accounts",
-                column: "is_active");
+                column: "isactive");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Account_Name",
@@ -225,17 +226,17 @@ namespace FinancesTracker.Migrations
             migrationBuilder.CreateIndex(
                 name: "ix_category_rules_category_id",
                 table: "category_rules",
-                column: "category_id");
+                column: "categoryid");
 
             migrationBuilder.CreateIndex(
                 name: "ix_category_rules_subcategory_id",
                 table: "category_rules",
-                column: "subcategory_id");
+                column: "subcategoryid");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CategoryRule_IsActive",
                 table: "category_rules",
-                column: "is_active");
+                column: "isactive");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CategoryRule_Keyword",
@@ -245,17 +246,17 @@ namespace FinancesTracker.Migrations
             migrationBuilder.CreateIndex(
                 name: "ix_subcategories_category_id",
                 table: "subcategories",
-                column: "category_id");
+                column: "categoryid");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transaction_AccountId",
                 table: "transactions",
-                column: "account_id");
+                column: "accountid");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transaction_CategoryId",
                 table: "transactions",
-                column: "category_id");
+                column: "categoryid");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transaction_Date",
@@ -265,12 +266,12 @@ namespace FinancesTracker.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Transaction_Year_Month",
                 table: "transactions",
-                columns: new[] { "year", "month_number" });
+                columns: new[] { "year", "monthnumber" });
 
             migrationBuilder.CreateIndex(
                 name: "ix_transactions_subcategory_id",
                 table: "transactions",
-                column: "subcategory_id");
+                column: "subcategoryid");
         }
 
         /// <inheritdoc />

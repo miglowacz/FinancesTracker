@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinancesTracker.Migrations
 {
     [DbContext(typeof(FinancesTrackerDbContext))]
-    [Migration("20260104175527_InitialialMigration")]
-    partial class InitialialMigration
+    [Migration("20260112125514_Transaction_ID_Account")]
+    partial class Transaction_ID_Account
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,15 +32,20 @@ namespace FinancesTracker.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseSerialColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BankName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("bankname");
 
                     b.Property<int>("CntAccountType")
                         .HasColumnType("integer")
-                        .HasColumnName("cnt_account_type");
+                        .HasColumnName("cntaccounttype");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("createdat");
 
                     b.Property<string>("Currency")
                         .IsRequired()
@@ -53,11 +58,11 @@ namespace FinancesTracker.Migrations
                     b.Property<decimal>("InitialBalance")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)")
-                        .HasColumnName("initial_balance");
+                        .HasColumnName("initialbalance");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
-                        .HasColumnName("is_active");
+                        .HasColumnName("isactive");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -67,7 +72,7 @@ namespace FinancesTracker.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
+                        .HasColumnName("updatedat");
 
                     b.HasKey("Id")
                         .HasName("pk_accounts");
@@ -81,6 +86,48 @@ namespace FinancesTracker.Migrations
                     b.ToTable("accounts", (string)null);
                 });
 
+            modelBuilder.Entity("FinancesTracker.Shared.Models.cAccountRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseSerialColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("integer")
+                        .HasColumnName("accountid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("createdat");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
+
+                    b.Property<string>("Keyword")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("keyword");
+
+                    b.HasKey("Id")
+                        .HasName("pk_account_rules");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_account_rules_account_id");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_AccountRule_IsActive");
+
+                    b.HasIndex("Keyword")
+                        .HasDatabaseName("IX_AccountRule_Keyword");
+
+                    b.ToTable("account_rules", (string)null);
+                });
+
             modelBuilder.Entity("FinancesTracker.Shared.Models.cCategory", b =>
                 {
                     b.Property<int>("Id")
@@ -88,7 +135,7 @@ namespace FinancesTracker.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseSerialColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -161,19 +208,19 @@ namespace FinancesTracker.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseSerialColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("integer")
-                        .HasColumnName("category_id");
+                        .HasColumnName("categoryid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("createdat");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
-                        .HasColumnName("is_active");
+                        .HasColumnName("isactive");
 
                     b.Property<string>("Keyword")
                         .IsRequired()
@@ -183,7 +230,7 @@ namespace FinancesTracker.Migrations
 
                     b.Property<int>("SubcategoryId")
                         .HasColumnType("integer")
-                        .HasColumnName("subcategory_id");
+                        .HasColumnName("subcategoryid");
 
                     b.HasKey("Id")
                         .HasName("pk_category_rules");
@@ -320,11 +367,11 @@ namespace FinancesTracker.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseSerialColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("integer")
-                        .HasColumnName("category_id");
+                        .HasColumnName("categoryid");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -548,11 +595,11 @@ namespace FinancesTracker.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseSerialColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AccountId")
+                    b.Property<int?>("AccountId")
                         .HasColumnType("integer")
-                        .HasColumnName("account_id");
+                        .HasColumnName("accountid");
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 2)
@@ -561,11 +608,11 @@ namespace FinancesTracker.Migrations
 
                     b.Property<int?>("CategoryId")
                         .HasColumnType("integer")
-                        .HasColumnName("category_id");
+                        .HasColumnName("categoryid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("createdat");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone")
@@ -579,19 +626,19 @@ namespace FinancesTracker.Migrations
 
                     b.Property<bool>("IsInsignificant")
                         .HasColumnType("boolean")
-                        .HasColumnName("is_insignificant");
+                        .HasColumnName("isinsignificant");
 
                     b.Property<int>("MonthNumber")
                         .HasColumnType("integer")
-                        .HasColumnName("month_number");
+                        .HasColumnName("monthnumber");
 
                     b.Property<int?>("SubcategoryId")
                         .HasColumnType("integer")
-                        .HasColumnName("subcategory_id");
+                        .HasColumnName("subcategoryid");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
+                        .HasColumnName("updatedat");
 
                     b.Property<int>("Year")
                         .HasColumnType("integer")
@@ -616,6 +663,18 @@ namespace FinancesTracker.Migrations
                         .HasDatabaseName("IX_Transaction_Year_Month");
 
                     b.ToTable("transactions", (string)null);
+                });
+
+            modelBuilder.Entity("FinancesTracker.Shared.Models.cAccountRule", b =>
+                {
+                    b.HasOne("FinancesTracker.Shared.Models.cAccount", "Account")
+                        .WithMany("AccountRules")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_account_rules_accounts_account_id");
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("FinancesTracker.Shared.Models.cCategoryRule", b =>
@@ -657,7 +716,6 @@ namespace FinancesTracker.Migrations
                         .WithMany("Transactions")
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("fk_transactions_accounts_account_id");
 
                     b.HasOne("FinancesTracker.Shared.Models.cCategory", "Category")
@@ -681,6 +739,8 @@ namespace FinancesTracker.Migrations
 
             modelBuilder.Entity("FinancesTracker.Shared.Models.cAccount", b =>
                 {
+                    b.Navigation("AccountRules");
+
                     b.Navigation("Transactions");
                 });
 

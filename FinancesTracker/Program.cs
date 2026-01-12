@@ -1,4 +1,5 @@
 using FinancesTracker.Data;
+using FinancesTracker.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,9 @@ builder.Services.AddHttpClient();
 builder.Services.AddDbContext<FinancesTrackerDbContext>(options =>
   options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
     .UseSnakeCaseNamingConvention());
+
+//rejestracja serwisów
+builder.Services.AddScoped<cAccountRuleService>();
 
 //CORS dla developmentu
 if (builder.Environment.IsDevelopment()) {

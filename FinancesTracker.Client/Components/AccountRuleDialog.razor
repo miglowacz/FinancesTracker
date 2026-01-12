@@ -1,0 +1,55 @@
+@using FinancesTracker.Shared.DTOs
+@inject ISnackbar Snackbar
+
+<MudDialog>
+  <DialogContent>
+    <MudForm @ref="_form" @bind-IsValid="_isFormValid">
+      <MudTextField @bind-Value="_rule.Keyword" Label="Słowo kluczowe" Required="true" RequiredError="Słowo kluczowe jest wymagane" />
+      
+      <MudSelect @bind-Value="_rule.AccountId" Label="Konto" Required="true" RequiredError="Konto jest wymagane" T="int" Class="mt-3">
+        @foreach (var account in Accounts) {
+          <MudSelectItem Value="@account.Id">@account.Name</MudSelectItem>
+        }
+      </MudSelect>
+
+      <MudSwitch @bind-Value="_rule.IsActive" Label="Aktywna" Color="Color.Primary" Class="mt-3" />
+    </MudForm>
+  </DialogContent>
+  <DialogActions>
+    <MudButton OnClick="Cancel">Anuluj</MudButton>
+    <MudButton Color="Color.Primary" OnClick="Submit" Disabled="!_isFormValid">Zapisz</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+  [Parameter] public cAccountRule_DTO? Rule { get; set; }
+  [Parameter] public List<cAccount_DTO> Accounts { get; set; } = new();
+
+  private cAccountRule_DTO _rule = new();
+  private MudForm _form = null!;
+  private bool _isFormValid;
+
+  protected override void OnInitialized() {
+    if (Rule != null) {
+      _rule = new cAccountRule_DTO {
+        Id = Rule.Id,
+        Keyword = Rule.Keyword,
+        AccountId = Rule.AccountId,
+        IsActive = Rule.IsActive
+      };
+    } else {
+      _rule.IsActive = true;
+    }
+  }
+
+  private void Submit() {
+    if (_isFormValid) {
+      MudDialog.Close(DialogResult.Ok(_rule));
+    }
+  }
+
+  private void Cancel() {
+    MudDialog.Cancel();
+  }
+}

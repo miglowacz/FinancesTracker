@@ -30,7 +30,7 @@ public class cAccount_DTO {
   public string? BankName { get; set; }
 
   [Required(ErrorMessage = "Saldo początkowe jest wymagane")]
-  [Range(typeof(decimal), "-999999.99", "999999.99", ErrorMessage = "Saldo musi być między -999999.99 a 999999.99")]
+  [Range(-999999.99, 999999.99, ErrorMessage = "Saldo musi być między -999999.99 a 999999.99")]
   public decimal InitialBalance { get; set; }
 
   [Required]

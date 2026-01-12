@@ -17,8 +17,7 @@ public class cTransaction {
   [Column(TypeName = "decimal(18,2)")]
   public decimal Amount { get; set; }
 
-  [Required]
-  public int AccountId { get; set; }
+  public int? AccountId { get; set; }
   public virtual cAccount Account { get; set; } = null!;
 
   public int? CategoryId { get; set; }

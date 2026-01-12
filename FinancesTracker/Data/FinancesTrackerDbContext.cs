@@ -14,17 +14,43 @@ public class FinancesTrackerDbContext : DbContext {
   public DbSet<cCategory> Categories { get; set; }
   public DbSet<cSubcategory> Subcategories { get; set; }
   public DbSet<cCategoryRule> CategoryRules { get; set; }
+  public DbSet<cAccountRule> AccountRules { get; set; }
 
   protected override void OnModelCreating(ModelBuilder modelBuilder) {
     base.OnModelCreating(modelBuilder);
 
-    // Konfiguracja nazewnictwa snake_case dla tabel
+    // Konfiguracja nazewnictwa lowercase dla tabel i kolumn
     foreach (var entity in modelBuilder.Model.GetEntityTypes()) {
-      entity.SetTableName(ToSnakeCase(entity.GetTableName()));
+      entity.SetTableName(entity.GetTableName()?.ToLowerInvariant());
       foreach (var property in entity.GetProperties()) {
-        property.SetColumnName(ToSnakeCase(property.Name));
+        property.SetColumnName(property.Name.ToLowerInvariant());
       }
     }
+
+    // Konfiguracja SERIAL dla wszystkich ID
+    modelBuilder.Entity<cAccount>()
+      .Property(a => a.Id)
+      .UseSerialColumn();
+
+    modelBuilder.Entity<cTransaction>()
+      .Property(t => t.Id)
+      .UseSerialColumn();
+
+    modelBuilder.Entity<cCategory>()
+      .Property(c => c.Id)
+      .UseSerialColumn();
+
+    modelBuilder.Entity<cSubcategory>()
+      .Property(s => s.Id)
+      .UseSerialColumn();
+
+    modelBuilder.Entity<cCategoryRule>()
+      .Property(cr => cr.Id)
+      .UseSerialColumn();
+
+    modelBuilder.Entity<cAccountRule>()
+      .Property(ar => ar.Id)
+      .UseSerialColumn();
 
     // Konfiguracja cAccount
     modelBuilder.Entity<cAccount>()
@@ -52,6 +78,40 @@ public class FinancesTrackerDbContext : DbContext {
     modelBuilder.Entity<cAccount>()
       .HasIndex(a => a.IsActive)
       .HasDatabaseName("IX_Account_IsActive");
+
+    // Konfiguracja cTransaction
+    modelBuilder.Entity<cTransaction>()
+      .Property(t => t.Description)
+      .HasMaxLength(500)
+      .IsRequired();
+
+    modelBuilder.Entity<cTransaction>()
+      .Property(t => t.Amount)
+      .HasPrecision(18, 2);
+
+    // Konfiguracja cCategory
+    modelBuilder.Entity<cCategory>()
+      .Property(c => c.Name)
+      .HasMaxLength(100)
+      .IsRequired();
+
+    // Konfiguracja cSubcategory
+    modelBuilder.Entity<cSubcategory>()
+      .Property(s => s.Name)
+      .HasMaxLength(100)
+      .IsRequired();
+
+    // Konfiguracja cCategoryRule
+    modelBuilder.Entity<cCategoryRule>()
+      .Property(cr => cr.Keyword)
+      .HasMaxLength(200)
+      .IsRequired();
+
+    // Konfiguracja cAccountRule
+    modelBuilder.Entity<cAccountRule>()
+      .Property(ar => ar.Keyword)
+      .HasMaxLength(200)
+      .IsRequired();
 
     // Konfiguracja relacji cTransaction -> cAccount
     modelBuilder.Entity<cTransaction>()
@@ -95,6 +155,13 @@ public class FinancesTrackerDbContext : DbContext {
       .HasForeignKey(cr => cr.SubcategoryId)
       .OnDelete(DeleteBehavior.Cascade);
 
+    // Konfiguracja cAccountRule -> cAccount
+    modelBuilder.Entity<cAccountRule>()
+      .HasOne(ar => ar.Account)
+      .WithMany(a => a.AccountRules)
+      .HasForeignKey(ar => ar.AccountId)
+      .OnDelete(DeleteBehavior.Cascade);
+
     // Indeksy dla wydajności
     modelBuilder.Entity<cTransaction>()
       .HasIndex(t => new { t.Year, t.MonthNumber })
@@ -120,31 +187,16 @@ public class FinancesTrackerDbContext : DbContext {
       .HasIndex(cr => cr.IsActive)
       .HasDatabaseName("IX_CategoryRule_IsActive");
 
-    // Konfiguracja właściwości cTransaction
-    modelBuilder.Entity<cTransaction>()
-      .Property(t => t.Amount)
-      .HasPrecision(18, 2);
+    modelBuilder.Entity<cAccountRule>()
+      .HasIndex(ar => ar.Keyword)
+      .HasDatabaseName("IX_AccountRule_Keyword");
+
+    modelBuilder.Entity<cAccountRule>()
+      .HasIndex(ar => ar.IsActive)
+      .HasDatabaseName("IX_AccountRule_IsActive");
 
     // Dane początkowe
     SeedData(modelBuilder);
-  }
-
-  private static string ToSnakeCase(string? name) {
-    if (string.IsNullOrEmpty(name)) return name ?? string.Empty;
-    
-    var result = new StringBuilder();
-    result.Append(char.ToLower(name[0]));
-    
-    for (int i = 1; i < name.Length; i++) {
-      if (char.IsUpper(name[i])) {
-        result.Append('_');
-        result.Append(char.ToLower(name[i]));
-      } else {
-        result.Append(name[i]);
-      }
-    }
-    
-    return result.ToString();
   }
 
   private void SeedData(ModelBuilder modelBuilder) {
