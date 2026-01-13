@@ -24,6 +24,11 @@ public class cTransaction_DTO {
 
   public bool IsInsignificant { get; set; } = false;
 
+  public bool IsTransfer { get; set; } = false;
+  public int? RelatedTransactionId { get; set; }
+  public int? TargetAccountId { get; set; }
+  public string? RelatedAccountName { get; set; }
+
   // Właściwości tylko do odczytu
   public string? CategoryName { get; set; }
   public string? SubcategoryName { get; set; }

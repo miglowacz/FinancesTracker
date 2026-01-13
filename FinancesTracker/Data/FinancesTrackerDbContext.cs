@@ -134,6 +134,13 @@ public class FinancesTrackerDbContext : DbContext {
       .HasForeignKey(t => t.SubcategoryId)
       .OnDelete(DeleteBehavior.Restrict);
 
+    // Konfiguracja relacji cTransaction -> cTransaction (Transfery)
+    modelBuilder.Entity<cTransaction>()
+      .HasOne(t => t.RelatedTransaction)
+      .WithOne() // Relacja 1:1, druga strona nie ma kolekcji
+      .HasForeignKey<cTransaction>(t => t.RelatedTransactionId)
+      .OnDelete(DeleteBehavior.ClientSetNull); // Unikamy cyklu kaskadowego usuwania
+
     // Konfiguracja cSubcategory -> cCategory
     modelBuilder.Entity<cSubcategory>()
       .HasOne(s => s.Category)

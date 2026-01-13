@@ -22,6 +22,7 @@ public class TransactionsController : ControllerBase {
       .Include(t => t.Account)
       .Include(t => t.Category)
       .Include(t => t.Subcategory)
+      .Include(t => t.RelatedTransaction).ThenInclude(rt => rt.Account) // Include related account
       .AsQueryable();
 
     if (xFilter.Year.HasValue)
@@ -29,6 +30,9 @@ public class TransactionsController : ControllerBase {
 
     if (xFilter.Month.HasValue)
       pQuery = pQuery.Where(t => t.MonthNumber == xFilter.Month.Value);
+
+    if (xFilter.HideTransfers)
+      pQuery = pQuery.Where(t => !t.IsTransfer);
 
     if (xFilter.HasNoCategory)
       pQuery = pQuery.Where(t => t.CategoryId == null);
@@ -54,6 +58,9 @@ public class TransactionsController : ControllerBase {
       var e = xFilter.EndDate.Value.ToUniversalTime();
       pQuery = pQuery.Where(t => t.Date <= e);
     }
+
+    if (xFilter.HideTransfers)
+      pQuery = pQuery.Where(t => !t.IsTransfer); // Filtering
 
     if (!string.IsNullOrEmpty(xFilter.SearchTerm))
       pQuery = pQuery.Where(t => t.Description.Contains(xFilter.SearchTerm));
@@ -116,6 +123,64 @@ public class TransactionsController : ControllerBase {
       return BadRequest(cApiResponse<cTransaction_DTO>.Error("Dane transakcji są nieprawidłowe", pErrors));
     }
 
+    // Obsługa transferów
+    if (xTransactionDto.IsTransfer && xTransactionDto.TargetAccountId.HasValue) {
+        if (xTransactionDto.TargetAccountId.Value == xTransactionDto.AccountId)
+             return BadRequest(cApiResponse<cTransaction_DTO>.Error("Konto źródłowe i docelowe muszą być różne"));
+
+        var pTargetAccount = await _DB_Context.Accounts.FindAsync(xTransactionDto.TargetAccountId.Value);
+        if (pTargetAccount == null)
+             return BadRequest(cApiResponse<cTransaction_DTO>.Error("Konto docelowe nie istnieje"));
+
+        // Tworzenie transakcji wychodzącej (z konta źródłowego)
+        var pSourceTransaction = MappingService.ToEntity(xTransactionDto);
+        pSourceTransaction.Amount = -Math.Abs(pSourceTransaction.Amount); // Upewniamy się, że jest ujemna
+        pSourceTransaction.IsTransfer = true;
+        
+        // Tworzenie transakcji przychodzącej (na konto docelowe)
+        var pTargetTransaction = new cTransaction {
+             Date = pSourceTransaction.Date,
+             Description = pSourceTransaction.Description, // Można dodać dopisek "(Transfer)"
+             Amount = Math.Abs(pSourceTransaction.Amount), // Dodatnia kwota
+             AccountId = xTransactionDto.TargetAccountId.Value,
+             CategoryId = pSourceTransaction.CategoryId,
+             SubcategoryId = pSourceTransaction.SubcategoryId,
+             IsTransfer = true,
+             IsInsignificant = pSourceTransaction.IsInsignificant,
+             MonthNumber = pSourceTransaction.MonthNumber,
+             Year = pSourceTransaction.Year,
+             CreatedAt = DateTime.UtcNow
+        };
+
+        using var transaction = await _DB_Context.Database.BeginTransactionAsync();
+        try {
+            _DB_Context.Transactions.Add(pSourceTransaction);
+            _DB_Context.Transactions.Add(pTargetTransaction);
+            await _DB_Context.SaveChangesAsync();
+
+            // Ustawienie powiązań ID po zapisie
+            pSourceTransaction.RelatedTransactionId = pTargetTransaction.Id;
+            pTargetTransaction.RelatedTransactionId = pSourceTransaction.Id;
+
+            await _DB_Context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            var pCreatedTransaction = await _DB_Context.Transactions
+              .Include(t => t.Account)
+              .Include(t => t.Category)
+              .Include(t => t.Subcategory)
+              .FirstAsync(t => t.Id == pSourceTransaction.Id);
+
+            return CreatedAtAction(nameof(GetTransaction),
+              new { id = pSourceTransaction.Id },
+              cApiResponse<cTransaction_DTO>.SuccessResult(MappingService.ToDto(pCreatedTransaction), "Transfer został utworzony"));
+
+        } catch (Exception ex) {
+            await transaction.RollbackAsync();
+            return StatusCode(500, cApiResponse<cTransaction_DTO>.Error($"Błąd podczas tworzenia transferu: {ex.Message}"));
+        }
+    }
+
     var pAccount = await _DB_Context.Accounts.FindAsync(xTransactionDto.AccountId);
     if (pAccount == null)
       return BadRequest(cApiResponse<cTransaction_DTO>.Error("Wybrane konto nie istnieje"));
@@ -133,15 +198,15 @@ public class TransactionsController : ControllerBase {
     _DB_Context.Transactions.Add(pTransaction);
     await _DB_Context.SaveChangesAsync();
 
-    var pCreatedTransaction = await _DB_Context.Transactions
+    var pCreatedTransactionSimple = await _DB_Context.Transactions
       .Include(t => t.Account)
       .Include(t => t.Category)
-      .Include(t => t.Subcategory)
+      .Include(t => t.Subcategory)  
       .FirstAsync(t => t.Id == pTransaction.Id);
 
     return CreatedAtAction(nameof(GetTransaction),
       new { id = pTransaction.Id },
-      cApiResponse<cTransaction_DTO>.SuccessResult(MappingService.ToDto(pCreatedTransaction), "Transakcja została utworzona"));
+      cApiResponse<cTransaction_DTO>.SuccessResult(MappingService.ToDto(pCreatedTransactionSimple), "Transakcja została utworzona"));
   }
 
   [HttpPut("{id}")]
@@ -279,56 +344,142 @@ public class TransactionsController : ControllerBase {
     int importedCount = 0;
     int insignificantCount = 0;
 
-    foreach (var transaction_DTO in transactionsCln) {
-      transaction_DTO.Date = transaction_DTO.Date.ToUniversalTime();
+    // Lista śledząca pomyślnie dodane encje (aby w drugim kroku je sparować)
+    var addedTransactions = new List<cTransaction>();
+    var matchedDbIds = new HashSet<int>(); 
 
-      // Dopasowanie konta na podstawie reguł (jeśli AccountId nie został ustawiony)
-      if (transaction_DTO.AccountId <= 0) {
-        var matchedAccountId = await accountRuleService.MatchAccountAsync(transaction_DTO.Description);
-        if (matchedAccountId.HasValue) {
-          transaction_DTO.AccountId = matchedAccountId.Value;
+    // Używamy transakcji DB, aby cały proces (import + linkowanie) był atomowy
+    using var dbTransaction = await _DB_Context.Database.BeginTransactionAsync();
+
+    try {
+        // ETAP 1: Dodanie wszystkich transakcji (bez linków) i zapis, aby wygenerować ID
+        foreach (var transaction_DTO in transactionsCln) {
+          transaction_DTO.Date = transaction_DTO.Date.ToUniversalTime();
+
+          // 1. Dopasowanie konta (jak w oryginale)
+          if (transaction_DTO.AccountId <= 0) {
+            if (!string.IsNullOrEmpty(transaction_DTO.AccountName)) {
+               var account = await _DB_Context.Accounts.FirstOrDefaultAsync(a => a.Name == transaction_DTO.AccountName);
+               if (account != null) transaction_DTO.AccountId = account.Id;
+            }
+            if (transaction_DTO.AccountId <= 0) {
+              var matchedAccountId = await accountRuleService.MatchAccountAsync(transaction_DTO.AccountName);
+              if (matchedAccountId.HasValue) transaction_DTO.AccountId = matchedAccountId.Value;
+            }
+          }
+
+          var accountExists = await _DB_Context.Accounts.AnyAsync(a => a.Id == transaction_DTO.AccountId);
+          if (!accountExists) {
+            errorsCln.Add($"Konto o ID {transaction_DTO.AccountId} nie istnieje.");
+           // continue; // Opcjonalnie: continue, w oryginale zakomentowane
+          }
+
+          // 2. Sprawdzenie duplikatów
+          bool exists = await _DB_Context.Transactions.AnyAsync(t =>
+            t.Description == transaction_DTO.Description &&
+            t.Date == transaction_DTO.Date &&
+            t.Amount == transaction_DTO.Amount &&
+            t.AccountId == transaction_DTO.AccountId
+          );
+
+          if (exists) {
+            errorsCln.Add($"Transakcja \"{transaction_DTO.Description}\" z dnia {transaction_DTO.Date:d} o kwocie {transaction_DTO.Amount} już istnieje.");
+            continue;
+          }
+
+          if (insignificantDetector.IsInsignificant(transaction_DTO)) {
+            transaction_DTO.IsInsignificant = true;
+            insignificantCount++;
+          }
+
+          cTransaction transaction = MappingService.ToEntity(transaction_DTO);
+
+          // 4. Dopasowanie kategorii
+          var (categoryId, subcategoryId) = await ruleService.MatchCategoryAsync(transaction.Description);
+          transaction.CategoryId = categoryId;
+          transaction.SubcategoryId = subcategoryId;
+
+          _DB_Context.Transactions.Add(transaction);
+          addedTransactions.Add(transaction); // Dodajemy do lokalnej listy do późniejszego parowania
+          importedCount++;
         }
-        //} else {
-        //  errorsCln.Add($"Transakcja \"{transaction_DTO.Description}\" nie ma przypisanego konta i nie znaleziono pasującej reguły.");
-        //  continue;
-        //}
-      }
 
-      var accountExists = await _DB_Context.Accounts.AnyAsync(a => a.Id == transaction_DTO.AccountId);
-      if (!accountExists) {
-        errorsCln.Add($"Konto o ID {transaction_DTO.AccountId} nie istnieje.");
-       // continue;
-      }
+        // ZAPIS 1: Generowanie ID dla nowych transakcji
+        await _DB_Context.SaveChangesAsync();
 
-      bool exists = await _DB_Context.Transactions.AnyAsync(t =>
-        t.Description == transaction_DTO.Description &&
-        t.Date == transaction_DTO.Date &&
-        t.Amount == transaction_DTO.Amount &&
-        t.AccountId == transaction_DTO.AccountId
-      );
+        // ETAP 2: Parowanie transferów (mając już ID)
+        var matchablePendingTransfers = new List<cTransaction>(); // Transakcje z bieżącego importu do parowania
 
-      if (exists) {
-        errorsCln.Add($"Transakcja \"{transaction_DTO.Description}\" z dnia {transaction_DTO.Date:d} o kwocie {transaction_DTO.Amount} już istnieje.");
-        continue;
-      }
+        foreach (var transaction in addedTransactions) {
+          if (!transaction.IsTransfer) continue;
+          if (transaction.RelatedTransactionId != null) continue; // Już sparowany w poprzedniej pętli jako "internalMatch"
 
-      if (insignificantDetector.IsInsignificant(transaction_DTO)) {
-        transaction_DTO.IsInsignificant = true;
-        insignificantCount++;
-      }
+            bool paired = false;
 
-      cTransaction transaction = MappingService.ToEntity(transaction_DTO);
+            // A. Próba parowania wewnątrz aktualnego importu (korzystamy z addedTransactions, które są śledzone przez kontekst)
+            // Szukamy w liście matchablePendingTransfers, tak jak w pierwotnej logice
+            var internalMatch = matchablePendingTransfers.FirstOrDefault(t => 
+                 t.RelatedTransactionId == null &&      // Nie ma jeszcze pary
+                 t.Amount == -transaction.Amount &&   // Przeciwna kwota
+                 t.AccountId != transaction.AccountId && // Inne konto
+                 Math.Abs((t.Date - transaction.Date).TotalDays) <= 3 // Zbliżona data
+            );
 
-      // Dopasowanie kategorii na podstawie reguł
-      var (categoryId, subcategoryId) = await ruleService.MatchCategoryAsync(transaction.Description);
-      transaction.CategoryId = categoryId;
-      transaction.SubcategoryId = subcategoryId;
+            if (internalMatch != null) {
+                // Teraz bezpiecznie ustawiamy ID, bo oba obiekty mają ID po SaveChanges
+                transaction.RelatedTransactionId = internalMatch.Id;
+                internalMatch.RelatedTransactionId = transaction.Id;
+                paired = true;
+            }
 
-      _DB_Context.Transactions.Add(transaction);
-      importedCount++;
+            // B. Jeśli nie sparowano lokalnie, szukamy w bazie danych
+            if (!paired) {
+                 decimal targetAmount = -transaction.Amount;
+                 DateTime dMin = transaction.Date.AddDays(-3);
+                 DateTime dMax = transaction.Date.AddDays(3);
+
+                 // Pobieramy kandydatów z bazy, ale wykluczamy te z obecnego importu (id są w addedTransactions)
+                 // aby uniknąć błędnego parowania "na krzyż" z niesparowanymi jeszcze elementami pętli
+                 var dbCandidates = await _DB_Context.Transactions
+                    .Where(t => t.IsTransfer && t.RelatedTransactionId == null)
+                    .Where(t => t.Amount == targetAmount)
+                    .Where(t => t.AccountId != transaction.AccountId)
+                    .Where(t => t.Date >= dMin && t.Date <= dMax)
+                    .ToListAsync();
+
+                 foreach (var candidate in dbCandidates) {
+                     // Pomijamy jeśli kandydat to ta sama transakcja (teoretycznie niemożliwe przez filtry, ale dla pewności)
+                     if (candidate.Id == transaction.Id) continue;
+                     
+                     // Pomijamy jeśli kandydat pochodzi z tego samego importu (zostanie obsłużony przez internalMatch)
+                     if (addedTransactions.Any(at => at.Id == candidate.Id)) continue;
+
+                     if (!matchedDbIds.Contains(candidate.Id)) {
+                         transaction.RelatedTransactionId = candidate.Id;
+                         candidate.RelatedTransactionId = transaction.Id;
+                         
+                         matchedDbIds.Add(candidate.Id); 
+                         paired = true;
+                         break; 
+                     }
+                 }
+            }
+
+            // Dodaj do lokalnej listy "oczekujących", aby kolejne transakcje w pętli mogły się z nią sparować (punkt A)
+            matchablePendingTransfers.Add(transaction);
+        }
+
+        // ZAPIS 2: Aktualizacja powiązań
+        if (importedCount > 0) {
+           await _DB_Context.SaveChangesAsync();
+        }
+
+        await dbTransaction.CommitAsync();
+
+    } catch (Exception) {
+        await dbTransaction.RollbackAsync();
+        throw; // Rzucamy dalej, aby klient dostał info o błędzie (500)
     }
-
-    await _DB_Context.SaveChangesAsync();
 
     string successMessage = $"Zaimportowano {importedCount} transakcji";
     if (insignificantCount > 0)

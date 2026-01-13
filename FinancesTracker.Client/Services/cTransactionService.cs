@@ -84,6 +84,9 @@ public class cTransactionService {
     if (filter.IsInsignificant.HasValue)
       queryParams.Add($"isInsignificant={filter.IsInsignificant.Value}");
 
+    if (filter.HideTransfers)
+        queryParams.Add($"hideTransfers={filter.HideTransfers}");
+
     queryParams.Add($"includeInsignificant={filter.IncludeInsignificant}");
     queryParams.Add($"pageNumber={filter.PageNumber}");
     queryParams.Add($"pageSize={filter.PageSize}");

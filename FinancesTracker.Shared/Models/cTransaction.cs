@@ -31,8 +31,16 @@ public class cTransaction {
 
   public bool IsInsignificant { get; set; } = false;
 
+  public bool IsTransfer { get; set; } = false;
+
+  public int? RelatedTransactionId { get; set; }
+  public virtual cTransaction? RelatedTransaction { get; set; }
+
   public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
   public DateTime? UpdatedAt { get; set; }
+
+  [NotMapped]
+  public string? AccountName { get; set; }
 
   // Właściwości pomocnicze dla Blazor (bez mapowania w EF)
   [NotMapped]

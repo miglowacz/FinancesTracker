@@ -14,6 +14,7 @@ public class cTransactionFilter_DTO {
   public bool? IsInsignificant { get; set; }
   public bool IncludeInsignificant { get; set; } = true;
   public bool HasNoCategory { get; set; } = false;
+  public bool HideTransfers { get; set; } = false; // Dodane pole
 
   // Paginacja
   public int PageNumber { get; set; } = 1;

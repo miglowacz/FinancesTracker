@@ -8,15 +8,21 @@
 @inject cCategoryService CategoryService
 @inject IJSRuntime JSRuntime
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <MudContainer MaxWidth="MaxWidth.False" Class="pa-0">
   <MudGrid>
     <MudItem xs="12">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Transakcje finansowe</h2>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ms-2" OnClick="AddTransaction">
-          <MudIcon Icon="@Icons.Material.Filled.Add" /> Dodaj transakcję
-        </MudButton>
+        <div>
+          <MudButton Variant="Variant.Filled" Color="Color.Info" Class="ms-2" OnClick="OpenTransferDialog" StartIcon="@Icons.Material.Filled.SwapHoriz">
+            Wykonaj transfer
+          </MudButton>
+          <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ms-2" OnClick="AddTransaction">
+            <MudIcon Icon="@Icons.Material.Filled.Add" /> Dodaj transakcję
+          </MudButton>
+        </div>
       </div>
     </MudItem>
 
@@ -26,7 +32,7 @@
         <MudCardHeader Class="py-1 px-2">
           <MudText Typo="Typo.h6">Filtry</MudText>
           <MudSpacer />
-          <MudIconButton Icon="@(mShowAdvancedFilters ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+          <MudIconButton Icon="@(mShowAdvancedFilters? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
                          OnClick="() => mShowAdvancedFilters = !mShowAdvancedFilters"
                          Title="@(mShowAdvancedFilters ? "Ukryj filtry zaawansowane" : "Pokaż filtry zaawansowane")" />
         </MudCardHeader>
@@ -76,63 +82,27 @@
           <MudDivider Class="my-2" />
           <MudText Typo="Typo.subtitle2" Class="mb-2">Szybkie filtry:</MudText>
           <MudGrid>
-            <MudItem xs="12" Class="d-flex flex-wrap gap-2">
-              <MudButton Variant="Variant.Text"
-                         Size="Size.Small"
-                         OnClick="SetToday">
-                Dziś
-              </MudButton>
-              <MudButton Variant="Variant.Text"
-                         Size="Size.Small"
-                         OnClick="SetYesterday">
-                Wczoraj
-              </MudButton>
-              <MudButton Variant="Variant.Text"
-                         Size="Size.Small"
-                         OnClick="SetThisWeek">
-                Ten tydzień
-              </MudButton>
-              <MudButton Variant="Variant.Text"
-                         Size="Size.Small"
-                         OnClick="SetLastWeek">
-                Ostatni tydzień
-              </MudButton>
-              <MudButton Variant="Variant.Text"
-                         Size="Size.Small"
-                         OnClick="SetThisMonth">
-                Bieżący miesiąc
-              </MudButton>
-              <MudButton Variant="Variant.Text"
-                         Size="Size.Small"
-                         OnClick="SetLastMonth">
-                Poprzedni miesiąc
-              </MudButton>
-              <MudButton Variant="Variant.Text"
-                         Size="Size.Small"
-                         OnClick="SetLast30Days">
-                Ostatnie 30 dni
-              </MudButton>
-              <MudButton Variant="Variant.Text"
-                         Size="Size.Small"
-                         OnClick="SetLast90Days">
-                Ostatnie 90 dni
-              </MudButton>
-              <MudButton Variant="Variant.Text"
-                         Size="Size.Small"
-                         OnClick="SetThisYear">
-                Ten rok
-              </MudButton>
-              <MudButton Variant="Variant.Text"
-                         Size="Size.Small"
-                         OnClick="SetLastYear">
-                Poprzedni rok
-              </MudButton>
-              <MudButton Variant="Variant.Text"
-                         Size="Size.Small"
-                         OnClick="ToggleShowNoCategory"
-                         Title="@(mFilterNoCategoryMode ? "Ukryj transakcje bez kategorii" : "Pokaż transakcje bez kategorii")">
+            <MudItem xs="12" Class="d-flex flex-wrap gap-2 align-items-center">
+              <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="SetToday">Dziś</MudButton>
+              <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="SetYesterday">Wczoraj</MudButton>
+              <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="SetThisWeek">Ten tydzień</MudButton>
+              <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="SetLastWeek">Ostatni tydzień</MudButton>
+              <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="SetThisMonth">Bieżący miesiąc</MudButton>
+              <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="SetLastMonth">Poprzedni miesiąc</MudButton>
+              <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="SetLast30Days">Ostatnie 30 dni</MudButton>
+              <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="SetThisYear">Ten rok</MudButton>
+              <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="SetLastYear">Poprzedni rok</MudButton>
+              <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="ToggleShowNoCategory">
                 @(mFilterNoCategoryMode ? "Bez kategorii (włączone)" : "Bez kategorii")
               </MudButton>
+
+              <MudDivider Vertical="true" FlexItem="true" Class="mx-2" />
+
+              <MudSwitch T="bool"
+                         @bind-Value="mFilterHideTransfers"
+                         Label="Ukryj transfery"
+                         Color="Color.Primary"
+                         UnCheckedColor="Color.Default" />
             </MudItem>
           </MudGrid>
 
@@ -288,6 +258,11 @@
                 Bez kategorii
               </MudChip>
             }
+            @if (mFilterHideTransfers) {
+              <MudChip T="string" Size="Size.Small" Class="mx-1" Color="Color.Info" Variant="Variant.Outlined">
+                Ukryte transfery
+              </MudChip>
+            }
           </MudText>
         </MudAlert>
       </MudItem>
@@ -318,19 +293,14 @@
               <MudTh>Akcje</MudTh>
             </HeaderContent>
             <RowTemplate>
-              @if (mEditingTransactionId == context.Id) {
+              @if (mEditingTransactionId == context.Id && !context.IsTransfer) {
+                <!-- Edycja transakcji (zablokowana dla transferów w tym trybie) -->
                 <MudTd DataLabel="Status">
-                  <MudTooltip Text="@(context.IsInsignificant ? "Nieistotna" : "Istotna")">
-                    <MudIcon Icon="@(context.IsInsignificant ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
-                             Color="@(context.IsInsignificant ? Color.Default : Color.Success)"
-                             Size="Size.Small" />
-                  </MudTooltip>
+                  <MudIcon Icon="@(context.IsInsignificant? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)" Size="Size.Small" />
                 </MudTd>
                 <MudTd DataLabel="Data">@context.Date.ToString("dd.MM.yyyy")</MudTd>
                 <MudTd DataLabel="Kwota">
-                  <span class="@(context.Amount >= 0 ? "text-success fw-bold" : "text-danger fw-bold")">
-                    @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
-                  </span>
+                  @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
                 </MudTd>
                 <MudTd DataLabel="Opis">@context.Description</MudTd>
                 <MudTd DataLabel="Kategoria">
@@ -359,7 +329,6 @@
                     }
                   </MudSelect>
                 </MudTd>
-                <MudTd DataLabel="Bank"></MudTd>
                 <MudTd DataLabel="Akcje">
                   <div class="d-flex gap-1">
                     <MudIconButton Icon="@Icons.Material.Filled.Save"
@@ -375,7 +344,7 @@
               } else {
                 <MudTd DataLabel="Status">
                   <MudTooltip Text="@(context.IsInsignificant ? "Nieistotna - kliknij aby oznaczyć jako istotną" : "Istotna - kliknij aby oznaczyć jako nieistotną")">
-                    <MudIconButton Icon="@(context.IsInsignificant ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                    <MudIconButton Icon="@(context.IsInsignificant? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
                                    Color="@(context.IsInsignificant ? Color.Default : Color.Success)"
                                    Size="Size.Small"
                                    OnClick="() => ToggleInsignificant(context)" />
@@ -385,30 +354,39 @@
                   @context.Date.ToString("dd.MM.yyyy")
                 </MudTd>
                 <MudTd DataLabel="Kwota" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
-                  <span class="@(context.Amount >= 0 ? "text-success fw-bold" : "text-danger fw-bold")">
+                  <MudText Typo="Typo.body2"
+                           Color="@(context.IsTransfer ? Color.Info : (context.Amount >= 0 ? Color.Success : Color.Error))"
+                           Class="fw-bold">
                     @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
-                  </span>
+                  </MudText>
                 </MudTd>
                 <MudTd DataLabel="Opis" Style="@(context.IsInsignificant ? "opacity: 0.6; text-decoration: line-through;" : "")">
                   @context.Description
                 </MudTd>
                 <MudTd DataLabel="Kategoria" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
-                  @context.CategoryName
+                  @if (context.IsTransfer) {
+                    <MudTooltip Text="@($"Transfer do/z: {context.RelatedAccountName ?? "Inne konto"}")">
+                      <div class="d-flex align-items-center gap-1">
+                        <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" Color="Color.Info" Size="Size.Small" />
+                        <MudText Typo="Typo.body2" Color="Color.Info">Transfer</MudText>
+                      </div>
+                    </MudTooltip>
+                  } else {
+                    @context.CategoryName
+                  }
                 </MudTd>
                 <MudTd DataLabel="Podkategoria" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
-                  @context.SubcategoryName
+                  @if (!context.IsTransfer) {
+                    @context.SubcategoryName
+                  }
                 </MudTd>
-             @*    <MudTd DataLabel="Bank" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
-                  @context.BankName
-                </MudTd>
-                <MudTd DataLabel="Konto" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
-                  @context.AccountName
-               </MudTd> *@ 
                 <MudTd DataLabel="Akcje">
-                  <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                 Color="Color.Primary"
-                                 Size="Size.Small"
-                                 OnClick="() => StartEdit(context)" />
+                  @if (!context.IsTransfer) {
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   OnClick="() => StartEdit(context)" />
+                  }
                 </MudTd>
               }
             </RowTemplate>
@@ -470,6 +448,7 @@
   private string? mFilterBankName;
   private string mFilterInsignificantMode = "all"; // "all", "significant", "insignificant"
   private bool mFilterNoCategoryMode = false;
+  private bool mFilterHideTransfers = false; // Nowe pole
 
   // Kategorie i podkategorie
   private List<cCategory_DTO> mCategories = new();
@@ -483,7 +462,7 @@
   protected override async Task OnInitializedAsync() {
     // Załaduj kategorie
     await LoadCategories();
-    
+
     // Domyślnie załaduj transakcje z bieżącego miesiąca (tylko istotne)
     mFilterInsignificantMode = "significant";
     SetThisMonth();
@@ -535,6 +514,9 @@
       // Ustaw filtr transakcji bez kategorii
       mFilter.HasNoCategory = mFilterNoCategoryMode;
 
+      // Ustaw filtr transferów
+      mFilter.HideTransfers = mFilterHideTransfers;
+
       var pResp = await TransactionService.GetTransactionsAsync(mFilter);
       if (!pResp.Success) {
         Console.WriteLine($"Błąd podczas ładowania transakcji: {BuildErrorMessage(pResp)}");
@@ -574,6 +556,10 @@
   }
 
   private void StartEdit(cTransaction_DTO transaction) {
+    if (transaction.IsTransfer) {
+      Snackbar.Add("Edycja transferów nie jest możliwa w tym widoku.", Severity.Info);
+      return;
+    }
     mEditingTransactionId = transaction.Id;
     mEditedCategoryId = transaction.CategoryId;
     mEditedSubcategoryId = transaction.SubcategoryId;
@@ -641,7 +627,8 @@
         || !string.IsNullOrEmpty(mFilterSearchTerm)
         || !string.IsNullOrEmpty(mFilterBankName)
         || mFilterInsignificantMode != "all"
-        || mFilterNoCategoryMode;
+        || mFilterNoCategoryMode
+        || mFilterHideTransfers;
   }
 
   private async Task ApplyFilters() {
@@ -660,6 +647,7 @@
     mFilterBankName = null;
     mFilterInsignificantMode = "all";
     mFilterNoCategoryMode = false;
+    mFilterHideTransfers = false;
     mFilter = new cTransactionFilter_DTO();
     await LoadTransactions();
   }
@@ -773,6 +761,15 @@
 
   private async Task AddTransaction(MouseEventArgs args) {
     await JSRuntime.InvokeVoidAsync("alert", "Dodaj transakcję - funkcja w budowie!");
+  }
+
+  private async Task OpenTransferDialog() {
+    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+    var dialog = await DialogService.ShowAsync<TransferDialog>("Nowy transfer", options);
+    var result = await dialog.Result;
+    if (!result.Canceled && result.Data is bool success && success) {
+      await LoadTransactions();
+    }
   }
 
   private static string BuildErrorMessage<T>(cApiResponse<T> xResp)

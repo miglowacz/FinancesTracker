@@ -1,0 +1,100 @@
+@using FinancesTracker.Shared.DTOs
+@using FinancesTracker.Client.Services
+@using MudBlazor
+@inject cAccountService AccountService
+@inject cTransactionService TransactionService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        @if (mAccounts == null)
+        {
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        }
+        else
+        {
+            <MudForm @ref="mForm" Model="mModel">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="int" Label="Konto źródłowe" @bind-Value="mModel.AccountId" Required="true" RequiredError="Wybierz konto źródłowe" AnchorOrigin="Origin.BottomCenter">
+                            @foreach (var account in mAccounts)
+                            {
+                                <MudSelectItem Value="@account.Id">@account.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="int?" Label="Konto docelowe" @bind-Value="mModel.TargetAccountId" Required="true" RequiredError="Wybierz konto docelowe" AnchorOrigin="Origin.BottomCenter">
+                            @foreach (var account in mAccounts.Where(a => a.Id != mModel.AccountId))
+                            {
+                                <MudSelectItem T="int?" Value="@account.Id">@account.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="mModel.Amount" Label="Kwota" Format="N2" Min="0.01m" Required="true" RequiredError="Kwota jest wymagana" Adornment="Adornment.Start" AdornmentText="PLN" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker Label="Data transferu" @bind-Date="mDate" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="mModel.Description" Label="Opis (opcjonalnie)" Placeholder="Transfer środków" />
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Anuluj</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Zatwierdź transfer</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private cTransaction_DTO mModel = new() { IsTransfer = true, Date = DateTime.Today };
+    private DateTime? mDate = DateTime.Today;
+    private List<cAccount_DTO> mAccounts = new();
+    private MudForm mForm = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await AccountService.GetAccountsAsync();
+        if (response.Success && response.Data != null)
+        {
+            mAccounts = response.Data.Where(a => a.IsActive).ToList();
+            if (mAccounts.Any())
+            {
+                mModel.AccountId = mAccounts.First().Id;
+            }
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        await mForm.Validate();
+        if (!mForm.IsValid) return;
+
+        if (mDate.HasValue) mModel.Date = mDate.Value;
+        if (string.IsNullOrWhiteSpace(mModel.Description)) mModel.Description = "Przelew wewnętrzny";
+
+        // Ustaw flagi transferu
+        mModel.IsTransfer = true;
+        // Upewnij się że kwota jest dodatnia (logika backendu odwróci ją dla źródła)
+        mModel.Amount = Math.Abs(mModel.Amount);
+
+        var response = await TransactionService.CreateTransactionAsync(mModel);
+        if (response.Success)
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+            Snackbar.Add("Transfer został wykonany pomyślnie", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add($"Błąd: {string.Join(", ", response.Errors ?? new List<string>())}", Severity.Error);
+        }
+    }
+}

@@ -10,12 +10,22 @@ public class cTransactionImportService {
 
   private readonly HttpClient _httpClient;
 
+  // Lista słów kluczowych oznaczających transfer
+  private readonly string[] _transferKeywords = new[] {
+    "PRZELEW WŁASNY",
+    "PRZELEW WEWNĘTRZNY",
+    "TRANSFER",
+    "WPŁATA WŁASNA"
+  };
+
   public cTransactionImportService(HttpClient httpClient) {
     _httpClient = httpClient;
   }
 
   public async Task<List<cTransaction>> ImportFromMbankCsvAsync(Stream csvStream) {
+
     List<cTransaction> transactions = new();
+
     using StreamReader streamReader = new(csvStream, Encoding.UTF8, true);
 
     string? line;
@@ -37,16 +47,20 @@ public class cTransactionImportService {
       string amountStr = parts[4].Replace("PLN", "").Replace(" ", "").Replace("\"", "");
       if (!decimal.TryParse(amountStr, NumberStyles.Any, new CultureInfo("pl-PL"), out decimal amount)) continue;
 
+      // Sprawdź czy to transfer
+      bool isTransfer = CheckIfTransfer(description);
+
       transactions.Add(new cTransaction {
         Date = date,
         Description = description,
         Amount = amount,
-        //BankName = "MBank",
-        //AccountName = accountName
+        AccountName = accountName,
+        IsTransfer = isTransfer // Ustaw flagę
       });
     }
 
     return transactions;
+
   }
 
   public async Task<List<cTransaction>> ImportFromMillenniumCsvAsync(Stream csvStream) {
@@ -81,19 +95,28 @@ public class cTransactionImportService {
 
       if (amount == 0) continue;
 
-      //string accountName = parts[0].Trim('"');
-      //string bankName = DetermineBankName(accountName);
+      string accountName = parts[0].Trim('"');
+      
+      // Sprawdź czy to transfer
+      bool isTransfer = CheckIfTransfer(description);
 
       transactionsCln.Add(new cTransaction {
         Date = date,
         Description = description,
         Amount = amount,
-        //BankName = "Millenium",
-        //AccountName="Bieżące"
+        AccountName = accountName,
+        IsTransfer = isTransfer // Ustaw flagę
       });
     }
 
     return transactionsCln;
+  }
+
+  // Metoda pomocnicza do wykrywania transferów
+  private bool CheckIfTransfer(string description) {
+    if (string.IsNullOrWhiteSpace(description)) return false;
+    var upperDesc = description.ToUpper();
+    return _transferKeywords.Any(k => upperDesc.Contains(k));
   }
 
   private static string BuildMillenniumDescription(string[] parts) {
@@ -178,8 +201,8 @@ public class cTransactionImportService {
         Date = transaction.Date,
         Description = transaction.Description,
         Amount = transaction.Amount,
-        //BankName = transaction.BankName,
-        //AccountName = transaction.AccountName
+        AccountName = transaction.AccountName,
+        IsTransfer = transaction.IsTransfer // Przekaż flagę IsTransfer do DTO
       });
     }
 
@@ -202,8 +225,8 @@ public class cTransactionImportService {
         Date = pT.Date,
         Description = pT.Description,
         Amount = pT.Amount,
-        //BankName = pT.BankName ?? xBankName,
-        //AccountName = pT.AccountName
+        AccountName = pT.AccountName,
+        IsTransfer = pT.IsTransfer // Przekaż flagę IsTransfer do DTO
       });
     }
 
