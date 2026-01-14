@@ -29,6 +29,9 @@ public class cAccount_DTO {
   [MaxLength(100, ErrorMessage = "Nazwa banku nie może być dłuższa niż 100 znaków")]
   public string? BankName { get; set; }
 
+  [MaxLength(50, ErrorMessage = "Identyfikator importu nie może być dłuższy niż 50 znaków")]
+  public string? ImportIdentifier { get; set; }
+
   [Required(ErrorMessage = "Saldo początkowe jest wymagane")]
   [Range(-999999.99, 999999.99, ErrorMessage = "Saldo musi być między -999999.99 a 999999.99")]
   public decimal InitialBalance { get; set; }

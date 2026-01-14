@@ -15,6 +15,9 @@ public class cAccount {
   [MaxLength(100)]
   public string? BankName { get; set; }
 
+  [MaxLength(50)]
+  public string? ImportIdentifier { get; set; }
+
   [Required]
   [Column(TypeName = "decimal(18,2)")]
   public decimal InitialBalance { get; set; }

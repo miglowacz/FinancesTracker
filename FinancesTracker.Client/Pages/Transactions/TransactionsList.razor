@@ -288,22 +288,30 @@
               <MudTh>Opis</MudTh>
               <MudTh>Kategoria</MudTh>
               <MudTh>Podkategoria</MudTh>
-              @* <MudTh>Bank</MudTh>
-              <MudTh>Konto</MudTh> *@
               <MudTh>Akcje</MudTh>
             </HeaderContent>
             <RowTemplate>
-              @if (mEditingTransactionId == context.Id && !context.IsTransfer) {
-                <!-- Edycja transakcji (zablokowana dla transferów w tym trybie) -->
-                <MudTd DataLabel="Status">
+              @if (mEditingTransactionId == context.Id) {
+                <!-- Edycja transakcji (teraz dozwolona dla transferów) -->
+                <MudTd DataLabel="Status" Style="@GetCellStyle(context)">
                   <MudIcon Icon="@(context.IsInsignificant? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)" Size="Size.Small" />
                 </MudTd>
-                <MudTd DataLabel="Data">@context.Date.ToString("dd.MM.yyyy")</MudTd>
-                <MudTd DataLabel="Kwota">
+                <MudTd DataLabel="Data" Style="@GetCellStyle(context)">@context.Date.ToString("dd.MM.yyyy")</MudTd>
+                <MudTd DataLabel="Kwota" Style="@GetCellStyle(context)">
                   @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
                 </MudTd>
-                <MudTd DataLabel="Opis">@context.Description</MudTd>
-                <MudTd DataLabel="Kategoria">
+                <MudTd DataLabel="Opis" Style="@GetCellStyle(context, "desc")">
+                  @context.Description
+                  @if (context.IsTransfer) {
+                    <div class="mt-1 d-flex align-items-center">
+                      <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small" Class="me-1" />
+                      <MudText Typo="Typo.caption" Color="Color.Info">
+                        Ta transakcja jest powiązana z przelewem na konto @(context.RelatedAccountName ?? "Brak danych")
+                      </MudText>
+                    </div>
+                  }
+                </MudTd>
+                <MudTd DataLabel="Kategoria" Style="@GetCellStyle(context)">
                   <MudSelect T="int?"
                              Value="mEditedCategoryId"
                              ValueChanged="OnCategoryChanged"
@@ -316,7 +324,7 @@
                     }
                   </MudSelect>
                 </MudTd>
-                <MudTd DataLabel="Podkategoria">
+                <MudTd DataLabel="Podkategoria" Style="@GetCellStyle(context)">
                   <MudSelect T="int?"
                              @bind-Value="mEditedSubcategoryId"
                              Dense="true"
@@ -329,7 +337,7 @@
                     }
                   </MudSelect>
                 </MudTd>
-                <MudTd DataLabel="Akcje">
+                <MudTd DataLabel="Akcje" Style="@GetCellStyle(context)">
                   <div class="d-flex gap-1">
                     <MudIconButton Icon="@Icons.Material.Filled.Save"
                                    Color="Color.Success"
@@ -342,7 +350,7 @@
                   </div>
                 </MudTd>
               } else {
-                <MudTd DataLabel="Status">
+                <MudTd DataLabel="Status" Style="@GetCellStyle(context)">
                   <MudTooltip Text="@(context.IsInsignificant ? "Nieistotna - kliknij aby oznaczyć jako istotną" : "Istotna - kliknij aby oznaczyć jako nieistotną")">
                     <MudIconButton Icon="@(context.IsInsignificant? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
                                    Color="@(context.IsInsignificant ? Color.Default : Color.Success)"
@@ -350,20 +358,29 @@
                                    OnClick="() => ToggleInsignificant(context)" />
                   </MudTooltip>
                 </MudTd>
-                <MudTd DataLabel="Data" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
+                <MudTd DataLabel="Data" Style="@GetCellStyle(context)">
                   @context.Date.ToString("dd.MM.yyyy")
                 </MudTd>
-                <MudTd DataLabel="Kwota" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
-                  <MudText Typo="Typo.body2"
-                           Color="@(context.IsTransfer ? Color.Info : (context.Amount >= 0 ? Color.Success : Color.Error))"
-                           Class="fw-bold">
-                    @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
-                  </MudText>
+                <MudTd DataLabel="Kwota" Style="@GetCellStyle(context)">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <MudText Typo="Typo.body2"
+                             Color="@(context.IsTransfer ? Color.Info : (context.Amount >= 0 ? Color.Success : Color.Error))"
+                             Class="fw-bold">
+                      @context.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pl-PL"))
+                    </MudText>
+                    @if (context.IsTransfer && context.RelatedTransactionId.HasValue) {
+                      <MudIconButton Icon="@Icons.Material.Filled.Link"
+                                     Size="Size.Small"
+                                     Color="Color.Info"
+                                     OnClick="@(() => HighlightTransaction(context.RelatedTransactionId))"
+                                     Title="Pokaż powiązaną transakcję" />
+                    }
+                  </div>
                 </MudTd>
-                <MudTd DataLabel="Opis" Style="@(context.IsInsignificant ? "opacity: 0.6; text-decoration: line-through;" : "")">
+                <MudTd DataLabel="Opis" Style="@GetCellStyle(context, "desc")">
                   @context.Description
                 </MudTd>
-                <MudTd DataLabel="Kategoria" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
+                <MudTd DataLabel="Kategoria" Style="@GetCellStyle(context)">
                   @if (context.IsTransfer) {
                     <MudTooltip Text="@($"Transfer do/z: {context.RelatedAccountName ?? "Inne konto"}")">
                       <div class="d-flex align-items-center gap-1">
@@ -375,18 +392,16 @@
                     @context.CategoryName
                   }
                 </MudTd>
-                <MudTd DataLabel="Podkategoria" Style="@(context.IsInsignificant ? "opacity: 0.6;" : "")">
+                <MudTd DataLabel="Podkategoria" Style="@GetCellStyle(context)">
                   @if (!context.IsTransfer) {
                     @context.SubcategoryName
                   }
                 </MudTd>
-                <MudTd DataLabel="Akcje">
-                  @if (!context.IsTransfer) {
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                   Color="Color.Primary"
-                                   Size="Size.Small"
-                                   OnClick="() => StartEdit(context)" />
-                  }
+                <MudTd DataLabel="Akcje" Style="@GetCellStyle(context)">
+                  <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                 Color="Color.Primary"
+                                 Size="Size.Small"
+                                 OnClick="() => StartEdit(context)" />
                 </MudTd>
               }
             </RowTemplate>
@@ -448,7 +463,7 @@
   private string? mFilterBankName;
   private string mFilterInsignificantMode = "all"; // "all", "significant", "insignificant"
   private bool mFilterNoCategoryMode = false;
-  private bool mFilterHideTransfers = false; // Nowe pole
+  private bool mFilterHideTransfers = false;
 
   // Kategorie i podkategorie
   private List<cCategory_DTO> mCategories = new();
@@ -458,6 +473,9 @@
   private int? mEditedCategoryId = null;
   private int? mEditedSubcategoryId = null;
   private List<cSubcategory_DTO> mAvailableSubcategories = new();
+
+  // Podświetlanie
+  private int? mHighlightedTransactionId = null;
 
   protected override async Task OnInitializedAsync() {
     // Załaduj kategorie
@@ -486,6 +504,7 @@
 
   private async Task LoadTransactions() {
     mIsLoading = true;
+    mHighlightedTransactionId = null; // Reset highlight on reload
     StateHasChanged();
 
     try {
@@ -556,10 +575,6 @@
   }
 
   private void StartEdit(cTransaction_DTO transaction) {
-    if (transaction.IsTransfer) {
-      Snackbar.Add("Edycja transferów nie jest możliwa w tym widoku.", Severity.Info);
-      return;
-    }
     mEditingTransactionId = transaction.Id;
     mEditedCategoryId = transaction.CategoryId;
     mEditedSubcategoryId = transaction.SubcategoryId;
@@ -652,20 +667,16 @@
     await LoadTransactions();
   }
 
-  // Toggle button for showing/hiding insignificant transactions
   private async Task ToggleShowInsignificant() {
     mFilter.PageNumber = 1;
     if (mFilterInsignificantMode == "significant") {
-      // currently hiding insignificant -> show them (all)
       mFilterInsignificantMode = "all";
     } else {
-      // otherwise hide insignificant (show only significant)
       mFilterInsignificantMode = "significant";
     }
     await LoadTransactions();
   }
 
-  // Toggle button for showing/hiding transactions without category
   private async Task ToggleShowNoCategory() {
     mFilter.PageNumber = 1;
     mFilterNoCategoryMode = !mFilterNoCategoryMode;
@@ -724,12 +735,6 @@
     await ApplyFilters();
   }
 
-  private async Task SetLast90Days() {
-    mStartDate = DateTime.Today.AddDays(-90);
-    mEndDate = DateTime.Today;
-    await ApplyFilters();
-  }
-
   private async Task SetThisYear() {
     var today = DateTime.Today;
     mStartDate = new DateTime(today.Year, 1, 1);
@@ -770,6 +775,36 @@
     if (!result.Canceled && result.Data is bool success && success) {
       await LoadTransactions();
     }
+  }
+
+  private void HighlightTransaction(int? transactionId) {
+    if (!transactionId.HasValue) return;
+
+    if (Transactions.Items.Any(t => t.Id == transactionId.Value)) {
+      mHighlightedTransactionId = transactionId;
+      Snackbar.Add("Zaznaczono powiązaną transakcję", Severity.Success);
+    } else {
+      mHighlightedTransactionId = null;
+      Snackbar.Add("Powiązana transakcja nie znajduje się na bieżącej stronie wyników", Severity.Warning);
+    }
+    StateHasChanged();
+  }
+
+  private string GetCellStyle(cTransaction_DTO context, string col = "") {
+    var s = new System.Text.StringBuilder();
+
+    if (mHighlightedTransactionId == context.Id) {
+      s.Append("background-color: rgba(33, 150, 243, 0.1); "); // Light blue highlight
+    }
+
+    if (context.IsInsignificant) {
+      s.Append("opacity: 0.6; ");
+      if (col == "desc") {
+        s.Append("text-decoration: line-through; ");
+      }
+    }
+
+    return s.ToString();
   }
 
   private static string BuildErrorMessage<T>(cApiResponse<T> xResp)

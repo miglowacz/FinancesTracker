@@ -11,6 +11,7 @@
         <MudSelectItem Value="@bank">@bank</MudSelectItem>
       }
     </MudSelect>
+    <MudTextField @bind-Value="_account.ImportIdentifier" Label="Identyfikator importu (np. nr konta)" MaxLength="50" HelperText="Używany do automatycznego rozpoznawania konta przy imporcie" />
     <MudSelect @bind-Value="_account.CntAccountType" Label="Typ konta" Required="true">
       <MudSelectItem Value="@AccountTypeEnum.Personal">Konto osobiste</MudSelectItem>
       <MudSelectItem Value="@AccountTypeEnum.Savings">Konto oszczędnościowe</MudSelectItem>
@@ -44,6 +45,7 @@
         Id = Account.Id,
         Name = Account.Name,
         BankName = Account.BankName,
+        ImportIdentifier = Account.ImportIdentifier,
         InitialBalance = Account.InitialBalance,
         Currency = Account.Currency,
         CntAccountType = Account.CntAccountType,

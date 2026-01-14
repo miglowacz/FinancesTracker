@@ -116,6 +116,11 @@ public class cTransactionImportService {
   private bool CheckIfTransfer(string description) {
     if (string.IsNullOrWhiteSpace(description)) return false;
     var upperDesc = description.ToUpper();
+
+    // Słowa, które definitywnie mówią, że to NIE jest transfer wewnętrzny
+    string[] forbiddenKeywords = { "FV/", "FAKTURA", "FS/", "ZAPŁATA ZA", " Paragon" };
+    if (forbiddenKeywords.Any(k => upperDesc.Contains(k))) return false;
+
     return _transferKeywords.Any(k => upperDesc.Contains(k));
   }
 
