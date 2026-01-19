@@ -402,6 +402,11 @@
                                  Color="Color.Primary"
                                  Size="Size.Small"
                                  OnClick="() => StartEdit(context)" />
+
+                  <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                 Color="Color.Error"
+                                 Size="Size.Small"
+                                 OnClick="() => DeleteTransaction(context)" />
                 </MudTd>
               }
             </RowTemplate>
@@ -579,6 +584,34 @@
     mEditedCategoryId = transaction.CategoryId;
     mEditedSubcategoryId = transaction.SubcategoryId;
     UpdateAvailableSubcategories();
+  }
+
+  private async Task DeleteTransaction(cTransaction_DTO transaction) {
+
+    var parameters = new DialogParameters {
+        { "ContentText", $"Czy na pewno chcesz usunąć transakcję '{transaction.Description}'?" },
+        { "ButtonText", "Usuń" },
+        { "Color", Color.Error }
+    };
+
+    // Jeśli to transfer, ostrzeż użytkownika
+    if (transaction.IsTransfer) {
+      parameters["ContentText"] = "To jest transfer. Usunięcie tej transakcji usunie również powiązany wpis na drugim koncie. Kontynuować?";
+    }
+
+    var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+    var dialog = await DialogService.ShowAsync<MudMessageBox>("Potwierdzenie", parameters, options);
+    var result = await dialog.Result;
+
+    if (!result.Canceled) {
+      var response = await TransactionService.DeleteTransactionAsync(transaction.Id);
+      if (response.Success) {
+        Snackbar.Add("Transakcja została usunięta", Severity.Success);
+        await LoadTransactions();
+      } else {
+        Snackbar.Add($"Błąd: {BuildErrorMessage(response)}", Severity.Error);
+      }
+    }
   }
 
   private void CancelEdit() {

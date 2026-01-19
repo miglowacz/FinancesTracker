@@ -214,60 +214,91 @@ public class TransactionsController : ControllerBase {
     if (id != xTransactionDto.Id)
       return BadRequest(cApiResponse<cTransaction_DTO>.Error("ID transakcji nie pasuje"));
 
-    if (!ModelState.IsValid) {
-      var pErrors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-      return BadRequest(cApiResponse<cTransaction_DTO>.Error("Dane transakcji są nieprawidłowe", pErrors));
-    }
+    var pExistingTransaction = await _DB_Context.Transactions
+        .Include(t => t.Account)
+        .FirstOrDefaultAsync(t => t.Id == id);
 
-    var pExistingTransaction = await _DB_Context.Transactions.FindAsync(id);
     if (pExistingTransaction == null)
       return NotFound(cApiResponse<cTransaction_DTO>.Error("Transakcja nie została znaleziona"));
 
-    var pAccount = await _DB_Context.Accounts.FindAsync(xTransactionDto.AccountId);
-    if (pAccount == null)
-      return BadRequest(cApiResponse<cTransaction_DTO>.Error("Wybrane konto nie istnieje"));
+    using var dbTransaction = await _DB_Context.Database.BeginTransactionAsync();
+    try {
+      // 1. Podstawowa aktualizacja pól
+      pExistingTransaction.Date = xTransactionDto.Date.ToUniversalTime();
+      pExistingTransaction.Description = xTransactionDto.Description;
+      pExistingTransaction.Amount = xTransactionDto.Amount;
+      pExistingTransaction.AccountId = xTransactionDto.AccountId;
+      pExistingTransaction.CategoryId = xTransactionDto.CategoryId;
+      pExistingTransaction.SubcategoryId = xTransactionDto.SubcategoryId;
+      pExistingTransaction.IsInsignificant = xTransactionDto.IsInsignificant;
+      pExistingTransaction.MonthNumber = xTransactionDto.Date.Month;
+      pExistingTransaction.Year = xTransactionDto.Date.Year;
+      pExistingTransaction.UpdatedAt = DateTime.UtcNow;
 
-    var pCategory = await _DB_Context.Categories.Include(c => c.Subcategories)
-      .FirstOrDefaultAsync(c => c.Id == xTransactionDto.CategoryId);
+      // 2. Obsługa powiązanego transferu (jeśli istnieje)
+      if (pExistingTransaction.RelatedTransactionId.HasValue) {
+        var pRelated = await _DB_Context.Transactions.FindAsync(pExistingTransaction.RelatedTransactionId.Value);
+        if (pRelated != null) {
+          // Synchronizujemy kluczowe dane, ale odwracamy kwotę
+          pRelated.Date = pExistingTransaction.Date;
+          pRelated.Amount = -pExistingTransaction.Amount; // Ważne: przeciwny znak
+          pRelated.Description = pExistingTransaction.Description;
+          pRelated.MonthNumber = pExistingTransaction.MonthNumber;
+          pRelated.Year = pExistingTransaction.Year;
+          pRelated.UpdatedAt = DateTime.UtcNow;
 
-    if (pCategory == null)
-      return BadRequest(cApiResponse<cTransaction_DTO>.Error("Wybrana kategoria nie istnieje"));
+          // Kategorie w transferach zazwyczaj są takie same (lub puste)
+          pRelated.CategoryId = pExistingTransaction.CategoryId;
+          pRelated.SubcategoryId = pExistingTransaction.SubcategoryId;
+        }
+      }
 
-    if (!pCategory.Subcategories.Any(s => s.Id == xTransactionDto.SubcategoryId))
-      return BadRequest(cApiResponse<cTransaction_DTO>.Error("Wybrana podkategoria nie należy do wybranej kategorii"));
+      await _DB_Context.SaveChangesAsync();
+      await dbTransaction.CommitAsync();
 
-    pExistingTransaction.Date = xTransactionDto.Date;
-    pExistingTransaction.Description = xTransactionDto.Description;
-    pExistingTransaction.Amount = xTransactionDto.Amount;
-    pExistingTransaction.AccountId = xTransactionDto.AccountId;
-    pExistingTransaction.CategoryId = xTransactionDto.CategoryId;
-    pExistingTransaction.SubcategoryId = xTransactionDto.SubcategoryId;
-    pExistingTransaction.IsInsignificant = xTransactionDto.IsInsignificant;
-    pExistingTransaction.MonthNumber = xTransactionDto.Date.Month;
-    pExistingTransaction.Year = xTransactionDto.Date.Year;
-    pExistingTransaction.UpdatedAt = DateTime.UtcNow;
+      // Ponowne pobranie z includami do DTO
+      var pResult = await _DB_Context.Transactions
+          .Include(t => t.Account)
+          .Include(t => t.Category)
+          .Include(t => t.Subcategory)
+          .FirstAsync(t => t.Id == id);
 
-    await _DB_Context.SaveChangesAsync();
+      return Ok(cApiResponse<cTransaction_DTO>.SuccessResult(MappingService.ToDto(pResult), "Zaktualizowano pomyślnie"));
+    } catch (Exception ex) {
+      await dbTransaction.RollbackAsync();
+      return StatusCode(500, cApiResponse<cTransaction_DTO>.Error($"Błąd aktualizacji: {ex.Message}"));
+    }
 
-    var pUpdatedTransaction = await _DB_Context.Transactions
-      .Include(t => t.Account)
-      .Include(t => t.Category)
-      .Include(t => t.Subcategory)
-      .FirstAsync(t => t.Id == id);
-
-    return Ok(cApiResponse<cTransaction_DTO>.SuccessResult(MappingService.ToDto(pUpdatedTransaction), "Transakcja została zaktualizowana"));
   }
-
   [HttpDelete("{id}")]
-  public async Task<ActionResult<cApiResponse>> DeleteTransaction(int xId) {
-    var pTransaction = await _DB_Context.Transactions.FindAsync(xId);
+  public async Task<ActionResult<cApiResponse>> DeleteTransaction(int id) {
+
+    var pTransaction = await _DB_Context.Transactions.FindAsync(id);
+
     if (pTransaction == null)
       return NotFound(cApiResponse.Error("Transakcja nie została znaleziona"));
 
-    _DB_Context.Transactions.Remove(pTransaction);
-    await _DB_Context.SaveChangesAsync();
+    using var dbTransaction = await _DB_Context.Database.BeginTransactionAsync();
 
-    return Ok(cApiResponse.SuccessResult("Transakcja została usunięta"));
+    try {
+      // Jeśli to transfer, musimy usunąć też powiązaną transakcję
+      if (pTransaction.RelatedTransactionId.HasValue) {
+        var pRelated = await _DB_Context.Transactions.FindAsync(pTransaction.RelatedTransactionId.Value);
+        if (pRelated != null) {
+          _DB_Context.Transactions.Remove(pRelated);
+        }
+      }
+
+      _DB_Context.Transactions.Remove(pTransaction);
+      await _DB_Context.SaveChangesAsync();
+      await dbTransaction.CommitAsync();
+
+      return Ok(cApiResponse.SuccessResult("Transakcja (i ewentualny powiązany transfer) została usunięta"));
+    } catch (Exception ex) {
+      await dbTransaction.RollbackAsync();
+      return StatusCode(500, cApiResponse.Error($"Błąd podczas usuwania: {ex.Message}"));
+    }
+
   }
 
   [HttpPatch("{id}/toggle-insignificant")]

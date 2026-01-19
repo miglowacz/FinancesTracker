@@ -32,7 +32,8 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="mModel.Amount" Label="Kwota" Format="N2" Min="0.01m" Required="true" RequiredError="Kwota jest wymagana" Adornment="Adornment.Start" AdornmentText="PLN" />
+                        <MudNumericField @bind-Value="mModel.Amount" Label="Kwota" Format="N2" Min="0.01m" Required="true" RequiredError="Kwota jest wymagana" Adornment="Adornment.Start"
+                          AdornmentText="@mAccounts.FirstOrDefault(a => a.Id == mModel.AccountId)?.Currency" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
                         <MudDatePicker Label="Data transferu" @bind-Date="mDate" Required="true" />
@@ -51,50 +52,51 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
 
-    private cTransaction_DTO mModel = new() { IsTransfer = true, Date = DateTime.Today };
-    private DateTime? mDate = DateTime.Today;
-    private List<cAccount_DTO> mAccounts = new();
-    private MudForm mForm = default!;
+  private cTransaction_DTO mModel = new() { IsTransfer = true, Date = DateTime.Today };
+  private DateTime? mDate = DateTime.Today;
+  private List<cAccount_DTO> mAccounts = new();
+  private MudForm mForm = default!;
 
-    protected override async Task OnInitializedAsync()
+  protected override async Task OnInitializedAsync()
+  {
+    var response = await AccountService.GetAccountsAsync();
+    if (response.Success && response.Data != null)
     {
-        var response = await AccountService.GetAccountsAsync();
-        if (response.Success && response.Data != null)
-        {
-            mAccounts = response.Data.Where(a => a.IsActive).ToList();
-            if (mAccounts.Any())
-            {
-                mModel.AccountId = mAccounts.First().Id;
-            }
-        }
+      mAccounts = response.Data.Where(a => a.IsActive).ToList();
+      if (mAccounts.Any())
+      {
+        mModel.AccountId = mAccounts.First().Id;
+      }
     }
+  }
 
-    private void Cancel() => MudDialog.Cancel();
+  private void Cancel() => MudDialog.Cancel();
 
-    private async Task Submit()
-    {
-        await mForm.Validate();
-        if (!mForm.IsValid) return;
+  private async Task Submit() {
+    await mForm.Validate();
+    if (!mForm.IsValid) return;
 
-        if (mDate.HasValue) mModel.Date = mDate.Value;
-        if (string.IsNullOrWhiteSpace(mModel.Description)) mModel.Description = "Przelew wewnętrzny";
+    if (mDate.HasValue) mModel.Date = mDate.Value;
 
-        // Ustaw flagi transferu
-        mModel.IsTransfer = true;
-        // Upewnij się że kwota jest dodatnia (logika backendu odwróci ją dla źródła)
-        mModel.Amount = Math.Abs(mModel.Amount);
+    var sourceName = mAccounts.First(a => a.Id == mModel.AccountId).Name;
+    var targetName = mAccounts.First(a => a.Id == mModel.TargetAccountId).Name;
+    mModel.Description = string.IsNullOrWhiteSpace(mModel.Description)
+        ? $"Transfer: {sourceName} -> {targetName}"
+        : mModel.Description;
 
-        var response = await TransactionService.CreateTransactionAsync(mModel);
-        if (response.Success)
-        {
-            MudDialog.Close(DialogResult.Ok(true));
-            Snackbar.Add("Transfer został wykonany pomyślnie", Severity.Success);
-        }
-        else
-        {
-            Snackbar.Add($"Błąd: {string.Join(", ", response.Errors ?? new List<string>())}", Severity.Error);
-        }
+    // Ustaw flagi transferu
+    mModel.IsTransfer = true;
+    // Upewnij się że kwota jest dodatnia (logika backendu odwróci ją dla źródła)
+    mModel.Amount = Math.Abs(mModel.Amount);
+
+    var response = await TransactionService.CreateTransactionAsync(mModel);
+    if (response.Success) {
+      MudDialog.Close(DialogResult.Ok(true));
+      Snackbar.Add("Transfer został wykonany pomyślnie", Severity.Success);
+    } else {
+      Snackbar.Add($"Błąd: {string.Join(", ", response.Errors ?? new List<string>())}", Severity.Error);
     }
+  }
 }
