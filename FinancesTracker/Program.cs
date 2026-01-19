@@ -15,6 +15,7 @@ builder.Services.AddDbContext<FinancesTrackerDbContext>(options =>
 
 //rejestracja serwisów
 builder.Services.AddScoped<cAccountRuleService>();
+builder.Services.AddScoped<cDataSeedService>();
 
 //CORS dla developmentu
 if (builder.Environment.IsDevelopment()) {

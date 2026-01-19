@@ -203,10 +203,11 @@ public class FinancesTrackerDbContext : DbContext {
       .HasDatabaseName("IX_AccountRule_IsActive");
 
     // Dane początkowe
-    SeedData(modelBuilder);
+    //SeedData(modelBuilder);
   }
 
   private void SeedData(ModelBuilder modelBuilder) {
+    return;
     // Kategorie główne
     var categories = new[] {
       new cCategory { Id = 1, Name = "Dochód" },

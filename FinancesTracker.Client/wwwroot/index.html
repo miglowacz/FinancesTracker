@@ -1,156 +1,27 @@
-@page "/"
-@using FinancesTracker.Client.Services
-@using FinancesTracker.Shared.DTOs
-@using MudBlazor
-@inject cTransactionService TransactionService
-@inject cAccountService AccountService
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinancesTracker</title>
+  <base href="/" />
+  <link href="app.css" rel="stylesheet" />
+  <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="app">
+    <div style="text-align: center; padding: 50px;">
+      <p>Ładowanie aplikacji...</p>
+    </div>
+  </div>
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-8">
-  <MudText Typo="Typo.h4" Class="mb-6">Pulpit finansowy</MudText>
+  <div id="blazor-error-ui">
+    Wystąpił nieoczekiwany błąd.
+    <a href="" class="reload">Odśwież</a>
+    <a class="dismiss">🗙</a>
+  </div>
 
-  @if (mIsLoading)
-  {
-  <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
-  }
-  else
-  {
-  <MudGrid>
-    <MudItem xs="12" sm="6" md="3">
-      <MudPaper Class="pa-4" Style="height:100px; border-left: 6px solid var(--mud-palette-success);">
-        <MudText Typo="Typo.subtitle2" Class="mud-text-secondary">Przychody (Miesiąc)</MudText>
-        <MudText Typo="Typo.h5" Color="Color.Success">@mSummary?.TotalIncome.ToString("C")</MudText>
-      </MudPaper>
-    </MudItem>
-    <MudItem xs="12" sm="6" md="3">
-      <MudPaper Class="pa-4" Style="height:100px; border-left: 6px solid var(--mud-palette-error);">
-        <MudText Typo="Typo.subtitle2" Class="mud-text-secondary">Wydatki (Miesiąc)</MudText>
-        <MudText Typo="Typo.h5" Color="Color.Error">-@mSummary?.TotalExpenses.ToString("C")</MudText>
-      </MudPaper>
-    </MudItem>
-    <MudItem xs="12" sm="6" md="3">
-      <MudPaper Class="pa-4" Style="height:100px; border-left: 6px solid var(--mud-palette-info);">
-        <MudText Typo="Typo.subtitle2" Class="mud-text-secondary">Bilans</MudText>
-        <MudText Typo="Typo.h5" Color="@(mSummary?.Balance >= 0 ? Color.Info : Color.Warning)">
-          @mSummary?.Balance.ToString("C")
-        </MudText>
-      </MudPaper>
-    </MudItem>
-    <MudItem xs="12" sm="6" md="3">
-      <MudPaper Class="pa-4" Style="height:100px; border-left: 6px solid var(--mud-palette-primary);">
-        <MudText Typo="Typo.subtitle2" Class="mud-text-secondary">Stan kont (Łącznie)</MudText>
-        <MudText Typo="Typo.h5">@mTotalBalance.ToString("C")</MudText>
-      </MudPaper>
-    </MudItem>
-
-    <MudItem xs="12" md="7">
-      <MudPaper Class="pa-4" Style="height:450px;">
-        <MudText Typo="Typo.h6" Class="mb-4">Struktura wydatków</MudText>
-        @if (mChartData.Any())
-        {
-        <MudChart ChartType="ChartType.Donut"
-                  InputData="@mChartData.ToArray()"
-                  InputLabels="@mChartLabels.ToArray()"
-                  Width="300px" Height="300px" />
-        }
-        else
-        {
-        <MudAlert Severity="Severity.Info">Brak transakcji w tym miesiącu do wyświetlenia wykresu.</MudAlert>
-        }
-      </MudPaper>
-    </MudItem>
-
-    <MudItem xs="12" md="5">
-      <MudPaper Class="pa-4" Style="height:450px; overflow-y: auto;">
-        <MudText Typo="Typo.h6" Class="mb-4">Wydatki wg kategorii</MudText>
-        <MudList T="string">
-          @foreach (var cat in mSummary?.Categories?.OrderBy(c => c.Expenses) ?? Enumerable.Empty<dynamic>
-            ())
-            {
-            @if (cat.Expenses < 0)
-            {
-            <MudListItem>
-              <div class="d-flex justify-content-between">
-                <MudText>@cat.CategoryName</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Error">@Math.Abs((decimal)cat.Expenses).ToString("C")</MudText>
-              </div>
-              <MudProgressLinear Color="Color.Error" Value="@GetPercentage(Math.Abs((decimal)cat.Expenses))" Class="mt-1" />
-            </MudListItem>
-            }
-            }
-        </MudList>
-      </MudPaper>
-    </MudItem>
-  </MudGrid>
-  }
-</MudContainer>
-
-@code {
-    private bool mIsLoading = true;
-    private dynamic? mSummary; // Używamy dynamic, bo kontroler zwraca object
-    private decimal mTotalBalance = 0;
-
-    private List<double>
-  mChartData = new();
-  private List<string>
-    mChartLabels = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-    await LoadData();
-    }
-
-    private async Task LoadData()
-    {
-    mIsLoading = true;
-    try
-    {
-    var now = DateTime.Now;
-
-    // 1. Pobierz podsumowanie z kontrolera (rok, miesiąc)
-    var response = await TransactionService.GetSummaryAsync(now.Year, now.Month);
-    if (response.Success && response.Data != null)
-    {
-    mSummary = response.Data;
-    PrepareChartData();
-    }
-
-    // 2. Pobierz konta, aby obliczyć całkowite saldo
-    var accResponse = await AccountService.GetAccountsAsync();
-    if (accResponse.Success && accResponse.Data != null)
-    {
-    // Tutaj przydałoby się, aby Twoje Account_DTO miało pole CurrentBalance
-    // Na razie sumujemy to co mamy
-    mTotalBalance = accResponse.Data.Sum(a => a.InitialBalance);
-    }
-    }
-    finally
-    {
-    mIsLoading = false;
-    }
-    }
-
-    private void PrepareChartData()
-    {
-    mChartData.Clear();
-    mChartLabels.Clear();
-
-    if (mSummary?.Categories == null) return;
-
-    // Bierzemy tylko wydatki (kwoty ujemne)
-    foreach (var cat in mSummary.Categories)
-    {
-    decimal exp = Math.Abs((decimal)cat.Expenses);
-    if (exp > 0)
-    {
-    mChartData.Add((double)exp);
-    mChartLabels.Add((string)cat.CategoryName);
-    }
-    }
-    }
-
-    private double GetPercentage(decimal amount)
-    {
-    if (mSummary == null || mSummary.TotalExpenses == 0) return 0;
-    return (double)(amount / mSummary.TotalExpenses * 100);
-    }
-    }
+  <script src="_framework/blazor.webassembly.js"></script>
+  <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+</body>
+</html>

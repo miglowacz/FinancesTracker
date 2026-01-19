@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Bogus" Version="35.6.5" />
     <PackageReference Include="EFCore.NamingConventions" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.11" />

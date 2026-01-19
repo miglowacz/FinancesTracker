@@ -20,6 +20,7 @@ builder.Services.AddScoped<cTransactionService>();
 builder.Services.AddScoped<cTransactionImportService>();
 builder.Services.AddScoped<cCategoryRuleService>();
 builder.Services.AddScoped<cAccountRuleService>();
+builder.Services.AddScoped<cDataSeedService>();
 
 // MudBlazor
 builder.Services.AddMudServices();

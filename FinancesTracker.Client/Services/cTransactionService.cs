@@ -35,16 +35,24 @@ public class cTransactionService {
     return await _apiService.PatchAsync<cTransaction_DTO>($"{cAppConstants.ApiEndpoints.Transactions}/{id}/toggle-insignificant", null);
   }
 
-  public async Task<cApiResponse<object>> GetSummaryAsync(int year, int? month = null, bool includeInsignificant = false) {
+  //public async Task<cApiResponse<object>> GetSummaryAsync(int year, int? month = null, bool includeInsignificant = false) {
+  //  var endpoint = $"{cAppConstants.ApiEndpoints.Transactions}/summary?year={year}&includeInsignificant={includeInsignificant}";
+  //  if (month.HasValue)
+  //    endpoint += $"&month={month.Value}";
+
+  //  return await _apiService.GetAsync<object>(endpoint);
+  //}
+
+  public async Task<cApiResponse<cSummary_DTO>> GetSummaryAsync(int year, int month) {
+    var endpoint = $"{cAppConstants.ApiEndpoints.Transactions}/summary?year={year}&month={month}";
+    return await _apiService.GetAsync<cSummary_DTO>(endpoint);
+  }
+
+  public async Task<cApiResponse<cSummary_DTO>> GetSummaryAsync(int year, int? month = null, bool includeInsignificant = false) {
     var endpoint = $"{cAppConstants.ApiEndpoints.Transactions}/summary?year={year}&includeInsignificant={includeInsignificant}";
     if (month.HasValue)
       endpoint += $"&month={month.Value}";
 
-    return await _apiService.GetAsync<object>(endpoint);
-  }
-
-  public async Task<cApiResponse<cSummary_DTO>> GetSummaryAsync(int year, int month) {
-    var endpoint = $"{cAppConstants.ApiEndpoints.Transactions}/summary?year={year}&month={month}";
     return await _apiService.GetAsync<cSummary_DTO>(endpoint);
   }
 

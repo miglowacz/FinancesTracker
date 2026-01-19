@@ -323,7 +323,7 @@ public class TransactionsController : ControllerBase {
   }
 
   [HttpGet("summary")]
-  public async Task<ActionResult<cApiResponse<object>>> GetSummary(int xYear, int? xMonth = null, bool xIncludeInsignificant = false) {
+  public async Task<ActionResult<cApiResponse<cSummary_DTO>>> GetSummary(int xYear, int? xMonth = null, bool xIncludeInsignificant = false) {
     var pQuery = _DB_Context.Transactions
       .Include(t => t.Category)
       .Where(t => t.Year == xYear);
@@ -336,30 +336,26 @@ public class TransactionsController : ControllerBase {
 
     var pSummary = await pQuery
       .GroupBy(t => new { t.CategoryId, t.Category.Name })
-      .Select(g => new {
-        CategoryId = g.Key.CategoryId,
-        CategoryName = g.Key.Name,
-        TotalAmount = g.Sum(t => t.Amount),
-        TransactionCount = g.Count(),
-        Income = g.Where(t => t.Amount > 0).Sum(t => t.Amount),
+      .Select(g => new CategorySummaryDTO {
+        CategoryName = g.Key.Name ?? "Bez kategorii",
         Expenses = g.Where(t => t.Amount < 0).Sum(t => t.Amount)
       })
-      .OrderByDescending(s => Math.Abs(s.TotalAmount))
+      .Where(s => s.Expenses < 0)
+      .OrderBy(s => s.Expenses)
       .ToListAsync();
 
-    decimal pTotalIncome = pSummary.Sum(s => s.Income);
-    decimal pTotalExpenses = Math.Abs(pSummary.Sum(s => s.Expenses));
+    decimal pTotalIncome = await pQuery.Where(t => t.Amount > 0).SumAsync(t => t.Amount);
+    decimal pTotalExpenses = Math.Abs(await pQuery.Where(t => t.Amount < 0).SumAsync(t => t.Amount));
     decimal pBalance = pTotalIncome - pTotalExpenses;
 
-    var pResult = new {
+    var pResult = new cSummary_DTO {
       TotalIncome = pTotalIncome,
       TotalExpenses = pTotalExpenses,
       Balance = pBalance,
-      Categories = pSummary,
-      IncludesInsignificant = xIncludeInsignificant
+      Categories = pSummary
     };
 
-    return Ok(cApiResponse<object>.SuccessResult(pResult));
+    return Ok(cApiResponse<cSummary_DTO>.SuccessResult(pResult));
   }
 
   [HttpPost("import")]
