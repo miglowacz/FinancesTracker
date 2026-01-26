@@ -10,4 +10,7 @@ public class CategorySummaryDTO
 {
     public string CategoryName { get; set; }
     public decimal Expenses { get; set; }
+  public decimal Income { get; set; }
+  public decimal TotalAmount { get; set; }
+  public int? CategoryId { get; set; }
 }

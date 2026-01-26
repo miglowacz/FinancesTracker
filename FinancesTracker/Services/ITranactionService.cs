@@ -11,6 +11,6 @@ public interface ITransactionService {
   Task<cTransaction_DTO> UpdateTransactionAsync(int id, cTransaction_DTO xDto);
   Task<bool> DeleteTransactionAsync(int xId);
   Task<cTransaction_DTO?> ToggleInsignificantAsync(int id);
-  Task<object> GetSummaryAsync(int xYear, int? xMonth, bool xIncludeInsignificant);
+  Task<cSummary_DTO> GetSummaryAsync(int xYear, int? xMonth, bool xIncludeInsignificant);
   Task<(int ImportedCount, int InsignificantCount, List<string> Errors)> ImportTransactionsAsync(List<cTransaction_DTO> transactionsCln);
 }

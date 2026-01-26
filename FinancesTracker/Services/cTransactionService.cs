@@ -1,3 +1,4 @@
+using FinancesTracker.Client.Services;
 using FinancesTracker.Data;
 using FinancesTracker.Shared.DTOs;
 using FinancesTracker.Shared.Models;
@@ -19,6 +20,7 @@ public class cTransactionService : ITransactionService {
 
   public async Task<cPagedResult<cTransaction_DTO>> GetTransactionsAsync(cTransactionFilter_DTO xFilter) {
     var pQuery = _context.Transactions
+        .AsNoTracking()
         .Include(t => t.Account)
         .Include(t => t.Category)
         .Include(t => t.Subcategory)
@@ -65,6 +67,7 @@ public class cTransactionService : ITransactionService {
 
   public async Task<cTransaction_DTO?> GetTransactionByIdAsync(int xId) {
     var pTransaction = await _context.Transactions
+        .AsNoTracking()
         .Include(t => t.Account).Include(t => t.Category).Include(t => t.Subcategory)
         .FirstOrDefaultAsync(t => t.Id == xId);
     return pTransaction != null ? MappingService.ToDto(pTransaction) : null;
@@ -72,15 +75,24 @@ public class cTransactionService : ITransactionService {
 
   public async Task<cTransaction_DTO> CreateTransactionAsync(cTransaction_DTO xDto) {
     var entity = MappingService.ToEntity(xDto);
+
+    // Automatyczna kategoryzacja przy ręcznym dodawaniu
+    var (catId, subCatId) = await _ruleService.MatchCategoryAsync(entity.Description);
+    if (entity.CategoryId == null) {
+      entity.CategoryId = catId;
+      entity.SubcategoryId = subCatId;
+    }
+
     _context.Transactions.Add(entity);
     await _context.SaveChangesAsync();
 
-    var created = await _context.Transactions.Include(t => t.Account).Include(t => t.Category).Include(t => t.Subcategory)
-        .FirstAsync(t => t.Id == entity.Id);
-    return MappingService.ToDto(created);
+    return await GetTransactionByIdAsync(entity.Id) ?? MappingService.ToDto(entity);
   }
 
   public async Task<cTransaction_DTO> CreateTransferAsync(cTransaction_DTO xDto) {
+    if (xDto.AccountId == xDto.TargetAccountId)
+      throw new ArgumentException("Konto źródłowe i docelowe muszą być różne.");
+
     using var transaction = await _context.Database.BeginTransactionAsync();
 
     var pSource = MappingService.ToEntity(xDto);
@@ -107,13 +119,12 @@ public class cTransactionService : ITransactionService {
     await _context.SaveChangesAsync();
     await transaction.CommitAsync();
 
-    var result = await _context.Transactions.Include(t => t.Account).Include(t => t.Category).Include(t => t.Subcategory)
-        .FirstAsync(t => t.Id == pSource.Id);
-    return MappingService.ToDto(result);
+    return MappingService.ToDto(pSource);
   }
 
   public async Task<cTransaction_DTO> UpdateTransactionAsync(int id, cTransaction_DTO xDto) {
-    var existing = await _context.Transactions.FindAsync(id) ?? throw new Exception("Nie znaleziono transakcji");
+    var existing = await _context.Transactions.FindAsync(id);
+    if (existing == null) return null;
 
     existing.Date = xDto.Date;
     existing.Description = xDto.Description;
@@ -146,33 +157,38 @@ public class cTransactionService : ITransactionService {
     return MappingService.ToDto(pTransaction);
   }
 
-  public async Task<object> GetSummaryAsync(int xYear, int? xMonth, bool xIncludeInsignificant) {
+  public async Task<cSummary_DTO> GetSummaryAsync(int xYear, int? xMonth, bool xIncludeInsignificant) {
     var pQuery = _context.Transactions.Include(t => t.Category).Where(t => t.Year == xYear);
     if (xMonth.HasValue) pQuery = pQuery.Where(t => t.MonthNumber == xMonth.Value);
     if (!xIncludeInsignificant) pQuery = pQuery.Where(t => !t.IsInsignificant);
 
     var pSummary = await pQuery
-        .GroupBy(t => new { t.CategoryId, t.Category.Name })
-        .Select(g => new {
+        .GroupBy(t => new { t.CategoryId, CategoryName = t.Category != null ? t.Category.Name : "Brak kategorii" })
+        .Select(g => new CategorySummaryDTO {
           CategoryId = g.Key.CategoryId,
-          CategoryName = g.Key.Name,
+          CategoryName = g.Key.CategoryName,
           TotalAmount = g.Sum(t => t.Amount),
           Income = g.Where(t => t.Amount > 0).Sum(t => t.Amount),
           Expenses = g.Where(t => t.Amount < 0).Sum(t => t.Amount)
         }).ToListAsync();
 
-    return new {
+    return new cSummary_DTO {
       TotalIncome = pSummary.Sum(s => s.Income),
       TotalExpenses = Math.Abs(pSummary.Sum(s => s.Expenses)),
+      Balance = pSummary.Sum(s => s.Income) + pSummary.Sum(s => s.Expenses),
       Categories = pSummary
     };
   }
 
   public async Task<(int ImportedCount, int InsignificantCount, List<string> Errors)> ImportTransactionsAsync(List<cTransaction_DTO> transactionsCln) {
-    var detector = new cInsignificantTransactionDetector();
+    var ruleService = new cCategoryRuleService(_context);
+    var accountRuleService = new cAccountRuleService(_context);
+    var insignificantDetector = new cInsignificantTransactionDetector();
+
     var errorsCln = new List<string>();
     int importedCount = 0;
     int insignificantCount = 0;
+    var addedTransactions = new List<cTransaction>();
 
     var myAccountIdentifiers = await _context.Accounts.Where(a => !string.IsNullOrEmpty(a.ImportIdentifier))
         .Select(a => a.ImportIdentifier).ToListAsync();
@@ -182,25 +198,70 @@ public class cTransactionService : ITransactionService {
       foreach (var dto in transactionsCln) {
         dto.Date = dto.Date.ToUniversalTime();
 
-        // (Uproszczona logika importu - tutaj wstaw resztę swojego kodu z Etapu 1 i 2)
-        // Dla zwięzłości zachowuję strukturę, którą miałeś w kontrolerze.
+        // Obsługa konta
+        if (dto.AccountId <= 0) {
+          var account = await _context.Accounts.FirstOrDefaultAsync(a => a.Name == dto.AccountName);
+          if (account != null) dto.AccountId = account.Id;
+          else {
+            var matchedId = await accountRuleService.MatchAccountAsync(dto.AccountName);
+            if (matchedId.HasValue) dto.AccountId = matchedId.Value;
+            else if (!string.IsNullOrEmpty(dto.AccountName)) {
+              var pNewAcc = new cAccount { Name = dto.AccountName, BankName = "Import Automatyczny", IsActive = true, Currency = "PLN" };
+              _context.Accounts.Add(pNewAcc);
+              await _context.SaveChangesAsync();
+              dto.AccountId = pNewAcc.Id;
+              errorsCln.Add($"Utworzono konto: {pNewAcc.Name}");
+            }
+          }
+        }
 
-        bool exists = await _context.Transactions.AnyAsync(t => t.Description == dto.Description && t.Date == dto.Date && t.Amount == dto.Amount);
+        if (dto.AccountId <= 0) continue;
+
+        // Duplikaty
+        bool exists = await _context.Transactions.AnyAsync(t => t.Description == dto.Description && t.Date == dto.Date && t.Amount == dto.Amount && t.AccountId == dto.AccountId);
         if (exists) continue;
 
+        // Logika transferu
+        bool isTransfer = false;
+        string pDesc = dto.Description.ToLower();
+        if (myAccountIdentifiers.Any(id => pDesc.Contains(id.ToLower()))) isTransfer = true;
+
+        // Insignificant
+        bool isInsignificant = !isTransfer && insignificantDetector.IsInsignificant(dto, myAccountIdentifiers);
+        if (isInsignificant) insignificantCount++;
+
         var entity = MappingService.ToEntity(dto);
-        var (catId, subCatId) = await _ruleService.MatchCategoryAsync(entity.Description);
+        entity.IsTransfer = isTransfer;
+        entity.IsInsignificant = isInsignificant;
+
+        var (catId, subCatId) = await ruleService.MatchCategoryAsync(entity.Description);
         entity.CategoryId = catId;
         entity.SubcategoryId = subCatId;
 
         _context.Transactions.Add(entity);
+        addedTransactions.Add(entity);
         importedCount++;
       }
+
+      await _context.SaveChangesAsync();
+
+      // Parowanie transferów
+      foreach (var trans in addedTransactions.Where(t => t.IsTransfer)) {
+        var dbMatch = await _context.Transactions.FirstOrDefaultAsync(t =>
+            t.IsTransfer && t.RelatedTransactionId == null && t.Amount == -trans.Amount &&
+            t.AccountId != trans.AccountId && Math.Abs((t.Date - trans.Date).TotalDays) <= 3);
+
+        if (dbMatch != null) {
+          trans.RelatedTransactionId = dbMatch.Id;
+          dbMatch.RelatedTransactionId = trans.Id;
+        }
+      }
+
       await _context.SaveChangesAsync();
       await dbTransaction.CommitAsync();
     } catch (Exception ex) {
       await dbTransaction.RollbackAsync();
-      throw new Exception($"Błąd importu: {ex.Message}");
+      throw;
     }
 
     return (importedCount, insignificantCount, errorsCln);

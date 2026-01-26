@@ -23,6 +23,19 @@ public class cTransactionService {
     return await _apiService.PostAsync<cTransaction_DTO>(cAppConstants.ApiEndpoints.Transactions, transaction);
   }
 
+  public async Task<cApiResponse<cTransaction_DTO>> CreateTransferAsync(cTransaction_DTO transfer) {
+    // Upewniamy się, że to transfer
+    transfer.IsTransfer = true;
+    
+    if (!transfer.TargetAccountId.HasValue)
+      throw new InvalidOperationException("Transfer musi mieć ustawione konto docelowe");
+
+    if (transfer.TargetAccountId.Value == transfer.AccountId)
+      throw new InvalidOperationException("Konto źródłowe i docelowe muszą być różne");
+
+    return await _apiService.PostAsync<cTransaction_DTO>(cAppConstants.ApiEndpoints.Transactions, transfer);
+  }
+
   public async Task<cApiResponse<cTransaction_DTO>> UpdateTransactionAsync(int id, cTransaction_DTO transaction) {
     return await _apiService.PutAsync<cTransaction_DTO>($"{cAppConstants.ApiEndpoints.Transactions}/{id}", transaction);
   }
@@ -34,14 +47,6 @@ public class cTransactionService {
   public async Task<cApiResponse<cTransaction_DTO>> ToggleInsignificantAsync(int id) {
     return await _apiService.PatchAsync<cTransaction_DTO>($"{cAppConstants.ApiEndpoints.Transactions}/{id}/toggle-insignificant", null);
   }
-
-  //public async Task<cApiResponse<object>> GetSummaryAsync(int year, int? month = null, bool includeInsignificant = false) {
-  //  var endpoint = $"{cAppConstants.ApiEndpoints.Transactions}/summary?year={year}&includeInsignificant={includeInsignificant}";
-  //  if (month.HasValue)
-  //    endpoint += $"&month={month.Value}";
-
-  //  return await _apiService.GetAsync<object>(endpoint);
-  //}
 
   public async Task<cApiResponse<cSummary_DTO>> GetSummaryAsync(int year, int month) {
     var endpoint = $"{cAppConstants.ApiEndpoints.Transactions}/summary?year={year}&month={month}";
