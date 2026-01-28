@@ -21,6 +21,7 @@ builder.Services.AddScoped<cTransactionImportService>();
 builder.Services.AddScoped<cCategoryRuleService>();
 builder.Services.AddScoped<cAccountRuleService>();
 builder.Services.AddScoped<cDataSeedService>();
+builder.Services.AddScoped<IEnableBankingClientService, EnableBankingClientService>();
 
 // MudBlazor
 builder.Services.AddMudServices();

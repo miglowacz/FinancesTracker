@@ -1,4 +1,5 @@
 using FinancesTracker.Data;
+using FinancesTracker.Models;
 using FinancesTracker.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +13,11 @@ builder.Services.AddHttpClient();
 builder.Services.AddDbContext<FinancesTrackerDbContext>(options =>
   options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
     .UseSnakeCaseNamingConvention());
+
+//konfiguracja EnableBanking
+builder.Services.Configure<EnableBankingSettings>(
+  builder.Configuration.GetSection("EnableBanking"));
+builder.Services.AddScoped<IEnableBankingService, EnableBankingService>();
 
 //rejestracja serwisów
 builder.Services.AddScoped<cAccountRuleService>();
@@ -49,7 +55,7 @@ app.UseRouting();
 //mapowanie kontrolerów API
 app.MapControllers();
 
-//fallback do index.html dla routingu po stronie klienta
+//fallback dla Blazor WASM
 app.MapFallbackToFile("index.html");
 
 app.Run();

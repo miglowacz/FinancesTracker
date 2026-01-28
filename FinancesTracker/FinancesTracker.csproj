@@ -31,6 +31,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,6 +42,12 @@
   <ItemGroup>
     <ProjectReference Include="..\FinancesTracker.Client\FinancesTracker.Client.csproj" />
     <ProjectReference Include="..\FinancesTracker.Shared\FinancesTracker.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Keys\a7df3fe3-5ebf-479a-b6eb-dc63c7b24b5b.pem">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
