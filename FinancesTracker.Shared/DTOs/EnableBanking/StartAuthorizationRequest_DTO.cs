@@ -19,9 +19,6 @@ namespace FinancesTracker.Shared.DTOs.EnableBanking {
     [JsonPropertyName("access")]
     public AccessInfo Access { get; set; }
 
-    [JsonPropertyName("psu_type")]
-    public string PsuType { get; set; } = "personal";
-
     public class AspspInfo {
       [JsonPropertyName("name")]
       public string Name { get; set; }

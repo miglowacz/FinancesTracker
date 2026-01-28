@@ -91,28 +91,33 @@ public class EnableBankingService : IEnableBankingService {
 
   public async Task<AuthResponse_DTO> StartAuthorizationAsync(string aspspName, string country, string redirectUrl) {
     try {
-      // 1. Generowanie tokena - upewnij się, że Twoje CreateToken() 
-      // dodaje "kid" do nagłówka JWT (tak jak w kodzie wzorcowym)
-      var token = CreateToken();
-      _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-      // 2. Budowanie body zgodnie z wymaganiami Enable Banking
+      // 1. Budowanie body zgodnie z wymaganiami Enable Banking
+      var state = Guid.NewGuid().ToString();
       var requestBody = new StartAuthorizationRequest_DTO {
         Aspsp = new StartAuthorizationRequest_DTO.AspspInfo {
           Name = aspspName,
           Country = country
         },
-        // WAŻNE: URL musi być pełny (z http/https) i zarejestrowany w Dashboardzie!
         RedirectUrl = redirectUrl,
-        State = Guid.NewGuid().ToString(),
+        State = state,
         Access = new StartAuthorizationRequest_DTO.AccessInfo {
-          // Zgoda ważna przez 90 dni (standard rynkowy)
           ValidUntil = DateTime.UtcNow.AddDays(90).ToString("yyyy-MM-ddTHH:mm:ssZ")
         }
       };
 
+      // Zapisz state do weryfikacji przy callback
+      _stateStorage[state] = aspspName;
+
+      // 2. Użyj tej samej metody co w GetAspspsAsync (która działa)
+      var request = CreateAuthenticatedRequest(HttpMethod.Post, "/auth");
+      request.Content = new StringContent(
+        JsonSerializer.Serialize(requestBody),
+        Encoding.UTF8,
+        "application/json"
+      );
+
       // 3. Wysłanie zapytania
-      var response = await _httpClient.PostAsJsonAsync("https://api.enablebanking.com/auth", requestBody);
+      var response = await _httpClient.SendAsync(request);
 
       if (!response.IsSuccessStatusCode) {
         var errorContent = await response.Content.ReadAsStringAsync();
